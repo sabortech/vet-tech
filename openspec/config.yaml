@@ -1,0 +1,62 @@
+schema: spec-driven
+
+context: |
+  Project: Vet-Tech
+
+  Domain: Sistema para clínicas veterinárias, veterinários e tutores de pets, com foco em
+  centralizar o histórico de saúde dos animais (prontuário eletrônico veterinário).
+
+  Tech stack:
+    Python(usando reflex como biblioteca), Xanoscript, VScode,1 Github
+
+  Architecture:
+    - Não fazer mudanças sem dizer ao usuario.
+    - Não começar uma implementação sem antes ter um planejamento claro. 
+  Security:
+    - por padrão, você nao tem acesso ao git(dar commits, fazer branches etc), você pode somente dar sugestoes ao usuario sobre o git/Github
+    - nunca expor chaves de api diretamente do codigo, ele deve ter sempre um .env
+    
+  Development:
+    O projeto será desenvolvido incrementalmente
+    utilizando OpenSpec.
+
+    Mudanças relevantes devem ser especificadas
+    antes da implementação.
+
+  Language:
+    Escrever a documentação do projeto e os artefatos
+    OpenSpec em português brasileiro.
+
+rules:
+ rules:
+  proposal:
+    - Identificar se a mudança envolve dados sensíveis do prontuário (saúde do pet,
+      dados do tutor) e, se sim, descrever o impacto em privacidade e auditoria
+    - Indicar se a mudança exige verificação de autorização de acesso do tutor
+    - Explicar o impacto em notificações automáticas, se aplicável
+
+  specs:
+    - Toda funcionalidade que exponha ou modifique o prontuário de um pet deve
+      verificar se o veterinário possui autorização concedida pelo tutor
+    - Toda operação de leitura, edição ou exportação de prontuário deve gerar
+      registro de auditoria (data, veterinário responsável, ação realizada)
+    - Vínculos obrigatórios devem ser respeitados: pet → um único tutor;
+      raça → uma única espécie; consulta → um pet e um veterinário
+    - Exames podem existir sem consulta vinculada; deixar isso explícito quando
+      relevante ao spec
+    - Ao tratar de doenças, considerar tanto o registro pontual (consulta) quanto
+      o histórico consolidado do pet, com status (ativa, em tratamento, curada,
+      controlada)
+    - Usar formato Given/When/Then para regras de autorização e auditoria
+  tasks:
+    - Dividir a implementação em tarefas pequenas e verificáveis.
+
+operations:
+  apply:
+    guidance:
+      - Executar verificações relevantes antes de concluir.
+
+  archive:
+    guidance:
+      - Confirmar que a implementação corresponde à especificação.
+```
