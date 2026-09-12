@@ -40,7 +40,7 @@ rules:
       verificar se o veterinário possui autorização concedida pelo tutor
     - Toda operação de leitura, edição ou exportação de prontuário deve gerar
       registro de auditoria (data, veterinário responsável, ação realizada)
-    - Vínculos obrigatórios devem ser respeitados: pet → um único tutor;
+    - Vínculos obrigatórios devem ser respeitados pet → um único tutor
       raça → uma única espécie; consulta → um pet e um veterinário
     - Exames podem existir sem consulta vinculada; deixar isso explícito quando
       relevante ao spec
@@ -59,4 +59,3 @@ operations:
   archive:
     guidance:
       - Confirmar que a implementação corresponde à especificação.
-```

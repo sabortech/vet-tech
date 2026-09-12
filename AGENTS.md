@@ -5,7 +5,7 @@ Antes de realizar alterações significativas,
 consultar os documentos de contexto do projeto.
 ```
 
-### Arquitetura
+### Arquitetura aaa
 
 ```text
 Respeitar as tecnologias definidas no projeto.
