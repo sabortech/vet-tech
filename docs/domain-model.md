@@ -18,7 +18,7 @@ Quando um pet é levado a atendimento, é registrada uma consulta, contendo a da
 
 A partir de uma consulta, podem ser solicitados um ou mais exames, cada um contendo tipo, data, resultado e, quando aplicável, um arquivo anexado (laudo, imagem etc.). Também é possível registrar exames sem vínculo direto a uma consulta específica.
 
-Durante o acompanhamento do pet, também são registradas vacinas aplicadas — com nome da vacina, data de aplicação, lote e data prevista para a próxima dose — e medicamentos prescritos, com nome, dosagem, frequência, período de uso e tipo (contínuo, vermífugo, antipulgas, entre outros).
+Durante o acompanhamento do pet, também são registradas vacinas aplicadas — com nome da vacina, data de aplicação, lote e data prevista para a próxima dose — e medicamentos prescritos, com nome, dosagem, frequência, período de uso e tipo j(contínuo, vermífugo, antipulgas, entre outros).
 
 O sistema também mantém um cadastro de doenças conhecidas, com nome, descrição, tipo e gravidade. Uma doença pode ser diagnosticada em uma consulta específica, e também pode ser registrada no histórico consolidado do pet, indicando se está ativa, em tratamento, curada ou controlada — permitindo que o tutor e qualquer veterinário autorizado saibam rapidamente das condições de saúde do animal.
 
