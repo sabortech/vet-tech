@@ -1,7 +1,6 @@
----
-description: "Implement tasks from an OpenSpec change (Experimental)"
----
+description = "Implement tasks from an OpenSpec change (Experimental)"
 
+prompt = """
 Implement tasks from an OpenSpec change.
 
 **Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`, `schemas`, `view`). Once selected, treat `--store <id>` as sticky for the rest of the workflow. Every unscoped example of those commands below is shorthand: before running it, append the flag. For example, run `openspec status --change "<name>" --json --store "<id>"`, not the unscoped form shown below. Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
@@ -17,7 +16,7 @@ Otherwise, with no root, what happens next depends on how this workflow was reac
 
 In both branches, never create the root as a side effect: do not run `openspec init` until the user asks for it, do not hand-create `openspec/` files, and do not let a command create it.
 
-**Input**: Optionally specify a change name (e.g., `/opsx-apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name (e.g., `/opsx:apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
 
@@ -28,7 +27,7 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Auto-select if only one active change exists
    - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-apply <other>`).
+   Always announce: "Using change: <name>" and how to override (e.g., `/opsx:apply <other>`).
 
 2. **Check status to understand the schema**
    ```bash
@@ -146,7 +145,7 @@ Working on task 4/7: <task description>
 - [x] Task 2
 ...
 
-All tasks complete! You can archive this change with `/opsx-archive`.
+All tasks complete! You can archive this change with `/opsx:archive`.
 ```
 
 **Output On Pause (Issue Encountered)**
@@ -192,3 +191,4 @@ This skill supports the "actions on a change" model:
 
 - **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
 - **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+"""
