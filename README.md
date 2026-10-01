@@ -1,5 +1,5 @@
-# Vet-Tech[README.md](https://github.com/user-attachments/files/32919296/README.md)
-# 🐾 VetTech
+## 🐾 VetTech | [README.md](https://github.com/user-attachments/files/32921014/README.1.md)
+
 
 > Prontuário digital para pets: o histórico de saúde do animal acompanha o pet por toda a vida, independentemente de clínica, cidade ou veterinário.
 
@@ -299,30 +299,91 @@ Desenvolvimento incremental por módulo:
 
 ## 👨‍💻 Equipe
 
+<div align="center">
+
 <table>
   <tr>
-    <td align="center">
+    <td align="center" width="200">
       <a href="https://github.com/7offdvx">
-        <img src="https://github.com/7offdvx.png" width="100" alt="7offdvx"/><br />
-        <sub><b>@7offdvx</b></sub>
+        <img src="https://images.weserv.nl/?url=github.com/7offdvx.png&w=240&h=240&fit=cover&mask=circle" width="120" alt="Foto de 7offdvx"/>
+      </a>
+      <br /><br />
+      <b>@7offdvx</b>
+      <br /><br />
+      <a href="https://github.com/7offdvx">
+        <img src="https://img.shields.io/badge/GitHub-7offdvx-181717?style=for-the-badge&logo=github&logoColor=white" alt="Perfil de 7offdvx no GitHub"/>
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="200">
       <a href="https://github.com/danikellyalves">
-        <img src="https://github.com/danikellyalves.png" width="100" alt="danikellyalves"/><br />
-        <sub><b>@danikellyalves</b></sub>
+        <img src="https://images.weserv.nl/?url=github.com/danikellyalves.png&w=240&h=240&fit=cover&mask=circle" width="120" alt="Foto de danikellyalves"/>
+      </a>
+      <br /><br />
+      <b>@danikellyalves</b>
+      <br /><br />
+      <a href="https://github.com/danikellyalves">
+        <img src="https://img.shields.io/badge/GitHub-danikellyalves-181717?style=for-the-badge&logo=github&logoColor=white" alt="Perfil de danikellyalves no GitHub"/>
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="200">
       <a href="https://github.com/vitor0sousa">
-        <img src="https://github.com/vitor0sousa.png" width="100" alt="vitor0sousa"/><br />
-        <sub><b>@vitor0sousa</b></sub>
+        <img src="https://images.weserv.nl/?url=github.com/vitor0sousa.png&w=240&h=240&fit=cover&mask=circle" width="120" alt="Foto de vitor0sousa"/>
+      </a>
+      <br /><br />
+      <b>@vitor0sousa</b>
+      <br /><br />
+      <a href="https://github.com/vitor0sousa">
+        <img src="https://img.shields.io/badge/GitHub-vitor0sousa-181717?style=for-the-badge&logo=github&logoColor=white" alt="Perfil de vitor0sousa no GitHub"/>
       </a>
     </td>
   </tr>
 </table>
 
+<br />
+
+<a href="https://github.com/sabortech/vet-tech/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sabortech/vet-tech" alt="Contribuidores do VetTech"/>
+</a>
+
+<sub>Feito com 💚 por quem acredita que todo pet merece um histórico de saúde completo 🐾</sub>
+
+</div>
+
+## 🐢 Nosso mascote
+<div align="center"> <table> <tr> <td align="center" width="280"> <img src="https://res.cloudinary.com/ke9kije9/image/upload/v1790866896/mascote04.jpg" width="220" alt="Mascote do VetTech com estetoscópio, acenando"/> <br /><br /> <b>O cuidador</b> <br /> <sub>Sempre pronto para receber tutores e pets de braços abertos.</sub> </td> <td align="center" width="280"> <img src="https://res.cloudinary.com/ke9kije9/image/upload/v1790867040/mascote01.jpg" width="220" alt="Mascote do VetTech com prancheta, anotando"/> <br /><br /> <b>O organizador</b> <br /> <sub>Cuida de cada anotação para o histórico do pet nunca se perder.</sub> </td> </tr> </table> <br />
+<i>Uma tartaruga atenta, calma e cuidadosa, como o prontuário que acompanha o pet por toda a vida.</i>
+
+</div>
+
+## 🎓 Instituição
+
+<div align="center">
+
+<a href="https://www.impacta.edu.br">
+  <img src="https://media.licdn.com/dms/image/v2/C4D0BAQEG8qandFQNjw/company-logo_200_200/company-logo_200_200/0/1630550349647/impacta_tecnologia_logo?e=2147483647&v=beta&t=lTZIrVJJfuwsdskCCvyYiH3z1lx6yA9wt74tIw2C35c" width="260" alt="Logo da Impacta"/>
+</a>
+
+<br /><br />
+
+### Faculdade Impacta e Tecnologia (FIT)
+
+*Projeto acadêmico desenvolvido com foco em tecnologia, inovação e aplicação prática.*
+
+<br />
+
+<a href="https://www.impacta.edu.br">
+  <img src="https://img.shields.io/badge/Site-impacta.edu.br-C8102E?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Site da Impacta"/>
+</a>
+<img src="https://img.shields.io/badge/Projeto-Acad%C3%AAmico-1C4EFF?style=for-the-badge&logo=bookstack&logoColor=white" alt="Projeto acadêmico"/>
+<img src="https://img.shields.io/badge/S%C3%A3o%20Paulo-SP-2EA44F?style=for-the-badge&logo=googlemaps&logoColor=white" alt="São Paulo, SP"/>
+
+</div>
+
+---
+
 ## 📄 Licença
 
 <!-- Defina a licença do projeto (ex.: MIT) -->
-Projeto desenvolvido para fins acadêmicos.
+© Projeto desenvolvido para fins acadêmicos.
+
+Faculdade Impacta e Tecnologia (FIT)
