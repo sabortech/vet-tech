@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "xano": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@xano/developer-mcp"
+      ]
+    }
+  }
+}

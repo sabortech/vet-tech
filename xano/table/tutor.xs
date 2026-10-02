@@ -1,5 +1,5 @@
 table tutor {
-  auth = false
+  auth = true
 
   schema {
     int id
@@ -9,10 +9,10 @@ table tutor {
   
     text nome? filters=trim
     text cpf filters=trim
-    email email? filters=trim|lower
+      email email filters=trim|lower
     text telefone? filters=trim
     text endereco? filters=trim
-    password senha? {
+      password password {
       sensitive = true
       visibility = "internal"
     }
@@ -21,6 +21,7 @@ table tutor {
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {type: "btree|unique", field: [{name: "email", op: "asc"}]}
   ]
 
   tags = ["vettech"]
