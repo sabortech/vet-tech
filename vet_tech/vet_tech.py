@@ -22,10 +22,13 @@ async def xano_request(
     form_data: Optional[dict[str, str]] = None,
     files: Optional[dict[str, tuple[str, bytes, str]]] = None,
 ) -> Any:
-    base_url = os.getenv("XANO_API_BASE_URL", "").rstrip("/")
+    base_url = os.getenv(
+        "XANO_API_BASE_URL",
+        "https://x8ki-letl-twmt.n7.xano.io",
+    ).rstrip("/")
     if not base_url:
         raise XanoRequestError("Configure XANO_API_BASE_URL para conectar ao Xano.")
-
+                
     headers = {}
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"

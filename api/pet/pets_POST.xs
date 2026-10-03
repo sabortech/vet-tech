@@ -1,4 +1,4 @@
-query "pets" verb=POST {
+query pets verb=POST {
   api_group = "Pet"
   auth = "tutor"
 
@@ -11,7 +11,7 @@ query "pets" verb=POST {
     int peso_atual?
     text cor_pelo? filters=trim
     int num_microchip?
-    file? foto
+    file? foto?
   }
 
   stack {
@@ -81,16 +81,17 @@ query "pets" verb=POST {
   }
 
   response = {
-    id         : $pet.id
-    nome       : $pet.nome
-    especie_id : $pet.especie_id
-    raca_id    : $pet.raca_id
-    sexo       : $pet.sexo
-    data_nasc  : $pet.data_nasc
-    peso_atual : $pet.peso_atual
-    cor_pelo   : $pet.cor_pelo
+    id           : $pet.id
+    nome         : $pet.nome
+    especie_id   : $pet.especie_id
+    raca_id      : $pet.raca_id
+    sexo         : $pet.sexo
+    data_nasc    : $pet.data_nasc
+    peso_atual   : $pet.peso_atual
+    cor_pelo     : $pet.cor_pelo
     num_microchip: $pet.num_microchip
-    tutor_id   : $pet.tutor_id
+    tutor_id     : $pet.tutor_id
   }
+
   guid = "QR7_QlgmV6JnQRwMbU4jvbkANkc"
 }

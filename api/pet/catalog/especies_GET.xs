@@ -8,8 +8,8 @@ query "catalog/especies" verb=GET {
   stack {
     db.query especie {
       sort = {nome: "asc"}
-      output = ["id", "nome"]
       return = {type: "list"}
+      output = ["id", "nome"]
     } as $especies
   }
 

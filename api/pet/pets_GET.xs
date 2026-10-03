@@ -1,4 +1,4 @@
-query "pets" verb=GET {
+query pets verb=GET {
   api_group = "Pet"
   auth = "tutor"
 
@@ -9,6 +9,7 @@ query "pets" verb=GET {
     db.query pet {
       where = $this.tutor_id == $auth.id
       sort = {created_at: "desc"}
+      return = {type: "list"}
       output = [
         "id"
         "nome"
@@ -21,7 +22,6 @@ query "pets" verb=GET {
         "num_microchip"
         "created_at"
       ]
-      return = {type: "list"}
     } as $pets
   }
 
