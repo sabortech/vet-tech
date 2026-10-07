@@ -9,8 +9,10 @@
 
 ## 2. Formulário no Reflex
 
-- [ ] 2.1 Adicionar o modo de cadastro acessível a partir do login, com nome, CPF, e-mail, telefone, endereço e senha; verificar que os campos obrigatórios e a validação antecipada do CPF dão feedback sem substituir a validação do servidor.
-- [ ] 2.2 Integrar o envio ao endpoint `tutor/signup`; testar estados de envio, erros recuperáveis, sucesso, limpeza da senha e retorno ao login sem autenticação automática.
+- [ ] 2.1 Extrair a composição da rota raiz para `vet_tech/pages/index.py` e mantê-la registrada pelo ponto de entrada `vet_tech/vet_tech.py`; verificar que a rota raiz continua carregando no build Reflex.
+- [ ] 2.2 Implementar o estado e os fluxos de login/cadastro em `vet_tech/features/auth/`, preservando uma única fonte de estado de sessão e a integração com o perfil e o carregamento dos pets; testar login e navegação para o perfil sem regressões.
+- [ ] 2.3 Criar em `vet_tech/components/` o formulário reutilizável de cadastro e conectá-lo à view de autenticação; verificar campos obrigatórios e feedback antecipado de CPF sem substituir validações do Xano.
+- [ ] 2.4 Integrar o envio ao endpoint `tutor/signup`; testar estados de envio, erros recuperáveis, sucesso, limpeza da senha e retorno ao login sem autenticação automática.
 
 ## 3. Verificação integrada
 

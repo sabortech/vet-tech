@@ -42,9 +42,13 @@ Alternativa considerada: manter campos sem obrigatoriedade no contrato e aceitar
 
 ### Apresentar cadastro e login como modos da mesma entrada
 
-Manter a entrada atual do app como ponto de acesso: um controle alterna entre o formulário de login e o de cadastro, sem definir layout visual. Após sucesso, limpar os dados de senha, mostrar confirmação e retornar ao login para autenticação manual. Em falha, mostrar o erro retornado e preservar os demais campos para permitir correção.
+Manter a rota raiz como ponto de acesso: um controle alterna entre os formulários de login e cadastro, sem definir layout visual. A composição da rota ficará em `vet_tech/pages/index.py`; a funcionalidade e o estado de autenticação/cadastro ficarão em `vet_tech/features/auth/`; componentes reutilizáveis do formulário ficarão em `vet_tech/components/`. `vet_tech/vet_tech.py` permanece como ponto de entrada Reflex e registra/importa as páginas.
+
+O cadastro e o login devem compartilhar uma única fonte de estado de sessão; não duplicar token ou autenticação entre módulos. A extração deve preservar a integração existente com o perfil e o carregamento de pets após o login. Após sucesso no cadastro, limpar os dados de senha, mostrar confirmação e retornar ao login para autenticação manual. Em falha, mostrar o erro retornado e preservar os demais campos para permitir correção.
 
 Alternativa considerada: autenticar automaticamente após criar a conta. Rejeitada conforme decisão do usuário; isso também exigiria que o endpoint emitisse token e alteraria o fluxo de sessão atual.
+
+Alternativa considerada: manter toda a tela, o estado e o formulário em `vet_tech.py`. Rejeitada para o novo fluxo porque concentra responsabilidades e contraria a organização documentada em `docs/architecture.md`. A extração será limitada aos módulos necessários e não exige reorganizar todo o código de pets nesta mudança.
 
 ### Evitar registrar dados de credenciais e identidade em logs
 
@@ -64,6 +68,7 @@ Alternativa considerada: usar o log genérico do quick start, que recebe o regis
 1. Verificar registros existentes em `tutor` para campos requeridos, CPFs inválidos/duplicados e compatibilidade do índice atual de e-mail.
 2. Corrigir ou tratar os registros que impediriam tornar os campos obrigatórios e criar o índice único de CPF.
 3. Implementar e validar o endpoint `tutor/signup` em ambiente de desenvolvimento antes de expô-lo ao Reflex.
-4. Integrar o formulário e verificar cadastro, duplicidades, erros e retorno à tela de login.
+4. Criar os módulos da página raiz, da funcionalidade de autenticação e dos componentes necessários, mantendo `vet_tech.py` como ponto de entrada; verificar imports e registro da rota raiz.
+5. Integrar o formulário ao cliente Xano existente e verificar cadastro, duplicidades, erros, retorno à tela de login e preservação do login e do perfil de pets.
 
 Se a verificação de dados apontar conflitos não resolvidos, não publicar a restrição nem o cadastro até decidir como corrigi-los. Para rollback, desabilitar o endpoint e o modo de cadastro; preservar contas existentes e não remover índices sem confirmar o impacto nas contas já criadas.
