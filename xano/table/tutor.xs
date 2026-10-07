@@ -7,11 +7,11 @@ table tutor {
       visibility = "private"
     }
   
-    text nome? filters=trim
+    text nome filters=trim
     text cpf filters=trim
       email email filters=trim|lower
-    text telefone? filters=trim
-    text endereco? filters=trim
+    text telefone filters=trim
+    text endereco filters=trim
       password password {
       sensitive = true
       visibility = "internal"
@@ -21,6 +21,7 @@ table tutor {
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {type: "btree|unique", field: [{name: "cpf", op: "asc"}]}
     {type: "btree|unique", field: [{name: "email", op: "asc"}]}
   ]
 

@@ -4,7 +4,7 @@
 
 Consulte `proposal.md` para a motivação e `specs/tutor-registration/spec.md` para os contratos. A aplicação Reflex já alterna entre login e perfil autenticado, e o cliente HTTP já consome endpoints do grupo `Authentication`. O endpoint `tutor/login` autentica pela tabela `tutor`; `auth/signup` é um exemplo do Xano que cria registros na tabela `user` e não serve para este fluxo.
 
-A tabela `tutor` já tem e-mail único e senha sensível, mas CPF ainda não tem índice único; nome, telefone e endereço são opcionais no schema atual. O domínio exige esses dados no cadastro. Não há capacidade correspondente em `openspec/specs/`, então esta mudança introduz uma nova especificação.
+A tabela `tutor` já tem e-mail único e senha sensível, mas CPF ainda não tem índice único; nome, telefone e endereço são opcionais no schema atual. O domínio exige esses dados no cadastro. A tabela foi confirmada vazia no ambiente de desenvolvimento antes das restrições, sem registros incompletos ou CPFs duplicados a tratar. Os artefatos oficiais do Xano ficam exclusivamente em `xano/`; a árvore XanoScript existente na raiz é uma duplicata legada e deve ser removida após transferir para a árvore oficial as alterações desta mudança. Não há capacidade correspondente em `openspec/specs/`, então esta mudança introduz uma nova especificação.
 
 ## Objetivos / Não objetivos
 
@@ -24,7 +24,7 @@ A tabela `tutor` já tem e-mail único e senha sensível, mas CPF ainda não tem
 
 ### Criar o tutor pela API própria, não pelo cadastro genérico
 
-Adicionar a operação `tutor/signup` no grupo `Authentication`, gravando na tabela `tutor`. O endpoint valida os campos no servidor e usa o campo `password` do modelo para persistir credenciais no formato seguro esperado pelo Xano. A resposta confirma o resultado sem devolver senha, hash ou dados pessoais desnecessários. O endpoint não cria token: o tutor entra depois pelo `tutor/login`.
+Adicionar a operação `tutor/signup` no grupo `Authentication`, gravando na tabela `tutor`. Os arquivos canônicos ficam em `xano/api/authentication/auth/` e `xano/table/tutor.xs`. O endpoint valida os campos no servidor e usa o campo `password` do modelo para persistir credenciais no formato seguro esperado pelo Xano. A resposta confirma o resultado sem devolver senha, hash ou dados pessoais desnecessários. O endpoint não cria token: o tutor entra depois pelo `tutor/login`.
 
 Alternativa considerada: reutilizar `auth/signup`. Rejeitada porque esse endpoint cria a identidade em `user`, enquanto o perfil e as operações protegidas usam `tutor`.
 
@@ -65,10 +65,11 @@ Alternativa considerada: usar o log genérico do quick start, que recebe o regis
 
 ## Plano de migração
 
-1. Verificar registros existentes em `tutor` para campos requeridos, CPFs inválidos/duplicados e compatibilidade do índice atual de e-mail.
-2. Corrigir ou tratar os registros que impediriam tornar os campos obrigatórios e criar o índice único de CPF.
-3. Implementar e validar o endpoint `tutor/signup` em ambiente de desenvolvimento antes de expô-lo ao Reflex.
-4. Criar os módulos da página raiz, da funcionalidade de autenticação e dos componentes necessários, mantendo `vet_tech.py` como ponto de entrada; verificar imports e registro da rota raiz.
-5. Integrar o formulário ao cliente Xano existente e verificar cadastro, duplicidades, erros, retorno à tela de login e preservação do login e do perfil de pets.
+1. Verificar registros existentes em `xano/table/tutor.xs` para campos requeridos, CPFs inválidos/duplicados e compatibilidade do índice atual de e-mail.
+2. Corrigir ou tratar os registros que impediriam tornar os campos obrigatórios e criar o índice único de CPF em `xano/table/tutor.xs`.
+3. Implementar e validar `tutor/signup` em `xano/api/authentication/auth/` em ambiente de desenvolvimento antes de expô-lo ao Reflex.
+4. Consolidar as alterações desta mudança na árvore canônica `xano/` e remover as cópias XanoScript da raiz, sem remover recursos não Xano.
+5. Criar os módulos da página raiz, da funcionalidade de autenticação e dos componentes necessários, mantendo `vet_tech.py` como ponto de entrada; verificar imports e registro da rota raiz.
+6. Integrar o formulário ao cliente Xano existente e verificar cadastro, duplicidades, erros, retorno à tela de login e preservação do login e do perfil de pets.
 
 Se a verificação de dados apontar conflitos não resolvidos, não publicar a restrição nem o cadastro até decidir como corrigi-los. Para rollback, desabilitar o endpoint e o modo de cadastro; preservar contas existentes e não remover índices sem confirmar o impacto nas contas já criadas.

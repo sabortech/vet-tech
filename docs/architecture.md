@@ -23,7 +23,7 @@ tests/
 ├── unit/
 └── integration/
 
-xano/                       # artefatos XanoScript do backend
+xano/                       # fonte única e autoritativa dos artefatos XanoScript
 docs/                       # documentação durável do projeto
 openspec/                   # propostas, especificações, designs e tarefas
 ```
@@ -70,7 +70,8 @@ separadas por domínio sem exigir uma migração total imediata. Ao extrair um
 módulo, preservar os fluxos existentes e verificar imports, registro de rotas
 e build do Reflex.
 
-O repositório contém diretórios XanoScript na raiz e também dentro de `xano/`.
-Até confirmar qual localização é a fonte oficial usada pelo fluxo de trabalho,
-não mover nem apagar esses arquivos e não manter novas cópias sincronizadas
-manualmente.
+Os artefatos XanoScript oficiais ficam somente em `xano/`. Não criar nem manter
+cópias de `api/`, `table/`, `function/`, `workspace/`, `addon/` ou `ai/` na raiz.
+Se arquivos XanoScript aparecerem na raiz, consolidar suas alterações com a
+versão autoritativa em `xano/` antes de remover a cópia; não manter duas árvores
+de workspace.
