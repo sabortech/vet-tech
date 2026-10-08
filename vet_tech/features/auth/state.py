@@ -19,6 +19,14 @@ class State(rx.State):
     is_registering: bool = False
     signup_message: str = ""
     signup_cpf: str = ""
+    registration_name: str = ""
+    registration_email: str = ""
+    registration_cpf: str = ""
+    registration_phone: str = ""
+    registration_password: str = ""
+    registration_password_confirmation: str = ""
+    registration_terms_accepted: bool = True
+    registration_remember_info: bool = True
     pet_message: str = ""
     is_loading_pets: bool = False
     pet_name: str = ""
@@ -59,6 +67,42 @@ class State(rx.State):
     def set_signup_cpf(self, value: str):
         self.signup_cpf = value
         self.signup_message = ""
+
+    @rx.event
+    def set_registration_name(self, value: str):
+        self.registration_name = value
+
+    @rx.event
+    def set_registration_email(self, value: str):
+        self.registration_email = value
+
+    @rx.event
+    def set_registration_cpf(self, value: str):
+        self.registration_cpf = value
+
+    @rx.event
+    def set_registration_phone(self, value: str):
+        self.registration_phone = value
+
+    @rx.event
+    def set_registration_password(self, value: str):
+        self.registration_password = value
+
+    @rx.event
+    def set_registration_password_confirmation(self, value: str):
+        self.registration_password_confirmation = value
+
+    @rx.event
+    def set_registration_terms_accepted(self, value: bool):
+        self.registration_terms_accepted = value
+
+    @rx.event
+    def set_registration_remember_info(self, value: bool):
+        self.registration_remember_info = value
+
+    @rx.event
+    def continue_registration(self):
+        pass
 
     @rx.event
     def set_pet_name(self, value: str):

@@ -31,6 +31,30 @@ def make_state():
 
 
 class AuthStateTests(unittest.IsolatedAsyncioTestCase):
+    def test_registration_fields_keep_independent_state(self):
+        state = make_state()
+
+        State.set_registration_name.fn(state, "Ana Silva")
+        State.set_registration_email.fn(state, "ana@example.com")
+        State.set_registration_cpf.fn(state, "52998224725")
+        State.set_registration_phone.fn(state, "11999999999")
+        State.set_registration_password.fn(state, "secret")
+        State.set_registration_password_confirmation.fn(state, "secret")
+        State.set_registration_terms_accepted.fn(state, False)
+        State.set_registration_remember_info.fn(state, False)
+
+        self.assertEqual(state.registration_name, "Ana Silva")
+        self.assertEqual(state.registration_email, "ana@example.com")
+        self.assertEqual(state.registration_cpf, "52998224725")
+        self.assertEqual(state.registration_phone, "11999999999")
+        self.assertEqual(state.registration_password, "secret")
+        self.assertEqual(state.registration_password_confirmation, "secret")
+        self.assertFalse(state.registration_terms_accepted)
+        self.assertFalse(state.registration_remember_info)
+        self.assertEqual(state.signup_cpf, "")
+
+        self.assertIsNone(State.continue_registration.fn(state))
+
     async def test_signup_success_returns_to_login_without_authentication(self):
         state = make_state()
         state.is_registering = True
