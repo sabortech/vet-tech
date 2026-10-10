@@ -23,16 +23,16 @@ query "tutor/signup" verb=POST {
       error = "Preencha todos os campos obrigatórios."
     }
 
-    precondition ($input.cpf|regex_test:"^[0-9. -]+$") {
+    precondition ("/^[0-9. -]+$/"|regex_matches:$input.cpf) {
       error_type = "inputerror"
       error = "Informe um CPF válido."
     }
 
     var $cpf_digits {
-      value = $input.cpf|regex_replace:"[^0-9]":""
+      value = "/[^0-9]/"|regex_replace:"":$input.cpf
     }
 
-    precondition ($cpf_digits|regex_test:"^[0-9]{11}$") {
+    precondition ("/^[0-9]{11}$/"|regex_matches:$cpf_digits) {
       error_type = "inputerror"
       error = "Informe um CPF válido."
     }

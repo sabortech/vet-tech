@@ -34,6 +34,8 @@ Aceitar CPF com ou sem pontuação, normalizar para os 11 dígitos e validar os 
 
 Alternativa considerada: consultar duplicidade somente antes de inserir. Rejeitada porque duas requisições concorrentes poderiam passar pela consulta; a restrição no armazenamento fecha essa condição de corrida.
 
+Na verificação do cadastro foi encontrado um defeito na chamada dos filtros de regex do XanoScript: as expressões de validação usavam o texto do CPF no lugar da expressão regular, e a normalização passava os argumentos de `regex_replace` em ordem inversa. Além disso, o validador do projeto não reconhece o alias `regex_test` usado no endpoint. O endpoint deve usar o padrão documentado com a expressão regular à esquerda (`regex_matches`/`regex_replace`) e o CPF como texto de entrada; assim, o backend remove pontuação antes de exigir 11 dígitos e executar a validação dos verificadores.
+
 ### Exigir os campos definidos pelo domínio no cadastro
 
 O endpoint exige nome, CPF, e-mail, telefone, endereço e senha. Antes de tornar `nome`, `telefone` e `endereco` obrigatórios no schema, verificar registros existentes e planejar correção ou migração de dados incompletos. CPF também deve ser verificado quanto a duplicidades antes do índice único. E-mail é normalizado pelo modelo existente.
@@ -61,6 +63,7 @@ Alternativa considerada: usar o log genérico do quick start, que recebe o regis
 - **[Risco]** Registros existentes podem não ter nome, telefone ou endereço, ou podem conter CPF duplicado → **Mitigação:** auditar a base antes de apertar restrições; corrigir dados ou realizar a migração necessária antes de publicar o endpoint.
 - **[Risco]** Mensagens que distinguem CPF ou e-mail já cadastrado podem revelar existência de conta → **Mitigação:** expor somente o campo que precisa de correção, sem retornar dados da conta; avaliar proteção contra abuso no ambiente de implantação.
 - **[Risco]** Validação de CPF apenas no navegador pode ser contornada → **Mitigação:** validar e normalizar no endpoint, com unicidade garantida também pelo índice.
+- **[Risco]** Uma expressão de regex aceita pelo editor, mas chamada com argumentos na ordem errada ou alias não reconhecido, pode rejeitar CPFs válidos → **Mitigação:** usar a assinatura documentada dos filtros e validar todos os arquivos XanoScript no projeto; confirmar o comportamento funcional no ambiente Xano antes da publicação.
 - **[Risco]** Reutilizar acidentalmente o endpoint de quick start criaria usuário fora do domínio → **Mitigação:** testar que o novo fluxo cria somente em `tutor` e não em `user`.
 
 ## Plano de migração

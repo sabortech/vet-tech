@@ -29,4 +29,4 @@ Nenhuma.
 - **XanoScript:** novo endpoint na API de autenticação e ajuste da unicidade do CPF na tabela `tutor`; o endpoint existente `auth/signup`, que cria registros em `user`, não será usado.
 - **Privacidade:** o fluxo cria e valida dados pessoais do tutor, incluindo CPF e contato. Senhas e hashes não devem ser retornados nem expostos em mensagens; esta mudança não acessa prontuários de pets nem altera autorização veterinária ou auditoria clínica.
 - **Notificações:** não há impacto em notificações automáticas.
-- **Verificação:** validar os cenários de cadastro, campos inválidos, CPF inválido ou duplicado, e-mail duplicado, falha de serviço e retorno ao login.
+- **Verificação:** validar os cenários de cadastro, campos inválidos, CPF inválido ou duplicado, e-mail duplicado, falha de serviço e retorno ao login; verificar que os filtros de regex do XanoScript aceitam CPF formatado e sem pontuação, normalizam a entrada e rejeitam caracteres inválidos.

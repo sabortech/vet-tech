@@ -12,15 +12,17 @@ LARGURA_FORMULARIO = "320px"
 
 def campo_texto(
     placeholder: str,
-    value: Any,
-    on_change: Any,
+    name: str,
     input_type: str = "text",
+    **props: Any,
 ) -> rx.Component:
+    autocomplete = props.pop("auto_complete", "off")
     return rx.input(
         placeholder=placeholder,
         type=input_type,
-        value=value,
-        on_change=on_change,
+        name=name,
+        required=True,
+        custom_attrs={"aria-label": placeholder, "autoComplete": autocomplete},
         width="100%",
         height="44px",
         padding_x="14px",
@@ -32,14 +34,15 @@ def campo_texto(
         font_size="14px",
         outline="none",
         _focus={"border": f"1.5px solid {VERDE}", "box_shadow": "none"},
+        **props,
     )
 
 
 def botao_primario() -> rx.Component:
     return rx.button(
-        "Próxima Etapa",
-        type="button",
-        on_click=State.continue_registration,
+        rx.cond(State.is_busy, "Cadastrando…", "Cadastrar"),
+        type="submit",
+        disabled=State.is_busy,
         width="100%",
         height="36px",
         padding="0",
@@ -52,27 +55,6 @@ def botao_primario() -> rx.Component:
         font_weight="600",
         cursor="pointer",
         _hover={"background": "#5D874A"},
-    )
-
-
-def checkbox_labeled(label: str, checked: Any, on_change: Any) -> rx.Component:
-    return rx.hstack(
-        rx.checkbox(
-            checked=checked,
-            on_change=on_change,
-            color_scheme="green",
-            size="1",
-        ),
-        rx.text(
-            label,
-            color=VERDE_ESCURO,
-            font_family="Nunito",
-            font_size="11px",
-            line_height="1.35",
-        ),
-        width="100%",
-        align="center",
-        spacing="2",
     )
 
 
@@ -95,7 +77,7 @@ def botao_google() -> rx.Component:
             width="18px",
             height="18px",
         ),
-        rx.text("Entrar com Google", font_family="Nunito", font_size="14px"),
+        rx.text("Google — em breve", font_family="Nunito", font_size="14px"),
         width="100%",
         height="36px",
         display="flex",
@@ -108,39 +90,33 @@ def botao_google() -> rx.Component:
         border="1px solid #333333",
         border_radius="999px",
         font_weight="400",
-        cursor="pointer",
+        disabled=True,
+        title="Cadastro com Google ainda indisponível",
     )
 
 
 def conteudo_cadastro() -> rx.Component:
-    formulario = rx.vstack(
-        campo_texto(
-            "Nome completo", State.registration_name, State.set_registration_name
+    formulario = rx.form(
+        rx.vstack(
+            campo_texto("Nome completo", "nome", auto_complete="name"),
+            campo_texto("E-mail", "email", "email", auto_complete="email"),
+            campo_texto("CPF", "cpf", value=State.signup_cpf,
+                        on_change=State.set_signup_cpf, max_length=14),
+            rx.text(State.signup_cpf_feedback, role="status", font_size="12px"),
+            campo_texto("Telefone", "telefone", "tel", auto_complete="tel"),
+            campo_texto("Endereço", "endereco", auto_complete="street-address"),
+            campo_texto("Senha", "password", "password", auto_complete="new-password"),
+            campo_texto("Confirmar Senha", "password_confirmation", "password",
+                        auto_complete="new-password"),
+            rx.text(State.signup_message, role="alert", color=VERDE_ESCURO,
+                    font_size="13px", width="100%"),
+            botao_primario(),
+            width="100%",
+            spacing="2",
         ),
-        campo_texto(
-            "E-mail",
-            State.registration_email,
-            State.set_registration_email,
-            "email",
-        ),
-        campo_texto("CPF", State.registration_cpf, State.set_registration_cpf),
-        campo_texto(
-            "Telefone", State.registration_phone, State.set_registration_phone, "tel"
-        ),
-        campo_texto(
-            "Senha",
-            State.registration_password,
-            State.set_registration_password,
-            "password",
-        ),
-        campo_texto(
-            "Confirmar Senha",
-            State.registration_password_confirmation,
-            State.set_registration_password_confirmation,
-            "password",
-        ),
+        on_submit=State.signup,
+        reset_on_submit=False,
         width="100%",
-        spacing="2",
     )
 
     painel_formulario = rx.vstack(
@@ -181,22 +157,6 @@ def conteudo_cadastro() -> rx.Component:
             width="100%",
         ),
         formulario,
-        rx.vstack(
-            checkbox_labeled(
-                "Li e aceito os Termos de Uso e a Política de Privacidade.",
-                State.registration_terms_accepted,
-                State.set_registration_terms_accepted,
-            ),
-            checkbox_labeled(
-                "Lembrar das minhas informações?",
-                State.registration_remember_info,
-                State.set_registration_remember_info,
-            ),
-            width="100%",
-            spacing="1",
-            align="start",
-        ),
-        botao_primario(),
         divisor_ou(),
         botao_google(),
         rx.link(
@@ -247,9 +207,12 @@ def conteudo_cadastro() -> rx.Component:
                     height="100%",
                     object_fit="contain",
                     object_position="center",
+                    position="absolute",
+                    inset="0",
                 ),
                 width="50%",
-                height="100%",
+                align_self="stretch",
+                position="relative",
                 background="#80A85C",
                 background_image="url('/fundo_mar.jpeg')",
                 background_size="cover",
@@ -269,8 +232,8 @@ def conteudo_cadastro() -> rx.Component:
         align_items="center",
         justify_content="center",
         width="min(1040px, calc(100vw - 32px))",
-        height="870px",
-        min_height="870px",
+        height="auto",
+        min_height="auto",
         overflow="hidden",
         border_radius="32px",
         background="white",
@@ -281,7 +244,7 @@ def conteudo_cadastro() -> rx.Component:
 def cadastro() -> rx.Component:
     return rx.box(
         conteudo_cadastro(),
-        min_height="max(100vh, 902px)",
+        min_height="100vh",
         width="100%",
         display="flex",
         align_items="center",

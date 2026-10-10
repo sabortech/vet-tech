@@ -30,30 +30,54 @@ def make_state():
     return state
 
 
+async def submit_signup(state, data):
+    return [event async for event in State.signup.fn(state, data)]
+
+
 class AuthStateTests(unittest.IsolatedAsyncioTestCase):
-    def test_registration_fields_keep_independent_state(self):
+    async def test_password_confirmation_and_required_fields_block_api(self):
+        data = {
+            "nome": "Ana Silva", "cpf": "52998224725",
+            "email": "ana@example.invalid", "telefone": "11999999999",
+            "endereco": "Rua A", "password": "secret",
+            "password_confirmation": "secret",
+        }
+        cases = [dict(data, password_confirmation="different"),
+                 {key: value for key, value in data.items() if key != "password_confirmation"},
+                 dict(data, endereco="")]
+        for case in cases:
+            with self.subTest(case=list(case)):
+                state = make_state()
+                with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock) as request:
+                    await submit_signup(state, case)
+                request.assert_not_awaited()
+                self.assertTrue(state.signup_message)
+                self.assertFalse(state.is_busy)
+
+    async def test_busy_state_is_sent_before_api_and_blocks_repeat(self):
         state = make_state()
+        data = {
+            "nome": "Ana Silva", "cpf": "52998224725",
+            "email": "ana@example.invalid", "telefone": "11999999999",
+            "endereco": "Rua A", "password": "secret",
+            "password_confirmation": "secret",
+        }
+        with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock) as request:
+            pending = State.signup.fn(state, data)
+            await pending.__anext__()
+            self.assertTrue(state.is_busy)
+            request.assert_not_awaited()
+            await submit_signup(state, data)
+            request.assert_not_awaited()
+            events = [event async for event in pending]
+        request.assert_awaited_once()
+        self.assertFalse(state.is_busy)
+        self.assertTrue(events)
 
-        State.set_registration_name.fn(state, "Ana Silva")
-        State.set_registration_email.fn(state, "ana@example.com")
-        State.set_registration_cpf.fn(state, "52998224725")
-        State.set_registration_phone.fn(state, "11999999999")
-        State.set_registration_password.fn(state, "secret")
-        State.set_registration_password_confirmation.fn(state, "secret")
-        State.set_registration_terms_accepted.fn(state, False)
-        State.set_registration_remember_info.fn(state, False)
-
-        self.assertEqual(state.registration_name, "Ana Silva")
-        self.assertEqual(state.registration_email, "ana@example.com")
-        self.assertEqual(state.registration_cpf, "52998224725")
-        self.assertEqual(state.registration_phone, "11999999999")
-        self.assertEqual(state.registration_password, "secret")
-        self.assertEqual(state.registration_password_confirmation, "secret")
-        self.assertFalse(state.registration_terms_accepted)
-        self.assertFalse(state.registration_remember_info)
-        self.assertEqual(state.signup_cpf, "")
-
-        self.assertIsNone(State.continue_registration.fn(state))
+    def test_login_registration_entry_redirects_to_single_route(self):
+        state = make_state()
+        event = State.show_signup.fn(state)
+        self.assertEqual(event.args[0][1]._var_value, "/cadastro")
 
     async def test_signup_success_returns_to_login_without_authentication(self):
         state = make_state()
@@ -66,13 +90,14 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
             "telefone": "(11) 99999-9999",
             "endereco": " Rua A, 10 ",
             "password": "secret",
+            "password_confirmation": "secret",
         }
 
         with patch(
             "vet_tech.features.auth.state.xano_request",
             new_callable=AsyncMock,
         ) as request:
-            await State.signup.fn(state, form_data)
+            events = await submit_signup(state, form_data)
 
         request.assert_awaited_once_with(
             "POST",
@@ -93,6 +118,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(state.signup_cpf, "")
         self.assertIn("Cadastro realizado", state.login_message)
         self.assertFalse(state.is_busy)
+        self.assertEqual(events[-1].args[0][1]._var_value, "/login")
 
     async def test_signup_failure_keeps_registration_open_and_displays_error(self):
         state = make_state()
@@ -104,7 +130,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
             new_callable=AsyncMock,
             side_effect=XanoRequestError("E-mail já cadastrado."),
         ) as request:
-            await State.signup.fn(
+            await submit_signup(
                 state,
                 {
                     "nome": "Ana Silva",
@@ -113,6 +139,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
                     "telefone": "11999999999",
                     "endereco": "Rua A, 10",
                     "password": "secret",
+                    "password_confirmation": "secret",
                 },
             )
 
@@ -128,7 +155,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         state.is_registering = True
 
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock) as request:
-            await State.signup.fn(
+            await submit_signup(
                 state,
                 {
                     "nome": "Ana Silva",
@@ -137,6 +164,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
                     "telefone": "11999999999",
                     "endereco": "Rua A, 10",
                     "password": "secret",
+                    "password_confirmation": "secret",
                 },
             )
 

@@ -24,9 +24,17 @@ O sistema SHALL normalizar o CPF para dígitos, validar seu formato e dígitos v
 - **WHEN** uma pessoa informa um CPF com 11 dígitos válidos e sem conta existente
 - **THEN** o sistema permite prosseguir com o cadastro usando o CPF normalizado
 
+#### Scenario: CPF válido com pontuação
+- **WHEN** uma pessoa informa um CPF válido formatado ou somente com dígitos
+- **THEN** o backend remove a pontuação, valida os 11 dígitos e permite prosseguir com o CPF normalizado
+
 #### Scenario: CPF com formato ou dígitos verificadores inválidos
 - **WHEN** uma pessoa informa um CPF inválido
 - **THEN** o sistema rejeita o cadastro e indica que o CPF precisa ser corrigido
+
+#### Scenario: CPF com caracteres fora do formato aceito
+- **WHEN** uma pessoa informa letras ou pontuação fora do formato de CPF
+- **THEN** o sistema rejeita o cadastro sem criar uma conta
 
 #### Scenario: CPF já cadastrado
 - **WHEN** uma pessoa informa um CPF que já pertence a uma conta
