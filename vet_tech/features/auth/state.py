@@ -49,6 +49,8 @@ class State(rx.State):
         self.is_registering = True
         self.login_message = ""
         self.signup_message = ""
+        self.signup_cpf = ""
+        return rx.redirect("/cadastro")
 
     @rx.event
     def show_login(self):
@@ -121,6 +123,8 @@ class State(rx.State):
 
     @rx.event
     async def signup(self, form_data: dict[str, Any]):
+        if self.is_busy:
+            return
         nome = str(form_data.get("nome", "")).strip()
         cpf = normalize_cpf(str(form_data.get("cpf", "")))
         email = str(form_data.get("email", "")).strip().lower()
@@ -135,8 +139,13 @@ class State(rx.State):
             self.signup_message = "Informe um CPF válido."
             return
 
+        if password != str(form_data.get("password_confirmation", "")):
+            self.signup_message = "As senhas não coincidem."
+            return
+
         self.is_busy = True
         self.signup_message = ""
+        yield
         try:
             await xano_request(
                 "POST",
@@ -157,6 +166,7 @@ class State(rx.State):
             self.is_registering = False
             self.signup_cpf = ""
             self.login_message = "Cadastro realizado. Entre com seu e-mail e senha."
+            yield rx.redirect("/login")
         finally:
             self.is_busy = False
 
