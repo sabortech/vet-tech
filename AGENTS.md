@@ -67,6 +67,8 @@ consultar os documentos de contexto do projeto.
 ```text
 Respeitar as tecnologias definidas no projeto.
 Não introduzir tecnologias alternativas sem justificativa.
+Antes de criar ou mover módulos da aplicação, consultar
+`docs/architecture.md` e seguir a estrutura recomendada de forma gradual.
 ```
 
 ### Código
