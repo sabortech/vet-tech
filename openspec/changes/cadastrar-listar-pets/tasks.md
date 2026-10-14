@@ -20,4 +20,10 @@
 
 ## 4. Verificação integrada
 
-- [x] 4.1 Executar verificações ponta a ponta com dois tutores e confirmar que cada um cadastra e lista somente seus pets, incluindo os catálogos, tentativa de manipular identificadores, credenciais inválidas, raça incompatível e ausência de edição. A validação do escopo foi concluída no contrato, no fluxo autenticado e no build do Reflex; a execução real com dois tutores exige um ambiente Xano com `XANO_API_BASE_URL` configurado e dados de teste ligados ao domínio.
+- [ ] 4.1 Executar verificações ponta a ponta com dois tutores e confirmar que cada um cadastra e lista somente seus pets, incluindo os catálogos, tentativa de manipular identificadores, credenciais inválidas, raça incompatível e ausência de edição. Pendente: os testes locais e a leitura do contrato não comprovam isolamento na API publicada; a execução real requer duas contas autenticadas e dados de teste no Xano.
+
+## 5. Correção da listagem
+
+- [x] 5.1 Exibir pets com raça e demais campos opcionais vazios; não consultar raças para pets SRD e preservar a lista se o catálogo de raças falhar.
+- [x] 5.2 Manter o login válido e carregar pets quando o catálogo de espécies falhar; limpar dados da sessão anterior antes de carregar a nova identidade.
+- [x] 5.3 Verificar regressões de cadastro seguido de listagem, falhas de catálogos, lista vazia e troca de sessão; executar testes unitários e compilação do Reflex.

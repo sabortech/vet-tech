@@ -49,6 +49,17 @@ Alternativa considerada: criar uma operação genérica de manutenção de pets 
 
 ## Risks / Trade-offs
 
+### Correção da listagem após cadastro
+
+A apresentação dos pets não deve depender do sucesso de consultas auxiliares
+de catálogo. Consultar raças somente para espécies de pets com `raca_id`
+informado; raça ausente permanece SRD. Se um catálogo falhar, exibir os pets
+recebidos com nomes genéricos para os vínculos não resolvidos e informar a
+falha. Uma falha ao carregar espécies não invalida credenciais já autenticadas.
+Limpar pets e catálogos ao estabelecer uma nova sessão evita reutilizar dados
+de outra identidade quando o carregamento falhar. O filtro de propriedade
+continua no backend, derivado de `$auth.id`.
+
 - [A tabela `tutor` já contém dados e não está autenticável] -> Verificar duplicidades de e-mail e a compatibilidade das senhas existentes antes de ativar autenticação; testar login e criação de token em ambiente de desenvolvimento.
 - [O projeto possui endpoints genéricos que usam `user`] -> Não reutilizá-los para autorização de pets; confirmar que os endpoints novos recebem identidade autenticada da tabela `tutor`.
 - [Campos opcionais atuais podem divergir das regras do domínio] -> Tornar obrigatórios apenas nome, espécie e proprietário neste fluxo; tratar raça opcional e preservar os campos complementares do domínio.
