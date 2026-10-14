@@ -8,8 +8,8 @@ query "catalog/racas" verb=GET {
 
   stack {
     db.query raca {
-      where = $this.especie_id == $input.especie_id
-      sort = {nome: "asc"}
+      where = $db.raca.especie_id == $input.especie_id
+      sort = {raca.nome: "asc"}
       output = ["id", "nome", "especie_id"]
       return = {type: "list"}
     } as $racas

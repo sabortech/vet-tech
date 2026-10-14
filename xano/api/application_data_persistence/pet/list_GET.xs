@@ -7,8 +7,8 @@ query "pets" verb=GET {
 
   stack {
     db.query pet {
-      where = $this.tutor_id == $auth.id
-      sort = {created_at: "desc"}
+      where = $db.pet.tutor_id == $auth.id
+      sort = {pet.created_at: "desc"}
       output = [
         "id"
         "nome"
