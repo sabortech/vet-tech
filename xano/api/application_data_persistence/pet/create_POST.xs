@@ -11,7 +11,7 @@ query "pets" verb=POST {
     int peso_atual?
     text cor_pelo? filters=trim
     int num_microchip?
-    file? foto
+    file? foto?
   }
 
   stack {

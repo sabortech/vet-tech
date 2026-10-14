@@ -25,6 +25,12 @@ Alternativa considerada: autenticar pela tabela genérica `user` e manter uma as
 
 ### Derivar a propriedade no backend
 
+Nas consultas `db.query`, referenciar as colunas por `$db.<tabela>.<campo>`.
+A listagem usa `$db.pet.tutor_id == $auth.id`; o catálogo de raças usa
+`$db.raca.especie_id == $input.especie_id`. `$this` não representa a coluna
+nessas consultas. Ordenação usa os nomes qualificados `pet.created_at` e
+`raca.nome`, conforme o contrato do XanoScript.
+
 No cadastro, definir `pet.tutor_id` a partir do tutor autenticado; não aceitar que o cliente escolha o proprietário. Na listagem, aplicar o filtro de `tutor_id` no backend usando a mesma identidade. Isso impede associação indevida e acesso cruzado mesmo que o cliente altere parâmetros.
 
 Alternativa considerada: receber o identificador do tutor no formulário ou na query de listagem. Um identificador controlado pelo cliente não comprova propriedade.
@@ -43,11 +49,27 @@ Alternativa considerada: manter uma lista de espécies/raças fixa no frontend o
 
 ### Separar operações de criação e listagem
 
+Para o teste sem upload no plano atual, o parâmetro `foto` do cadastro deve
+ser opcional e aceitar ausência (`file? foto?`). Sem esse parâmetro, a criação
+mantém `foto = null` e não executa `storage.create_image`. A solução de envio
+de imagens será tratada em outra change, conforme solicitado pelo usuário.
+
 Expor comportamentos de criação e listagem protegidos por autenticação, sem operação de atualização ou exclusão nesta etapa. A listagem pode retornar estado vazio quando o tutor ainda não possui pets. A interface Reflex apenas consumirá esses comportamentos e apresentará feedback funcional; decisões de layout ficam para uma proposta futura.
 
 Alternativa considerada: criar uma operação genérica de manutenção de pets desde já. Isso ampliaria a superfície de autorização e contrariaria o recorte acordado.
 
 ## Risks / Trade-offs
+
+### Correção da listagem após cadastro
+
+A apresentação dos pets não deve depender do sucesso de consultas auxiliares
+de catálogo. Consultar raças somente para espécies de pets com `raca_id`
+informado; raça ausente permanece SRD. Se um catálogo falhar, exibir os pets
+recebidos com nomes genéricos para os vínculos não resolvidos e informar a
+falha. Uma falha ao carregar espécies não invalida credenciais já autenticadas.
+Limpar pets e catálogos ao estabelecer uma nova sessão evita reutilizar dados
+de outra identidade quando o carregamento falhar. O filtro de propriedade
+continua no backend, derivado de `$auth.id`.
 
 - [A tabela `tutor` já contém dados e não está autenticável] -> Verificar duplicidades de e-mail e a compatibilidade das senhas existentes antes de ativar autenticação; testar login e criação de token em ambiente de desenvolvimento.
 - [O projeto possui endpoints genéricos que usam `user`] -> Não reutilizá-los para autorização de pets; confirmar que os endpoints novos recebem identidade autenticada da tabela `tutor`.

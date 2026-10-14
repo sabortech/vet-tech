@@ -112,7 +112,16 @@ class State(rx.State):
 
             self._auth_token = str(token)
             self.is_authenticated = True
-            await self._load_species()
+            self.pets = []
+            self.species_options = []
+            self.breed_options = []
+            self.selected_species_id = ""
+            self.selected_breed_id = ""
+            self.pet_message = ""
+            try:
+                await self._load_species()
+            except XanoRequestError as error:
+                self.pet_message = f"Não foi possível carregar as espécies: {error}"
             await self._load_pets()
         except XanoRequestError as error:
             self._auth_token = ""
@@ -236,12 +245,17 @@ class State(rx.State):
                 {
                     str(item.get("especie_id"))
                     for item in result or []
-                    if item.get("especie_id") is not None
+                    if item.get("especie_id") and item.get("raca_id")
                 }
             )
             breed_names: dict[str, str] = {}
             for species_id in species_ids:
-                for breed in await self._load_breeds(species_id):
+                try:
+                    breeds = await self._load_breeds(species_id)
+                except XanoRequestError as error:
+                    self.pet_message = f"Pets carregados, mas não foi possível consultar as raças: {error}"
+                    continue
+                for breed in breeds:
                     breed_names[breed["id"]] = breed["nome"]
 
             self.pets = [
@@ -258,7 +272,7 @@ class State(rx.State):
                     ),
                     "sexo": str(item.get("sexo") or ""),
                     "data_nasc": str(item.get("data_nasc") or ""),
-                    "peso_atual": str(item.get("peso_atual") or ""),
+                    "peso_atual": str(item["peso_atual"]) if item.get("peso_atual") is not None else "",
                 }
                 for item in result or []
             ]
