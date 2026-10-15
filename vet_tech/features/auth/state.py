@@ -32,7 +32,58 @@ class State(rx.State):
     species_options: list[dict[str, str]] = []
     breed_options: list[dict[str, str]] = []
     pets: list[dict[str, str]] = []
+    selected_pet: dict[str, str] = {}
+    pet_target_id: str = ""
+    pet_detail_message: str = ""
+    is_loading_pet: bool = False
     _auth_token: str = ""
+    _session_generation: int = 0
+    _pet_context_generation: int = 0
+    _pet_list_generation: int = 0
+
+    @rx.var
+    def selected_pet_id(self) -> str:
+        """Validated pet context for future per-pet features; never a pending ID."""
+        return self.selected_pet.get("id", "")
+
+    def _clear_pet_context(self):
+        """Invalidate all pet-scoped data and pending work in one place.
+
+        Future clinical features must clear their pet-scoped state here and
+        check the same session/context generation before accepting responses.
+        """
+        self._pet_context_generation += 1
+        self.selected_pet = {}
+        self.pet_target_id = ""
+        self.pet_detail_message = ""
+        self.is_loading_pet = False
+
+    def _clear_session(self):
+        self._session_generation += 1
+        self._pet_list_generation += 1
+        self._clear_pet_context()
+        self._auth_token = ""
+        self.is_authenticated = False
+        self.pets = []
+        self.species_options = []
+        self.breed_options = []
+        self.selected_species_id = ""
+        self.selected_breed_id = ""
+        self.pet_message = ""
+        self.is_loading_pets = False
+        self.is_busy = False
+
+    def _pet_request_is_current(self, generation: int, session: int, token: str) -> bool:
+        return (
+            generation == self._pet_context_generation
+            and session == self._session_generation
+            and token == self._auth_token
+            and bool(token)
+        )
+
+    def _expire_session(self):
+        self._clear_session()
+        self.login_message = "Sua sessão expirou. Entre novamente."
 
     @rx.var
     def has_pets(self) -> bool:
@@ -94,8 +145,10 @@ class State(rx.State):
             self.login_message = "Informe e-mail e senha."
             return
 
-        self.is_busy = True
         self.login_message = ""
+        self._clear_session()
+        self.is_busy = True
+        session = self._session_generation
         try:
             result = await xano_request(
                 "POST",
@@ -107,6 +160,8 @@ class State(rx.State):
                 },
             )
             token = result.get("authToken") if isinstance(result, dict) else None
+            if session != self._session_generation:
+                return
             if not token:
                 raise XanoRequestError("O Xano não retornou uma sessão válida.")
 
@@ -121,14 +176,22 @@ class State(rx.State):
             try:
                 await self._load_species()
             except XanoRequestError as error:
+                if session != self._session_generation:
+                    return
+                if error.status_code == 401:
+                    self._expire_session()
+                    return
                 self.pet_message = f"Não foi possível carregar as espécies: {error}"
+            if session != self._session_generation:
+                return
             await self._load_pets()
         except XanoRequestError as error:
-            self._auth_token = ""
-            self.is_authenticated = False
-            self.login_message = str(error)
+            if session == self._session_generation:
+                self._clear_session()
+                self.login_message = str(error)
         finally:
-            self.is_busy = False
+            if session == self._session_generation:
+                self.is_busy = False
 
     @rx.event
     async def signup(self, form_data: dict[str, Any]):
@@ -181,33 +244,31 @@ class State(rx.State):
 
     @rx.event
     async def logout(self):
-        self._auth_token = ""
-        self.is_authenticated = False
+        self._clear_session()
         self.login_message = ""
-        self.pet_message = ""
-        self.species_options = []
-        self.breed_options = []
-        self.pets = []
 
     async def _load_species(self):
+        session = self._session_generation
         result = await xano_request(
             "GET",
             PET_API_GROUP,
             "catalog/especies",
             auth_token=self._auth_token,
         )
+        if session != self._session_generation:
+            return
         self.species_options = [
             {"id": str(item["id"]), "nome": str(item.get("nome") or "")}
             for item in result or []
         ]
 
-    async def _load_breeds(self, species_id: str) -> list[dict[str, str]]:
+    async def _load_breeds(self, species_id: str, token: str | None = None) -> list[dict[str, str]]:
         query = urlencode({"especie_id": species_id})
         result = await xano_request(
             "GET",
             PET_API_GROUP,
             f"catalog/racas?{query}",
-            auth_token=self._auth_token,
+            auth_token=self._auth_token if token is None else token,
         )
         return [
             {"id": str(item["id"]), "nome": str(item.get("nome") or "")}
@@ -231,14 +292,102 @@ class State(rx.State):
     def select_breed(self, breed_id: str):
         self.selected_breed_id = breed_id
 
+    def _start_pet_selection(self, pet_id: str):
+        self._clear_pet_context()
+        if not self._auth_token:
+            self._expire_session()
+            return
+        if not pet_id.isascii() or not pet_id.isdecimal() or int(pet_id) <= 0:
+            self.pet_detail_message = "Identificador de pet inválido."
+            return
+        self.pet_target_id = str(int(pet_id))
+        self.is_loading_pet = True
+
+    async def _load_pet_detail(self):
+        pet_id = self.pet_target_id
+        if not pet_id or not self._auth_token:
+            return
+        generation = self._pet_context_generation
+        session = self._session_generation
+        token = self._auth_token
+        try:
+            pet = await xano_request("GET", PET_API_GROUP, f"pets/{pet_id}", auth_token=token)
+            if not self._pet_request_is_current(generation, session, token):
+                return
+            if not isinstance(pet, dict) or str(pet.get("id")) != pet_id:
+                raise XanoRequestError("O Xano retornou dados incompatíveis com o pet solicitado.")
+
+            species_id = str(pet.get("especie_id") or "")
+            species_name = next((item["nome"] for item in self.species_options if item["id"] == species_id), "")
+            warnings = [] if species_name else ["Não foi possível identificar a espécie no catálogo."]
+            breed_id = str(pet.get("raca_id") or "")
+            breed_name = "SRD"
+            if breed_id not in ("", "0"):
+                breed_name = "Raça"
+                try:
+                    breeds = await self._load_breeds(species_id, token=token)
+                    breed_name = next((item["nome"] for item in breeds if item["id"] == breed_id), "Raça")
+                    if breed_name == "Raça":
+                        warnings.append("Não foi possível identificar a raça no catálogo.")
+                except XanoRequestError as error:
+                    if error.status_code == 401:
+                        raise
+                    warnings.append(f"Não foi possível consultar as raças: {error}")
+            if not self._pet_request_is_current(generation, session, token):
+                return
+            details = {
+                key: "" if pet.get(key) is None else str(pet[key])
+                for key in ("id", "nome", "especie_id", "raca_id", "sexo", "data_nasc", "peso_atual", "cor_pelo", "num_microchip")
+            }
+            details.update(nome=details["nome"] or "Pet", especie=species_name or "Espécie", raca=breed_name)
+            self.selected_pet = details
+            self.pet_detail_message = " ".join(warnings)
+        except XanoRequestError as error:
+            if self._pet_request_is_current(generation, session, token):
+                if error.status_code == 401:
+                    self._expire_session()
+                else:
+                    self.selected_pet = {}
+                    self.pet_detail_message = str(error)
+        finally:
+            if self._pet_request_is_current(generation, session, token):
+                self.is_loading_pet = False
+
+    @rx.event
+    async def open_pet(self, pet_id: str):
+        self._start_pet_selection(pet_id)
+        generation = self._pet_context_generation
+        yield
+        if generation == self._pet_context_generation:
+            await self._load_pet_detail()
+
+    @rx.event
+    async def retry_pet(self):
+        self._start_pet_selection(self.pet_target_id)
+        generation = self._pet_context_generation
+        yield
+        if generation == self._pet_context_generation:
+            await self._load_pet_detail()
+
+    @rx.event
+    def close_pet(self):
+        self._clear_pet_context()
+
     async def _load_pets(self):
+        self._pet_list_generation += 1
+        list_generation = self._pet_list_generation
+        session = self._session_generation
+        token = self._auth_token
+        target = self.pet_target_id
+        self._clear_pet_context()
+        context_generation = self._pet_context_generation
         self.is_loading_pets = True
         try:
             result = await xano_request(
                 "GET",
                 PET_API_GROUP,
                 "pets",
-                auth_token=self._auth_token,
+                auth_token=token,
             )
             species_names = {item["id"]: item["nome"] for item in self.species_options}
             species_ids = sorted(
@@ -251,13 +400,19 @@ class State(rx.State):
             breed_names: dict[str, str] = {}
             for species_id in species_ids:
                 try:
-                    breeds = await self._load_breeds(species_id)
+                    breeds = await self._load_breeds(species_id, token=token)
                 except XanoRequestError as error:
+                    if session != self._session_generation or list_generation != self._pet_list_generation:
+                        return
+                    if error.status_code == 401:
+                        raise
                     self.pet_message = f"Pets carregados, mas não foi possível consultar as raças: {error}"
                     continue
                 for breed in breeds:
                     breed_names[breed["id"]] = breed["nome"]
 
+            if session != self._session_generation or list_generation != self._pet_list_generation:
+                return
             self.pets = [
                 {
                     "id": str(item.get("id") or ""),
@@ -276,15 +431,31 @@ class State(rx.State):
                 }
                 for item in result or []
             ]
+            if context_generation == self._pet_context_generation and target:
+                if any(item["id"] == target for item in self.pets):
+                    self._start_pet_selection(target)
+                    await self._load_pet_detail()
+                else:
+                    self.pet_detail_message = "O pet selecionado não está mais disponível."
         except XanoRequestError as error:
-            self.pet_message = str(error)
+            if session == self._session_generation and list_generation == self._pet_list_generation:
+                if error.status_code == 401:
+                    self._expire_session()
+                else:
+                    self.pet_message = str(error)
         finally:
-            self.is_loading_pets = False
+            if session == self._session_generation and list_generation == self._pet_list_generation:
+                self.is_loading_pets = False
 
     @rx.event
     async def refresh_pets(self):
         if self._auth_token:
             self.pet_message = ""
+            self._pet_context_generation += 1
+            self.selected_pet = {}
+            self.is_loading_pet = bool(self.pet_target_id)
+            self.is_loading_pets = True
+            yield
             await self._load_pets()
 
     @rx.event

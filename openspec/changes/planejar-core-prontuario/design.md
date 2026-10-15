@@ -17,13 +17,52 @@ completa de clínicas, pagamentos, PDF, notificações, OAuth ou upload.
 
 ## Decisions
 
-### Prontuário é o histórico do pet
+### Prontuário por consulta compõe o histórico do pet
 
-Não criar um documento independente que precise ser copiado para o tutor.
-Cada consulta pertence obrigatoriamente a um pet e ao veterinário autenticado;
-o prontuário reúne suas consultas e registros clínicos vinculados. O tutor
-visualiza o mesmo histórico persistido, sem depender de qual veterinário o criou.
-Não incluir exclusão de histórico nesta entrega.
+Cada consulta pertence obrigatoriamente a um pet e ao veterinário autenticado
+e deve permitir acessar seu próprio prontuário anexado/vinculado, com os
+registros e complementos daquele atendimento. Essa associação é parte
+obrigatória do planejamento, não apenas uma lista geral de registros do pet.
+O conjunto das consultas e dos respectivos prontuários compõe o histórico do
+animal. O tutor visualiza o mesmo conteúdo persistido, sem depender de qual
+veterinário o criou e sem precisar receber uma cópia separada.
+
+A seção Consultas deve deixar clara a relação entre cada atendimento e seu
+prontuário. O formato de arquivo, caso desejado, precisa ser confirmado antes
+da implementação: vínculo do registro clínico e upload de documento são
+decisões diferentes. Não incluir exclusão de histórico nesta entrega.
+
+### Menu lateral retrátil e página inicial por pet
+
+Decisão confirmada pelo usuário: a área inicial terá menu lateral que pode
+ser recolhido e expandido, com estas opções, nesta ordem:
+
+1. **Início:** resumo dos dados e informações disponíveis do pet selecionado.
+2. **Vacinas:** registros aplicados e datas previstas desse pet.
+3. **Medicamentos:** prescrições e tratamentos desse pet.
+4. **Doenças:** condições e diagnósticos vinculados ao pet.
+5. **Consultas:** atendimentos do pet e acesso aos prontuários correspondentes.
+
+Na parte inferior do menu ficam **Novo pet** e **Mudar pet**. O primeiro abre
+o cadastro em pop-up/modal, reutilizando formulário, validações e API existentes;
+o formulário deixa de ocupar permanentemente a página inicial. Cancelar o
+modal não cria registro. Em sucesso, atualizar a lista sem trocar silenciosamente
+o pet selecionado, preservando a seleção explícita já entregue.
+
+Mudar pet aciona a escolha entre os pets do tutor e reutiliza o contexto seguro
+implementado em `selecionar-alternar-pet`. Todas as seções, inclusive o resumo
+de Início, seguem o mesmo ID de pet validado; alternar limpa dados anteriores
+e respostas pendentes, conforme o contrato existente.
+
+Recolher o menu não altera o pet ativo. Manter navegação utilizável no celular,
+identificação da seção e do pet atuais, nomes acessíveis dos controles quando
+o menu estiver recolhido e foco/teclado adequados no modal. Sem pet selecionado,
+apresentar orientação de escolha/cadastro, sem dados clínicos de outro contexto.
+Seções ainda não implementadas não podem simular registros ou ações disponíveis.
+
+A estrutura de navegação será incorporada às entregas futuras do roadmap;
+este ajuste altera somente o planejamento. Não criar nova change para registrar
+esta decisão, nem reabrir ou alterar a implementação arquivada de seleção.
 
 ### Complementos opcionais, vínculos consistentes
 
@@ -135,3 +174,7 @@ mapa de trabalho:
 3. Antes de `agendar-consulta-pet`: escolher reserva de horário disponível ou
    solicitação com confirmação do veterinário; definir duração, disponibilidade,
    cancelamento e fuso. Não implementar agenda antes dessa decisão.
+4. Antes de `registrar-consultar-prontuario`: confirmar se “prontuários anexados”
+   significa o registro clínico vinculado e acessível dentro da consulta, um
+   arquivo enviado, ou ambos. A associação por consulta está aprovada; eventual
+   upload exige revisar explicitamente a exclusão de arquivos e o limite do plano.

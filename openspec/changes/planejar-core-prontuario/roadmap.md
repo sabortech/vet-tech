@@ -22,9 +22,9 @@ o recorte solicitado. Datas e estimativas não foram atribuídas.
 | Ordem | Prioridade | Change futura | Dependências | Entrega e aceite principal |
 |---|---|---|---|---|
 | 1 | P0 | `selecionar-alternar-pet` | Cadastro/listagem existentes | Abrir um pet e trocar entre os próprios pets, sem misturar dados nem aceitar pet alheio. |
-| 2 | P0 | `unificar-acesso-perfis` | Decisões de clínica/CRMV e identidade com dois perfis | Reutilizar `/cadastro` e `/login`, adaptar os campos do cadastro, autenticar tutor/veterinário no backend e abrir a área correta; incluir espécies/especialidades e testar duplicidades, isolamento e perfil forjado. |
+| 2 | P0 | `unificar-acesso-perfis` | Decisões de clínica/CRMV e identidade com dois perfis | Reutilizar `/cadastro` e `/login`, adaptar os campos do cadastro e abrir a área do perfil validado no backend. Na área do tutor, preparar menu retrátil, Início com dados básicos e ações Novo pet em modal/Mudar pet; incluir espécies/especialidades e testar duplicidades, isolamento e perfil forjado. |
 | 3 | P0 | `autorizar-auditar-acesso-pet` | 1 e 2 | Dono concede/revoga acesso individual, backend centraliza checagem, registra logs com horário e permite ao dono consultá-los; testar outro tutor, não autorizado e revogação. |
-| 4 | P0 | `registrar-consultar-prontuario` | 3 | Veterinário registra consulta e tutor a vê no histórico do pet; sem complemento clínico obrigatório, com autoria e auditoria desde o primeiro endpoint. |
+| 4 | P0 | `registrar-consultar-prontuario` | 3 e definição do formato de prontuário | Seção Consultas apresenta atendimentos e prontuários anexados/vinculados a cada consulta; veterinário registra e tutor consulta por pet, com autoria/auditoria, sem complemento clínico obrigatório. O resumo de Início passa a refletir os atendimentos disponíveis. |
 | 5 | P1 | `registrar-doencas-pet` | 4 | Diagnósticos opcionais por consulta, catálogo e histórico de condições por pet, com estados definidos; relações não atravessam pets. |
 | 6 | P1 | `prescrever-medicamentos-pet` | 4 e 5 | Prescrição opcional ligada ao pet/consulta e, quando aplicável, à doença; dose, unidade, frequência e período legíveis ao tutor, sem promessa automática de cura. |
 | 7 | P1 | `planejar-registrar-vacinas` | 4 | Veterinário estipula datas previstas e registra aplicações; tutor distingue previsto/aplicado e consulta próxima dose, sem exigir vacina em toda consulta. |
@@ -38,10 +38,35 @@ pré-requisito para registrar um atendimento já realizado; continua no escopo.
 As changes 5, 7 e 8 podem avançar independentemente após a 4, evitando editar
 simultaneamente os mesmos arquivos compartilhados. Não há delegação automática.
 
+## Contexto de navegação aprovado
+
+O menu lateral retrátil contém **Início, Vacinas, Medicamentos, Doenças e
+Consultas**, com **Novo pet** e **Mudar pet** na parte inferior. Todas as seções
+usam o pet selecionado; Início resume suas informações disponíveis. Dentro de
+Consultas, cada atendimento apresenta os próprios prontuários vinculados.
+Não há nova entrada de menu para cada prontuário.
+
+A etapa 2 prepara a estrutura da área do tutor e transfere o cadastro existente
+para modal; a troca reaproveita a entrega já arquivada da etapa 1. A etapa 4
+implementa o conteúdo de Consultas. As etapas 5, 6 e 7 implementam os conteúdos
+de Doenças, Medicamentos e Vacinas e atualizam os resumos de Início. Exames
+permanecem como complemento acessível pela consulta na etapa 8; agendamento
+integra o fluxo de Consultas na etapa 9, sem acrescentar opções ao menu aprovado.
+
+Preservar essa estrutura nas propostas futuras, com estados vazios honestos
+enquanto os módulos não existirem. O formato de arquivo dos prontuários ainda
+precisa ser confirmado; a relação obrigatória com a consulta não depende disso.
+Nenhuma change adicional é criada nesta atualização de contexto.
+
 ## Como registrar cada entrega no OpenSpec
 
 Esta change de planejamento usa `skip_specs: true`: organiza o trabalho sem
-alterar contratos de software. As dez changes de execução ainda não foram criadas.
+alterar contratos de software. A primeira change, `selecionar-alternar-pet`,
+foi implementada e verificada com testes locais, Xano real e navegador;
+suas 9 tarefas estão concluídas e ela foi arquivada em
+`openspec/changes/archive/2026-10-14-selecionar-alternar-pet/`, com a spec
+`pet-management` sincronizada. As demais
+changes de execução ainda não foram criadas.
 Para cada uma, antes de implementar:
 
 1. Criar a change com `openspec new change <nome>`.
@@ -80,6 +105,9 @@ Mapeamento inicial de capacidades, sujeito à revisão de cada proposta:
 - Toda operação com pet/consulta/registro recebido do cliente valida propriedade
   e correspondência dos vínculos no backend.
 - Alternância de pet não reaproveita formulários nem respostas atrasadas do anterior.
+- Menu e Início refletem o mesmo pet ativo; Consultas mantém cada prontuário
+  associado ao atendimento correto. Novo pet abre modal, e cancelá-lo não cria
+  registro; Mudar pet preserva as validações e a limpeza de contexto existentes.
 - Agendamento, consentimento e atendimento são estados separados; o histórico
   permanece no pet quando muda o veterinário ou a autorização é revogada.
 - Cada change inclui testes de regras e integração necessários; a etapa 10

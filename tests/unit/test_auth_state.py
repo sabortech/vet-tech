@@ -256,7 +256,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
             await state._load_pets()
         self.assertEqual(state.pets[0]["nome"], "Rex")
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock, return_value=[]):
-            await State.refresh_pets.fn(state)
+            _ = [update async for update in State.refresh_pets.fn(state)]
         self.assertEqual(state.pets, [])
         self.assertEqual(state.pet_message, "")
 

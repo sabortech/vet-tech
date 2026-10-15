@@ -12,6 +12,9 @@ ordenadas por dependência e critérios verificáveis, sem estabelecer datas.
 - Planejar seleção e alternância do pet, identidade veterinária, permissões e auditoria.
 - Reutilizar as páginas existentes de cadastro e login para os dois perfis; após validar as credenciais, o backend identifica tutor ou veterinário e a aplicação abre a área correspondente.
 - Planejar registro de consulta e consulta do prontuário por pet pelos perfis autorizados.
+- Organizar a área inicial do tutor em menu lateral retrátil com Início, Vacinas, Medicamentos, Doenças e Consultas, sempre no contexto do pet selecionado.
+- Em Consultas, apresentar os atendimentos e os prontuários anexados/vinculados individualmente a cada consulta.
+- Colocar Novo pet e Mudar pet na parte inferior do menu; Novo pet abre o formulário existente em um pop-up/modal, em vez de mantê-lo na página principal.
 - Incluir doenças, medicamentos, vacinas previstas/aplicadas e exames como complementos opcionais de uma consulta.
 - Incluir agendamento com profissionais aptos a atender a espécie do pet selecionado e especialidade pertinente.
 - Separar as futuras changes, seu conteúdo, dependências e critérios de conclusão em `roadmap.md`.

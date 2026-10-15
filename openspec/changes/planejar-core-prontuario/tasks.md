@@ -13,6 +13,7 @@ funcionalidades futuras. O trabalho de execução está dividido em `roadmap.md`
 - [x] 2.1 Dividir a execução em changes menores com dependências, prioridades e critérios de aceite; conferir a ordem e o mapeamento de capacidades no roadmap.
 - [x] 2.2 Registrar os pontos de decisão de clínica, especialidade/espécie, arquivos e agenda antes das respectivas implementações; conferir que não foram apresentados como decisões aprovadas.
 - [x] 2.3 Incorporar a decisão da equipe de reutilizar cadastro/login para ambos os perfis, com identificação no backend e áreas distintas; conferir coerência entre proposta, design e roadmap e registrar a decisão pendente sobre e-mail com dois perfis.
+- [x] 2.4 Registrar menu lateral retrátil, Início por pet, seções clínicas, prontuários vinculados a cada consulta e ações inferiores Novo pet em modal/Mudar pet; conferir proposta, design e distribuição nas etapas existentes do roadmap, sem criar outra change nem alterar código.
 
 ## Workflow follow-up
 

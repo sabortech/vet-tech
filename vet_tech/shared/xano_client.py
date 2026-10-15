@@ -8,7 +8,9 @@ PET_API_GROUP = "vettech-pets"
 
 
 class XanoRequestError(Exception):
-    pass
+    def __init__(self, message: str, status_code: Optional[int] = None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 async def xano_request(
@@ -62,7 +64,7 @@ async def xano_request(
                 message = body.get("message") or body.get("error") or message
         except ValueError:
             pass
-        raise XanoRequestError(str(message))
+        raise XanoRequestError(str(message), status_code=response.status_code)
 
     if not response.content:
         return None
