@@ -209,6 +209,17 @@ def login_view() -> rx.Component:
 
     return rx.box(
         rx.box(
+            position="absolute",
+            inset="-18px",
+            background_image="url('/fundo02.jpeg')",
+            background_size="cover",
+            background_position="center",
+            background_repeat="no-repeat",
+            filter="blur(9px)",
+            transform="scale(1.04)",
+            pointer_events="none",
+        ),
+        rx.box(
             rx.hstack(
                 rx.box(
                     painel_formulario,
@@ -246,6 +257,8 @@ def login_view() -> rx.Component:
             border_radius=["20px", "28px", "32px"],
             background="white",
             box_shadow="0 22px 65px rgba(20, 39, 24, 0.24)",
+            position="relative",
+            z_index="1",
         ),
         min_height="100vh",
         width="100%",
@@ -253,5 +266,7 @@ def login_view() -> rx.Component:
         align_items=["flex-start", "center"],
         justify_content="center",
         padding=["14px", "18px"],
+        position="relative",
+        overflow="hidden",
         background="#1C1C1E",
     )

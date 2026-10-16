@@ -7,11 +7,12 @@ Definir uma apresentação visual responsiva para a tela de login de tutor confo
 ## Requirements
 
 ### Requirement: A tela de login segue a referência visual aprovada
-O sistema SHALL apresentar a tela de login existente com a hierarquia e o estilo visual do protótipo aprovado: um cartão dividido com cantos arredondados, uma área clara para o formulário, uma área com imagem de floresta, a marca Vet Tech, mensagem de boas-vindas, campos de credenciais, ação primária, divisor, apresentação de entrada secundária e convite ao cadastro.
+O sistema SHALL apresentar a tela de login existente com a hierarquia e o estilo visual do protótipo aprovado: um cartão dividido com cantos arredondados, uma área clara para o formulário, uma área com imagem de floresta, a marca Vet Tech, mensagem de boas-vindas, campos de credenciais, ação primária, divisor, apresentação de entrada secundária e convite ao cadastro. A imagem exibida no painel direito SHALL também aparecer como fundo da página com efeito de desfoque, mantendo o conteúdo do cartão e a imagem do painel lateral nítidos.
 
 #### Scenario: Renderização do login em desktop
 - **WHEN** uma pessoa acessa a rota de login em uma viewport desktop
 - **THEN** o sistema exibe formulário e identidade visual no painel claro e a imagem florestal no painel adjacente, com proporções, tipografia, cores, espaçamentos e cantos arredondados correspondentes ao protótipo aprovado
+- **AND** a mesma imagem aparece ampliada e desfocada atrás do cartão, sem desfocar seus conteúdos
 
 #### Scenario: Exibição das opções visuais do protótipo
 - **WHEN** a tela de login é renderizada
@@ -23,6 +24,7 @@ O sistema SHALL adaptar a composição de login a viewports estreitas para que o
 #### Scenario: Renderização do login em viewport estreita
 - **WHEN** uma pessoa acessa a rota de login em uma viewport estreita
 - **THEN** o formulário se adapta sem overflow horizontal e o painel decorativo de imagem pode ser ocultado ou reposicionado para preservar o acesso aos controles de login
+- **AND** o fundo desfocado não encobre nem prejudica a leitura ou interação com o formulário
 
 ### Requirement: As mudanças visuais preservam o contrato de login existente
 O sistema SHALL continuar enviando as credenciais atuais de e-mail e senha pelo fluxo de login existente e preservar seus estados de carregamento, erro, sessão autenticada e navegação de cadastro.
