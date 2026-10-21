@@ -111,7 +111,7 @@ Aplicação web com:
 
 ### Unicidade e integridade
 - **RN09** Tutor: CPF e e-mail únicos (não pode haver dois cadastros com o mesmo CPF ou e-mail).
-- **RN10** Veterinário: CRMV único, garantindo que é um profissional habilitado.
+- **RN10** Veterinário: CRMV/UF únicos em conjunto; validação local de caracteres sem comprovação externa de habilitação.
 - **RN11** Clínica: CNPJ único.
 - **RN12** Espécie: nome único (ex.: não pode haver duas entradas para "Cachorro").
 - **RN13** Toda raça pertence a exatamente uma espécie; o pet não pode receber raça de outra espécie (ex.: "Labrador" não pode ser associado a "Gato").
@@ -159,7 +159,11 @@ erDiagram
     ESPECIE ||--o{ RACA : contem
     ESPECIE ||--o{ PET : classifica
     RACA |o--o{ PET : define
-    CLINICA ||--o{ VETERINARIO : emprega
+    CLINICA |o--o{ VETERINARIO : emprega
+    VETERINARIO ||--o{ VETERINARIO_ESPECIE : atende
+    ESPECIE ||--o{ VETERINARIO_ESPECIE : vincula
+    VETERINARIO ||--o{ VETERINARIO_ESPECIALIDADE : declara
+    ESPECIALIDADE ||--o{ VETERINARIO_ESPECIALIDADE : vincula
     PET ||--o{ CONSULTA : tem
     VETERINARIO ||--o{ CONSULTA : realiza
     PET ||--o{ EXAME : tem
@@ -189,10 +193,10 @@ Campos de chave primária (`id`) e chaves estrangeiras são implícitos; as FKs 
 - **Relaciona-se com:** PET (1:N), NOTIFICACAO (1:N).
 
 #### VETERINARIO
-- **Campos:** nome, CRMV (único), especialidade, e-mail, telefone, senha (hash), clínica.
-- **Regras:** CRMV único; só acessa prontuário de pet com autorização ativa; pode realizar consultas, aplicar vacinas e registrar diagnósticos em qualquer pet ao qual tenha acesso autorizado.
-- **Relaciona-se com:** CLINICA (N:1), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N).
-- **Observação:** a obrigatoriedade do vínculo com clínica está em aberto (ver [Pontos em aberto](#16-pontos-em-aberto)).
+- **Campos:** nome, CRMV e UF (par único), especialidades e espécies atendidas (múltiplas), e-mail (único entre perfis), telefone, senha (hash), clínica opcional.
+- **Regras:** CRMV/UF únicos, com validação sintática local; só acessa prontuário de pet com autorização ativa; pode realizar consultas, aplicar vacinas e registrar diagnósticos em qualquer pet ao qual tenha acesso autorizado.
+- **Relaciona-se com:** CLINICA (N:0..1), ESPECIE (N:N), ESPECIALIDADE (N:N), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N).
+- **Observação:** o vínculo com clínica é opcional, conforme decisão da change unificar-acesso-perfis.
 
 #### CLINICA
 - **Campos:** nome, CNPJ (único), endereço, telefone.
@@ -353,7 +357,7 @@ Desenvolvimento incremental por módulo, com spec driven development usando Open
 4. **Cadastro de pet:** confirmar que apenas o tutor cadastra pets.
 5. **Canal de notificação:** apenas dentro do sistema ou também por e-mail?
 6. **Relação Pet–Veterinário:** coberta por `ACESSO_AUTORIZADO`; confirmar se basta ou se haverá vínculo clínico separado.
-7. **Vínculo veterinário–clínica:** um dos documentos de origem marca o vínculo como opcional ("opcional: um veterinário está sempre vinculado a uma clínica"); definir se é obrigatório (veterinário autônomo?).
+7. **Vínculo veterinário–clínica (resolvido):** opcional, conforme decisão registrada na change `unificar-acesso-perfis`; quando informado, o vínculo deve apontar para uma clínica existente.
 8. **Notificação:** um dos documentos de origem a marca como "(OPCIONAL)" na modelagem, enquanto RF09 a prevê como funcionalidade; confirmar prioridade.
 
 ## 17. Glossário

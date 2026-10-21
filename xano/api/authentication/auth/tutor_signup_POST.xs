@@ -261,16 +261,32 @@ query "tutor/signup" verb=POST {
       error = "Já existe uma conta com esse CPF ou e-mail."
     }
 
-    db.add tutor {
-      data = {
-        nome     : $input.nome
-        cpf      : $cpf_digits
-        email    : $input.email
-        telefone : $input.telefone
-        endereco : $input.endereco
-        password : $input.password
+    function.run "Identity/check_email_available" {
+      input = {email: $input.email}
+    } as $email_check
+
+    db.transaction {
+      stack {
+        db.add reserva_email {
+          data = {email: $input.email, perfil: "tutor"}
+        } as $reservation
+        db.add tutor {
+          data = {
+            nome     : $input.nome
+            cpf      : $cpf_digits
+            email    : $input.email
+            telefone : $input.telefone
+            endereco : $input.endereco
+            password : $input.password
+          }
+        } as $tutor
+        db.edit reserva_email {
+          field_name = "id"
+          field_value = $reservation.id
+          data = {identidade_id: $tutor.id}
+        } as $complete
       }
-    } as $tutor
+    }
   }
 
   response = {success: true}

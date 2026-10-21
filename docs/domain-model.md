@@ -12,7 +12,7 @@ As espécies (cachorro, gato, ave etc.) e raças são cadastradas de forma padro
 
 Os veterinários também se cadastram no sistema, informando nome, CRMV (registro profissional), especialidade, e-mail, telefone e senha. 
 
-Cada veterinário está vinculado a uma clínica, que possui nome, CNPJ, endereço e telefone. Uma clínica pode empregar vários veterinários.
+Cada veterinário pode estar vinculado a uma clínica, que possui nome, CNPJ, endereço e telefone. O vínculo é opcional. Uma clínica pode empregar vários veterinários.
 
 Quando um pet é levado a atendimento, é registrada uma consulta, contendo a data, o motivo do atendimento, o diagnóstico do veterinário e observações adicionais. Uma consulta está sempre associada a um pet e a um veterinário responsável pelo atendimento. 
 
@@ -37,11 +37,13 @@ Relaciona-se com: PET (1:N) e NOTIFICACAO (1:N)
 
 ## Veterinário
 
-Um veterinário deve possuir CRMV único no sistema, garantindo que é um profissional habilitado
-opcional:Um veterinário está sempre vinculado a uma clínica
+Um veterinário informa CRMV e UF, únicos em conjunto após normalização. A validação local de caracteres não comprova habilitação profissional e não consulta sistemas externos.
+Um veterinário pode estar vinculado a uma clínica; o vínculo é opcional.
+Um e-mail normalizado pertence a um único perfil (tutor ou veterinário), sem dupla identidade nesta etapa.
+Espécies atendidas e especialidades são catálogos distintos, com múltiplos vínculos por veterinário.
 Um veterinário só pode acessar o prontuário de um pet se possuir autorização ativa concedida pelo tutor
 Um veterinário pode realizar consultas, aplicar vacinas e registrar diagnósticos em qualquer pet ao qual tenha acesso autorizado
-Relaciona-se com: CLINICA (N:1), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
+Relaciona-se com: CLINICA (N:0..1), ESPECIE (N:N, via VETERINARIO_ESPECIE), ESPECIALIDADE (N:N, via VETERINARIO_ESPECIALIDADE), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
 
 ## Clinica
 Uma clínica deve possuir CNPJ único

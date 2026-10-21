@@ -9,7 +9,7 @@ o recorte solicitado. Datas e estimativas não foram atribuídas.
 | Área | Evidência atual | Falta principal |
 |---|---|---|
 | Tutor e pets | Specs principais, APIs Xano, telas Reflex e testes existentes | Seleção persistente no contexto da tela e abertura do pet |
-| Veterinário | Tabela `veterinario`, ainda `auth = false` | Identidade, cadastro/login, unicidade e aptidão por espécie |
+| Veterinário | Identidade autenticável, cadastro/login compartilhados e aptidões por catálogo entregues em `unificar-acesso-perfis` | Autorizações individuais e operações clínicas nas próximas etapas |
 | Permissões | Tabela `acesso_autorizado` | API, interface, validação por operação e revogação |
 | Prontuário | Tabelas clínicas | APIs e telas de registro e consulta por pet |
 | Doenças | `doenca` contém `pet_id`; DER descreve catálogo e associativas | Reconciliar modelo, diagnóstico da consulta e evolução por pet |
@@ -22,7 +22,7 @@ o recorte solicitado. Datas e estimativas não foram atribuídas.
 | Ordem | Prioridade | Change futura | Dependências | Entrega e aceite principal |
 |---|---|---|---|---|
 | 1 | P0 | `selecionar-alternar-pet` | Cadastro/listagem existentes | Abrir um pet e trocar entre os próprios pets, sem misturar dados nem aceitar pet alheio. |
-| 2 | P0 | `unificar-acesso-perfis` | Decisões de clínica/CRMV e identidade com dois perfis | Reutilizar `/cadastro` e `/login`, adaptar os campos do cadastro e abrir a área do perfil validado no backend. Na área do tutor, preparar menu retrátil, Início com dados básicos e ações Novo pet em modal/Mudar pet; incluir espécies/especialidades e testar duplicidades, isolamento e perfil forjado. |
+| 2 | P0 | `unificar-acesso-perfis` | Seleção de pet entregue; decisões de identidade registradas na proposta | Reutilizar `/cadastro` e `/login`, adaptar os campos do cadastro e abrir a área do perfil validado no backend. Na área do tutor, preparar menu retrátil, Início com dados básicos e ações Novo pet em modal/Mudar pet; clínica opcional, um perfil por e-mail, CRMV com validação local e múltiplas espécies/especialidades; testar duplicidades, isolamento e perfil forjado. |
 | 3 | P0 | `autorizar-auditar-acesso-pet` | 1 e 2 | Dono concede/revoga acesso individual, backend centraliza checagem, registra logs com horário e permite ao dono consultá-los; testar outro tutor, não autorizado e revogação. |
 | 4 | P0 | `registrar-consultar-prontuario` | 3 e definição do formato de prontuário | Seção Consultas apresenta atendimentos e prontuários anexados/vinculados a cada consulta; veterinário registra e tutor consulta por pet, com autoria/auditoria, sem complemento clínico obrigatório. O resumo de Início passa a refletir os atendimentos disponíveis. |
 | 5 | P1 | `registrar-doencas-pet` | 4 | Diagnósticos opcionais por consulta, catálogo e histórico de condições por pet, com estados definidos; relações não atravessam pets. |
@@ -56,7 +56,22 @@ integra o fluxo de Consultas na etapa 9, sem acrescentar opções ao menu aprova
 Preservar essa estrutura nas propostas futuras, com estados vazios honestos
 enquanto os módulos não existirem. O formato de arquivo dos prontuários ainda
 precisa ser confirmado; a relação obrigatória com a consulta não depende disso.
-Nenhuma change adicional é criada nesta atualização de contexto.
+O menu permanece na etapa completa `unificar-acesso-perfis`, conforme decisão
+posterior do usuário; não há entrega separada de menu lateral.
+
+## Decisões de identidade e entrega auxiliar de registros
+
+- Clínica opcional: o domínio atual contém trechos contraditórios; a implementação
+  da etapa 2 alinhará a documentação à opção expressa pelo usuário.
+- Um perfil por e-mail normalizado, sem tutor e veterinário simultâneos no mesmo
+  e-mail; garantir a regra no backend, inclusive em concorrência.
+- CRMV com validação local de caracteres, sem consulta externa. O formato proposto
+  e sua unicidade por UF estão detalhados em `unificar-acesso-perfis/design.md`.
+- Espécies e especialidades múltiplas por referências a catálogos.
+- `popular-catalogos-especies-racas` é entrega auxiliar própria, com revisão
+  exclusiva dos registros, fontes, simulação e carga idempotente. Pode ser preparada
+  antes da etapa 2; coordenar alterações no catálogo compartilhado. A etapa 2
+  não exige uma lista ampla, mas precisa de espécies válidas disponíveis para uso.
 
 ## Como registrar cada entrega no OpenSpec
 
@@ -65,8 +80,12 @@ alterar contratos de software. A primeira change, `selecionar-alternar-pet`,
 foi implementada e verificada com testes locais, Xano real e navegador;
 suas 9 tarefas estão concluídas e ela foi arquivada em
 `openspec/changes/archive/2026-10-14-selecionar-alternar-pet/`, com a spec
-`pet-management` sincronizada. As demais
-changes de execução ainda não foram criadas.
+`pet-management` sincronizada. A change `unificar-acesso-perfis` foi implementada
+com menu, modal, identidade veterinária e backend publicado; ver suas tarefas,
+`verification.md` e `smoke-result.json` para as evidências. Aguarda revisão e
+arquivamento, com suas delta specs ainda na change. A auxiliar
+`popular-catalogos-especies-racas` possui planejamento completo e implementação
+ainda não iniciada. As demais changes de execução ainda não foram criadas.
 Para cada uma, antes de implementar:
 
 1. Criar a change com `openspec new change <nome>`.

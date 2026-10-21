@@ -99,7 +99,11 @@ erDiagram
     ESPECIE ||--o{ RACA : contem
     ESPECIE ||--o{ PET : classifica
     RACA |o--o{ PET : define
-    CLINICA ||--o{ VETERINARIO : emprega
+    CLINICA |o--o{ VETERINARIO : emprega
+    VETERINARIO ||--o{ VETERINARIO_ESPECIE : atende
+    ESPECIE ||--o{ VETERINARIO_ESPECIE : vincula
+    VETERINARIO ||--o{ VETERINARIO_ESPECIALIDADE : declara
+    ESPECIALIDADE ||--o{ VETERINARIO_ESPECIALIDADE : vincula
     PET ||--o{ CONSULTA : tem
     VETERINARIO ||--o{ CONSULTA : realiza
     PET ||--o{ EXAME : tem

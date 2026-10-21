@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import reflex as rx
 
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
+from vet_tech.features.veterinarians.validation import professional_payload
 from vet_tech.shared.xano_client import (
     AUTH_API_GROUP,
     PET_API_GROUP,
@@ -13,6 +14,22 @@ from vet_tech.shared.xano_client import (
 
 
 class State(rx.State):
+    profile: str = ""
+    identity_id: str = ""
+    identity_name: str = ""
+    signup_profile: str = "tutor"
+    registration_species: list[dict[str, str]] = []
+    registration_specialties: list[dict[str, str]] = []
+    registration_clinics: list[dict[str, str]] = []
+    professional_species: list[str] = []
+    professional_specialties: list[str] = []
+    professional_clinic: str = ""
+    registration_options_message: str = ""
+    is_loading_registration_options: bool = False
+    active_section: str = "Início"
+    sidebar_expanded: bool = True
+    pet_modal_open: bool = False
+    pet_picker_open: bool = False
     login_message: str = ""
     is_authenticated: bool = False
     is_busy: bool = False
@@ -40,6 +57,7 @@ class State(rx.State):
     _session_generation: int = 0
     _pet_context_generation: int = 0
     _pet_list_generation: int = 0
+    _registration_generation: int = 0
 
     @rx.var
     def selected_pet_id(self) -> str:
@@ -59,6 +77,23 @@ class State(rx.State):
         self.is_loading_pet = False
 
     def _clear_session(self):
+        self.profile = ""
+        self.identity_id = ""
+        self.identity_name = ""
+        self.active_section = "Início"
+        self.sidebar_expanded = True
+        self.pet_modal_open = False
+        self.pet_picker_open = False
+        self._registration_generation += 1
+        self.professional_species = []
+        self.professional_specialties = []
+        self.professional_clinic = ""
+        self.registration_species = []
+        self.registration_specialties = []
+        self.registration_clinics = []
+        self.registration_options_message = ""
+        self.is_loading_registration_options = False
+        self._reset_pet_form()
         self._session_generation += 1
         self._pet_list_generation += 1
         self._clear_pet_context()
@@ -139,6 +174,9 @@ class State(rx.State):
 
     @rx.event
     async def login(self, form_data: dict[str, Any]):
+        if self.is_busy:
+            return
+        self._clear_session()
         email = form_data.get("email", "").strip()
         password = form_data.get("password", "")
         if not email or not password:
@@ -146,14 +184,13 @@ class State(rx.State):
             return
 
         self.login_message = ""
-        self._clear_session()
         self.is_busy = True
         session = self._session_generation
         try:
             result = await xano_request(
                 "POST",
                 AUTH_API_GROUP,
-                "tutor/login",
+                "acesso/login",
                 json_payload={
                     "email": email,
                     "password": password,
@@ -164,9 +201,22 @@ class State(rx.State):
                 return
             if not token:
                 raise XanoRequestError("O Xano não retornou uma sessão válida.")
-
+            profile = result.get("perfil")
+            identity_id = str(result.get("identidade_id", ""))
+            if profile not in ("tutor", "veterinario") or not identity_id.isascii() or not identity_id.isdecimal() or int(identity_id) <= 0:
+                raise XanoRequestError("O Xano não retornou uma identidade válida.")
+            identity = await xano_request("GET", AUTH_API_GROUP, f"{profile}/me", auth_token=str(token))
+            if session != self._session_generation:
+                return
+            if not isinstance(identity, dict) or identity.get("perfil") != profile or str(identity.get("identidade_id")) != identity_id:
+                raise XanoRequestError("Não foi possível confirmar a identidade da sessão.")
             self._auth_token = str(token)
+            self.profile = profile
+            self.identity_id = identity_id
+            self.identity_name = str(identity.get("nome") or "")
             self.is_authenticated = True
+            if profile == "veterinario":
+                return
             self.pets = []
             self.species_options = []
             self.breed_options = []
@@ -204,11 +254,28 @@ class State(rx.State):
         endereco = str(form_data.get("endereco", "")).strip()
         password = str(form_data.get("password", ""))
 
-        if not all((nome, cpf, email, telefone, endereco, password)):
+        if not all((nome, email, telefone, password)):
             self.signup_message = "Preencha todos os campos obrigatórios."
             return
-        if not is_valid_cpf(cpf):
-            self.signup_message = "Informe um CPF válido."
+        payload = {"nome": nome, "email": email, "telefone": telefone, "password": password}
+        if self.signup_profile == "tutor":
+            if not endereco:
+                self.signup_message = "Preencha todos os campos obrigatórios."
+                return
+            if not is_valid_cpf(cpf):
+                self.signup_message = "Informe um CPF válido."
+                return
+            payload.update(cpf=cpf, endereco=endereco)
+            endpoint = "tutor/signup"
+        elif self.signup_profile == "veterinario":
+            try:
+                payload.update(professional_payload(form_data, self.professional_species, self.professional_specialties, self.professional_clinic))
+            except ValueError as error:
+                self.signup_message = str(error)
+                return
+            endpoint = "veterinario/signup"
+        else:
+            self.signup_message = "Selecione o perfil a cadastrar."
             return
 
         if password != str(form_data.get("password_confirmation", "")):
@@ -216,36 +283,127 @@ class State(rx.State):
             return
 
         self.is_busy = True
+        session = self._session_generation
         self.signup_message = ""
         yield
         try:
             await xano_request(
                 "POST",
                 AUTH_API_GROUP,
-                "tutor/signup",
-                json_payload={
-                    "nome": nome,
-                    "cpf": cpf,
-                    "email": email,
-                    "telefone": telefone,
-                    "endereco": endereco,
-                    "password": password,
-                },
+                endpoint,
+                json_payload=payload,
             )
         except XanoRequestError as error:
-            self.signup_message = str(error)
+            if session == self._session_generation:
+                self.signup_message = str(error)
         else:
+            if session != self._session_generation:
+                return
             self.is_registering = False
             self.signup_cpf = ""
             self.login_message = "Cadastro realizado. Entre com seu e-mail e senha."
+            yield rx.set_value("signup-password", "")
+            yield rx.set_value("signup-password-confirmation", "")
             yield rx.redirect("/login")
         finally:
-            self.is_busy = False
+            if session == self._session_generation:
+                self.is_busy = False
 
     @rx.event
     async def logout(self):
         self._clear_session()
         self.login_message = ""
+        return rx.clear_selected_files("pet-photo")
+
+    @rx.event
+    async def choose_signup_profile(self, value: str):
+        if self.is_busy or value not in ("tutor", "veterinario"):
+            return
+        self.signup_profile = value
+        self.signup_message = ""
+        self.professional_species = []
+        self.professional_specialties = []
+        self.professional_clinic = ""
+        self._registration_generation += 1
+        if value == "veterinario":
+            await self.load_registration_options()
+
+    @rx.event
+    async def load_registration_options(self):
+        self._registration_generation += 1
+        generation = self._registration_generation
+        self.is_loading_registration_options = True
+        self.registration_options_message = ""
+        try:
+            result = await xano_request("GET", AUTH_API_GROUP, "cadastro/opcoes")
+            if generation != self._registration_generation:
+                return
+            def options(key):
+                return [{"id": str(row["id"]), "nome": str(row.get("nome") or "")} for row in result[key]]
+            self.registration_species = options("especies")
+            self.registration_specialties = options("especialidades")
+            self.registration_clinics = options("clinicas")
+            if not self.registration_species or not self.registration_specialties:
+                self.registration_options_message = "Cadastro profissional indisponível: faltam opções de espécies ou especialidades."
+        except (XanoRequestError, KeyError, TypeError) as error:
+            if generation == self._registration_generation:
+                self.registration_species = []
+                self.registration_specialties = []
+                self.registration_clinics = []
+                self.registration_options_message = "Não foi possível carregar as opções de cadastro. Tente novamente."
+        finally:
+            if generation == self._registration_generation:
+                self.is_loading_registration_options = False
+
+    @rx.event
+    def toggle_professional_species(self, value: str, checked: bool):
+        if not self.is_busy:
+            self.professional_species = [i for i in self.professional_species if i != value] + ([value] if checked else [])
+
+    @rx.event
+    def toggle_professional_specialty(self, value: str, checked: bool):
+        if not self.is_busy:
+            self.professional_specialties = [i for i in self.professional_specialties if i != value] + ([value] if checked else [])
+
+    @rx.event
+    def choose_professional_clinic(self, value: str):
+        if not self.is_busy:
+            self.professional_clinic = "" if value == "none" else value
+
+    def _reset_pet_form(self):
+        self.pet_name = ""
+        self.pet_sex = ""
+        self.pet_birth_date = ""
+        self.pet_weight = ""
+        self.pet_coat_color = ""
+        self.pet_microchip = ""
+        self.selected_species_id = ""
+        self.selected_breed_id = ""
+        self.breed_options = []
+        self.pet_message = ""
+
+    @rx.event
+    def change_section(self, value: str):
+        if value in ("Início", "Vacinas", "Medicamentos", "Doenças", "Consultas"):
+            self.active_section = value
+            self.pet_picker_open = False
+
+    @rx.event
+    def toggle_sidebar(self):
+        self.sidebar_expanded = not self.sidebar_expanded
+
+    @rx.event
+    def set_pet_modal(self, opened: bool):
+        if self.is_busy or self.profile != "tutor":
+            return
+        self._reset_pet_form()
+        self.pet_modal_open = opened
+        return rx.clear_selected_files("pet-photo")
+
+    @rx.event
+    def show_pet_picker(self):
+        self.pet_picker_open = True
+        self.active_section = "Início"
 
     async def _load_species(self):
         session = self._session_generation
@@ -277,6 +435,7 @@ class State(rx.State):
 
     @rx.event
     async def select_species(self, species_id: str):
+        session = self._session_generation
         self.selected_species_id = species_id
         self.selected_breed_id = ""
         self.breed_options = []
@@ -284,9 +443,12 @@ class State(rx.State):
         if not species_id:
             return
         try:
-            self.breed_options = await self._load_breeds(species_id)
+            breeds = await self._load_breeds(species_id)
+            if session == self._session_generation and species_id == self.selected_species_id:
+                self.breed_options = breeds
         except XanoRequestError as error:
-            self.pet_message = str(error)
+            if session == self._session_generation and species_id == self.selected_species_id:
+                self.pet_message = str(error)
 
     @rx.event
     def select_breed(self, breed_id: str):
@@ -341,6 +503,7 @@ class State(rx.State):
             }
             details.update(nome=details["nome"] or "Pet", especie=species_name or "Espécie", raca=breed_name)
             self.selected_pet = details
+            self.pet_picker_open = False
             self.pet_detail_message = " ".join(warnings)
         except XanoRequestError as error:
             if self._pet_request_is_current(generation, session, token):
@@ -460,6 +623,22 @@ class State(rx.State):
 
     @rx.event
     async def create_pet(self, files: list[rx.UploadFile]):
+        if self.is_busy:
+            return
+        session = self._session_generation
+        self.is_busy = True
+        yield
+        try:
+            if session != self._session_generation:
+                return
+            result = await self._create_pet(files)
+            if result is not None and session == self._session_generation:
+                yield result
+        finally:
+            if session == self._session_generation:
+                self.is_busy = False
+
+    async def _create_pet(self, files: list[rx.UploadFile]):
         if not self._auth_token:
             self.pet_message = "Entre novamente para cadastrar pets."
             return
@@ -491,30 +670,30 @@ class State(rx.State):
                 return
             form_data["num_microchip"] = self.pet_microchip
 
-        upload = files[0] if files else None
-        upload_files = None
-        if upload:
-            content = await upload.read()
-            upload_files = {
-                "foto": (
-                    upload.name,
-                    content,
-                    upload.content_type or "application/octet-stream",
-                )
-            }
-
         self.is_busy = True
         self.pet_message = ""
+        session = self._session_generation
+        token = self._auth_token
         try:
+            upload = files[0] if files else None
+            upload_files = None
+            if upload:
+                content = await upload.read()
+                if session != self._session_generation:
+                    return
+                upload_files = {"foto": (upload.name, content, upload.content_type or "application/octet-stream")}
             await xano_request(
                 "POST",
                 PET_API_GROUP,
                 "pets",
-                auth_token=self._auth_token,
+                auth_token=token,
                 form_data=form_data if upload_files else None,
                 files=upload_files,
                 json_payload=form_data if not upload_files else None,
             )
+            if session != self._session_generation:
+                return
+            self.pet_modal_open = False
             self.pet_name = ""
             self.selected_breed_id = ""
             self.pet_sex = ""
@@ -524,8 +703,15 @@ class State(rx.State):
             self.pet_microchip = ""
             self.pet_message = "Pet cadastrado com sucesso."
             await self._load_pets()
+            if session != self._session_generation:
+                return
             return rx.clear_selected_files("pet-photo")
         except XanoRequestError as error:
-            self.pet_message = str(error)
+            if session == self._session_generation:
+                if error.status_code == 401:
+                    self._expire_session()
+                else:
+                    self.pet_message = str(error)
         finally:
-            self.is_busy = False
+            if session == self._session_generation:
+                self.is_busy = False

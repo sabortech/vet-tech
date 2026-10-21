@@ -98,7 +98,7 @@ Aplicação web com: cadastro de tutores, veterinários e clínicas; perfil comp
 
 ### Unicidade e integridade
 - **RN09** Tutor: CPF e e-mail únicos.
-- **RN10** Veterinário: CRMV único.
+- **RN10** Veterinário: CRMV/UF únicos em conjunto, sem consulta externa.
 - **RN11** Clínica: CNPJ único.
 - **RN12** Espécie: nome único.
 - **RN13** Toda raça pertence a exatamente uma espécie; o pet não pode receber raça de outra espécie.
@@ -146,7 +146,11 @@ erDiagram
     ESPECIE ||--o{ RACA : contem
     ESPECIE ||--o{ PET : classifica
     RACA |o--o{ PET : define
-    CLINICA ||--o{ VETERINARIO : emprega
+    CLINICA |o--o{ VETERINARIO : emprega
+    VETERINARIO ||--o{ VETERINARIO_ESPECIE : atende
+    ESPECIE ||--o{ VETERINARIO_ESPECIE : vincula
+    VETERINARIO ||--o{ VETERINARIO_ESPECIALIDADE : declara
+    ESPECIALIDADE ||--o{ VETERINARIO_ESPECIALIDADE : vincula
     PET ||--o{ CONSULTA : tem
     VETERINARIO ||--o{ CONSULTA : realiza
     PET ||--o{ EXAME : tem
@@ -175,8 +179,8 @@ Campos: nome, CPF (único), e-mail (único), telefone, endereço, senha (hash).
 Relaciona-se com: PET (1:N), NOTIFICACAO (1:N).
 
 #### VETERINARIO
-Campos: nome, CRMV (único), especialidade, e-mail, telefone, senha (hash), clínica.
-Relaciona-se com: CLINICA (N:1), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N).
+Campos: nome, CRMV e UF (par único), especialidades e espécies atendidas (múltiplas), e-mail (único entre perfis), telefone, senha (hash), clínica opcional.
+Relaciona-se com: CLINICA (N:0..1), ESPECIE (N:N), ESPECIALIDADE (N:N), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N).
 
 #### CLINICA
 Campos: nome, CNPJ (único), endereço, telefone.

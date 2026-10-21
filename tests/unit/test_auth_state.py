@@ -34,6 +34,10 @@ async def submit_signup(state, data):
     return [event async for event in State.signup.fn(state, data)]
 
 
+async def submit_pet(state, files):
+    return [event async for event in State.create_pet.fn(state, files) if event is not None]
+
+
 class AuthStateTests(unittest.IsolatedAsyncioTestCase):
     async def test_password_confirmation_and_required_fields_block_api(self):
         data = {
@@ -178,7 +182,8 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         with patch(
             "vet_tech.features.auth.state.xano_request",
             new_callable=AsyncMock,
-            side_effect=[{"authToken": "session-token"}, [], []],
+            side_effect=[{"authToken": "session-token", "perfil": "tutor", "identidade_id": 1},
+                         {"perfil": "tutor", "identidade_id": 1, "nome": "Tutor"}, [], []],
         ) as request:
             await State.login.fn(
                 state,
@@ -187,7 +192,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(state.is_authenticated)
         self.assertEqual(state._auth_token, "session-token")
-        self.assertEqual(request.await_count, 3)
+        self.assertEqual(request.await_count, 4)
         self.assertEqual(state.pets, [])
         self.assertFalse(state.is_busy)
 
@@ -227,7 +232,8 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         state.species_options = [{"id": "99", "nome": "Antiga"}]
         state.breed_options = [{"id": "99", "nome": "Antiga"}]
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock,
-                   side_effect=[{"authToken": "new-session"}, XanoRequestError("Catálogo indisponível"),
+                   side_effect=[{"authToken": "new-session", "perfil": "tutor", "identidade_id": 1},
+                                {"perfil": "tutor", "identidade_id": 1}, XanoRequestError("Catálogo indisponível"),
                                 [{"id": 10, "nome": "Rex", "especie_id": 1}]] ) as request:
             await State.login.fn(state, {"email": "novo@example.invalid", "password": "secret"})
         self.assertTrue(state.is_authenticated)
@@ -241,7 +247,8 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         state = make_state()
         state.pets = [{"id": "old", "nome": "Pet de outro tutor"}]
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock,
-                   side_effect=[{"authToken": "new-session"}, [], XanoRequestError("Falha na lista")]):
+                   side_effect=[{"authToken": "new-session", "perfil": "tutor", "identidade_id": 1},
+                                {"perfil": "tutor", "identidade_id": 1}, [], XanoRequestError("Falha na lista")]):
             await State.login.fn(state, {"email": "novo@example.invalid", "password": "secret"})
         self.assertEqual(state.pets, [])
         self.assertTrue(state.is_authenticated)
@@ -268,7 +275,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock,
                    side_effect=[{"id": 10}, [{"id": 10, "nome": "Rex", "especie_id": 1,
                                             "raca_id": None}]]) as request:
-            await State.create_pet.fn(state, [])
+            await submit_pet(state, [])
         self.assertEqual(request.await_count, 2)
         self.assertEqual(request.await_args_list[0].kwargs["json_payload"], {"nome": "Rex", "especie_id": "1"})
         self.assertEqual(state.pets[0]["raca"], "SRD")

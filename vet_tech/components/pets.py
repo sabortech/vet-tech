@@ -215,26 +215,3 @@ def pet_details() -> rx.Component:
         border_radius="0.75rem",
         aria_label="Dados do pet selecionado",
     )
-
-
-def profile_view() -> rx.Component:
-    return rx.container(
-        rx.vstack(
-            rx.hstack(
-                rx.heading("Perfil do tutor", size="6"),
-                rx.spacer(),
-                rx.button("Sair", on_click=State.logout),
-                width="100%",
-                align="center",
-            ),
-            pet_details(),
-            pet_list(),
-            rx.divider(),
-            pet_form(),
-            align="stretch",
-            spacing="5",
-            width="100%",
-            max_width="48rem",
-        ),
-        padding_y="2rem",
-    )

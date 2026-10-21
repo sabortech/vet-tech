@@ -3,6 +3,7 @@ from typing import Any
 import reflex as rx
 
 from vet_tech.features.auth.state import State
+from vet_tech.components.professional_registration import professional_fields
 
 VERDE = "#689554"
 VERDE_ESCURO = "#1A3629"
@@ -98,16 +99,25 @@ def botao_google() -> rx.Component:
 def conteudo_cadastro() -> rx.Component:
     formulario = rx.form(
         rx.vstack(
+            rx.select.root(
+                rx.select.trigger(placeholder="Perfil a cadastrar", width="100%"),
+                rx.select.content(rx.select.item("Tutor", value="tutor"), rx.select.item("Veterinário", value="veterinario")),
+                value=State.signup_profile, on_change=State.choose_signup_profile,
+                disabled=State.is_busy, aria_label="Perfil a cadastrar",
+            ),
             campo_texto("Nome completo", "nome", auto_complete="name"),
             campo_texto("E-mail", "email", "email", auto_complete="email"),
-            campo_texto("CPF", "cpf", value=State.signup_cpf,
-                        on_change=State.set_signup_cpf, max_length=14),
-            rx.text(State.signup_cpf_feedback, role="status", font_size="12px"),
+            rx.cond(State.signup_profile == "tutor", rx.vstack(
+                campo_texto("CPF", "cpf", value=State.signup_cpf,
+                            on_change=State.set_signup_cpf, max_length=14),
+                rx.text(State.signup_cpf_feedback, role="status", font_size="12px"),
+                campo_texto("Endereço", "endereco", auto_complete="street-address"),
+                width="100%", spacing="2",
+            ), professional_fields()),
             campo_texto("Telefone", "telefone", "tel", auto_complete="tel"),
-            campo_texto("Endereço", "endereco", auto_complete="street-address"),
-            campo_texto("Senha", "password", "password", auto_complete="new-password"),
+            campo_texto("Senha", "password", "password", auto_complete="new-password", id="signup-password"),
             campo_texto("Confirmar Senha", "password_confirmation", "password",
-                        auto_complete="new-password"),
+                        auto_complete="new-password", id="signup-password-confirmation"),
             rx.text(State.signup_message, role="alert", color=VERDE_ESCURO,
                     font_size="13px", width="100%"),
             botao_primario(),

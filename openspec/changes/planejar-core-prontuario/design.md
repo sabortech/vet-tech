@@ -165,10 +165,11 @@ ou exclusão de registros como estratégia de implantação.
 Decisões que bloqueiam somente as futuras changes correspondentes, não este
 mapa de trabalho:
 
-1. Antes de `unificar-acesso-perfis`: confirmar vínculo com clínica obrigatório
-   ou opcional, critérios de CRMV, especialidade e espécies atendidas e a
-   política para uma pessoa/e-mail com ambos os perfis. O compartilhamento
-   das páginas e a identificação do perfil no backend já estão aprovados.
+1. Resolvido para `unificar-acesso-perfis`: clínica opcional, um único perfil por
+   e-mail, CRMV validado localmente por caracteres sem consulta externa e múltiplas
+   especialidades/espécies por catálogo. Ver a proposta e o design dessa change
+   para contratos, unicidade e migração. A carga de espécies/raças fica na change
+   auxiliar `popular-catalogos-especies-racas`, com revisão própria dos registros.
 2. Antes de `solicitar-exames-pet`: confirmar solicitação inicialmente sem anexo
    e política para resultado/arquivo externo; reconciliar conflito documental.
 3. Antes de `agendar-consulta-pet`: escolher reserva de horário disponível ou

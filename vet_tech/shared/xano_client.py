@@ -30,6 +30,9 @@ async def xano_request(
         raise XanoRequestError("Configure XANO_API_BASE_URL para conectar ao Xano.")
 
     headers = {}
+    tenant = os.getenv("XANO_TENANT", "").strip()
+    if tenant:
+        headers["X-Tenant"] = tenant
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 

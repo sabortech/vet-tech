@@ -7,7 +7,8 @@ def login_view() -> rx.Component:
     formulario = rx.form(
         rx.vstack(
             rx.input(
-                placeholder="E-mail ou CPF",
+                placeholder="E-mail",
+                aria_label="E-mail",
                 type="email",
                 name="email",
                 required=True,
@@ -24,6 +25,7 @@ def login_view() -> rx.Component:
             ),
             rx.input(
                 placeholder="Senha",
+                aria_label="Senha",
                 type="password",
                 name="password",
                 required=True,
