@@ -18,12 +18,19 @@ table exame {
     text tipo? filters=trim
     date? data?
     text resultado? filters=trim
-    attachment arquivo?
+    // Optional legacy upload; new structured examinations do not require a file.
+    attachment? arquivo?
+    text? status?
+    date? data_solicitacao?
+    date? data_realizacao?
+    int veterinario_id? { table = "veterinario" }
+    text? origem_linha?
   }
 
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {type: "btree|unique", field: [{name: "consulta_id", op: "asc"}, {name: "origem_linha", op: "asc"}]}
   ]
 
   tags = ["vettech"]

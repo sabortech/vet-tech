@@ -17,11 +17,15 @@ table acesso_autorizado {
   
     date? data_autorizacao?
     text status? filters=trim
+    timestamp? concedido_em?
+    timestamp? revogado_em?
+    int consulta_origem_id? { table = "consulta" }
   }
 
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {type: "btree|unique", field: [{name: "pet_id", op: "asc"}, {name: "veterinario_id", op: "asc"}]}
   ]
 
   tags = ["vettech"]

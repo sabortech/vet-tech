@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import reflex as rx
 
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
+from vet_tech.features.clinical.state import ClinicalMixin
 from vet_tech.features.veterinarians.validation import professional_payload
 from vet_tech.shared.xano_client import (
     AUTH_API_GROUP,
@@ -13,7 +14,7 @@ from vet_tech.shared.xano_client import (
 )
 
 
-class State(rx.State):
+class State(ClinicalMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
@@ -70,6 +71,7 @@ class State(rx.State):
         Future clinical features must clear their pet-scoped state here and
         check the same session/context generation before accepting responses.
         """
+        self._clear_clinical_pet()
         self._pet_context_generation += 1
         self.selected_pet = {}
         self.pet_target_id = ""
@@ -77,6 +79,7 @@ class State(rx.State):
         self.is_loading_pet = False
 
     def _clear_session(self):
+        self._clear_clinical_session()
         self.profile = ""
         self.identity_id = ""
         self.identity_name = ""

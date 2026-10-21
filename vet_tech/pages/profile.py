@@ -3,6 +3,7 @@ import reflex as rx
 from vet_tech.components.navigation import sidebar
 from vet_tech.components.pets import pet_details, pet_list
 from vet_tech.features.auth.state import State
+from vet_tech.components.clinical import booking_dialog, notice, records, tutor_consultations, veterinary_content, veterinary_sidebar
 
 
 def tutor_area() -> rx.Component:
@@ -13,22 +14,23 @@ def tutor_area() -> rx.Component:
                 rx.vstack(rx.text("Área do tutor", size="2", color="#53635A"),
                           rx.heading(State.active_section, size="7"), align="start", spacing="1"),
                 rx.spacer(),
-                rx.cond(State.selected_pet_id != "", rx.badge(State.selected_pet["nome"], size="2")),
-                align="center", width="100%", margin_bottom="2rem",
+                rx.cond(State.active_section == "Início", booking_dialog()),
+                rx.cond(State.selected_pet_id != "", rx.badge(State.selected_pet["nome"], size="2", white_space="normal", max_width="100%")),
+                align="center", wrap="wrap", width="100%", margin_bottom="2rem",
             ),
             rx.cond(State.pet_picker_open | (State.pet_target_id == ""),
                     rx.vstack(rx.text("Escolha um pet para continuar ou cadastre em Novo pet."), pet_list(),
                               align="stretch", width="100%", spacing="4"),
-                    rx.cond(State.active_section == "Início", pet_details(),
-                            rx.vstack(
-                                rx.cond(State.is_loading_pet, rx.text("Carregando dados do pet…", role="status")),
-                                rx.cond(State.selected_pet_id != "",
-                                        rx.text("Esta seção ainda não está disponível. Os registros serão integrados nas próximas entregas."),
-                                        pet_details()),
-                                align="stretch", width="100%",
-                            ))),
+                    rx.match(State.active_section,
+                        ("Início", pet_details()),
+                        ("Consultas", tutor_consultations()),
+                        ("Vacinas", rx.vstack(notice(), records("vacinas"), align="stretch")),
+                        ("Medicamentos", rx.vstack(notice(), records("medicamentos"), align="stretch")),
+                        ("Doenças", rx.vstack(notice(), records("doencas"), align="stretch")),
+                        pet_details())),
             rx.text(State.pet_message, role="status", margin_top="1rem"),
             as_="main", id="main-content", width="100%", min_width="0", min_height="100dvh",
+            overflow_wrap="anywhere",
             padding=rx.breakpoints(initial="24px 16px", lg="40px"),
             margin_left=rx.breakpoints(initial="72px", lg="0"),
         ),
@@ -43,15 +45,11 @@ def tutor_area() -> rx.Component:
 
 
 def veterinarian_area() -> rx.Component:
-    return rx.container(
-        rx.vstack(
-            rx.hstack(rx.heading("Área do veterinário", size="6"), rx.spacer(),
-                      rx.button("Sair", on_click=State.logout), width="100%"),
-            rx.text(State.identity_name),
-            rx.text("Seu cadastro profissional está ativo. O acesso aos pets dependerá da autorização do tutor, em uma próxima entrega."),
-            align="stretch", spacing="5", padding_y="2rem",
-        ),
-    )
+    return rx.hstack(veterinary_sidebar(),
+        rx.box(veterinary_content(), as_="main", width="100%", min_width="0",
+               overflow_wrap="anywhere",
+               padding=rx.breakpoints(initial="16px", lg="40px")),
+        width="100%", align="start", spacing="0", on_mount=State.load_agenda)
 
 
 def profile_view() -> rx.Component:

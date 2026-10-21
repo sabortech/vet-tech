@@ -70,6 +70,7 @@ O histórico do pet nunca é apagado, mesmo que o tutor mude de clínica ou de v
 Relaciona-se com: TUTOR (N:1), ESPECIE (N:1), RACA (N:1), CONSULTA (1:N), EXAME (1:N), VACINA (1:N), MEDICAMENTO (1:N), PET_DOENCA (1:N), ANEXO (1:N), NOTIFICACAO (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
 
 ## Consulta
+O fluxo estruturado de consultas, agenda e associativas clínicas em implementação está detalhado em [clinical-flow.md](clinical-flow.md). A migração preserva os registros anteriores e distingue reserva, rascunho e publicação.
 Toda consulta deve estar vinculada a um pet e a um veterinário responsável pelo atendimento
 Uma consulta pode gerar um ou mais exames complementares
 Uma consulta pode resultar no diagnóstico de uma ou mais doenças, registradas através da associação com DOENCA

@@ -199,6 +199,7 @@ Campos: nome, espécie, raça (opcional), sexo, data de nascimento, peso, cor da
 Relaciona-se com: TUTOR, ESPECIE, RACA (N:1); CONSULTA, EXAME, VACINA, MEDICAMENTO, PET_DOENCA, ANEXO, NOTIFICACAO, ACESSO_AUTORIZADO, LOG_ACESSO (1:N).
 
 #### CONSULTA
+Evolução em implementação: ver [fluxo clínico](clinical-flow.md) para estados, timestamps, rascunho e relações dos complementos com a consulta. A existência dos schemas locais não representa publicação do novo fluxo.
 Campos: data, motivo, diagnóstico, observações, pet, veterinário.
 Relaciona-se com: PET (N:1), VETERINARIO (N:1), EXAME (1:N), CONSULTA_DOENCA (1:N).
 

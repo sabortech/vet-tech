@@ -7,6 +7,7 @@ O cadastro de pets já depende das tabelas de espécie e raça, e a identidade v
 ## What Changes
 
 - Preparar um conjunto inicial versionado de espécies e raças e uma seção exclusiva para revisar os registros, suas fontes e o mapeamento ao banco existente.
+- Curar cerca de 20 raças de cães e 20 de gatos a partir de fontes identificadas. A seleção inicial tem 21 caninas (incluindo a Shih Tzu legada) e 20 felinas, sem impor limite permanente nem afirmar ranking brasileiro.
 - Executar carga administrativa com simulação, validação de nomes/vínculos, criação apenas do que falta e relatório de resultado.
 - Preservar IDs e registros existentes, inclusive pets e futuras aptidões veterinárias; não cadastrar uma raça artificial SRD.
 - Tornar a reexecução idempotente e interromper conflitos ambíguos antes de escrever.

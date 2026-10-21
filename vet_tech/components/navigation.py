@@ -42,7 +42,7 @@ def sidebar() -> rx.Component:
                       aria_label=rx.cond(State.sidebar_expanded, "Recolher menu", "Expandir menu"),
                       aria_expanded=State.sidebar_expanded, on_click=State.toggle_sidebar,
                       variant="outline", width="100%", justify="start"),
-            *[menu_button(label, icon, on_click=State.change_section(label),
+            *[menu_button(label, icon, on_click=State.clinical_section(label),
                           background=rx.cond(State.active_section == label, "#DDE9D4", "transparent"),
                           custom_attrs={"aria-current": rx.cond(State.active_section == label, "page", "false")})
               for label, icon in SECTIONS],

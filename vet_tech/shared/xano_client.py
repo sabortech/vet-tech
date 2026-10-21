@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Any, Optional
 
@@ -39,27 +40,27 @@ async def xano_request(
     url = f"{base_url}/api:{api_group}/{endpoint.lstrip('/')}"
     try:
         async with httpx.AsyncClient(timeout=20) as client:
-            if files:
+            for attempt in range(3):
                 response = await client.request(
-                    method,
-                    url,
-                    headers=headers,
-                    data=form_data,
-                    files=files,
+                    method, url, headers=headers,
+                    **({"data": form_data, "files": files} if files else {"json": json_payload}),
                 )
-            else:
-                response = await client.request(
-                    method,
-                    url,
-                    headers=headers,
-                    json=json_payload,
-                )
+                if response.status_code != 429 or attempt == 2:
+                    break
+                try:
+                    delay = min(30, max(1, float(response.headers.get("Retry-After", "20"))))
+                except ValueError:
+                    delay = 20
+                # 429 rejects the operation before execution. Never retry a timeout/5xx here.
+                await asyncio.sleep(delay)
     except httpx.TimeoutException as error:
         raise XanoRequestError("O Xano demorou para responder. Tente novamente.") from error
     except httpx.RequestError as error:
         raise XanoRequestError("Não foi possível conectar ao Xano.") from error
 
     if not response.is_success:
+        if response.status_code == 429:
+            raise XanoRequestError("Muitas solicitações no momento. Aguarde alguns instantes e tente novamente.", status_code=429)
         message = "Não foi possível concluir a solicitação."
         try:
             body = response.json()
