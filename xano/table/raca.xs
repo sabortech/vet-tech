@@ -6,9 +6,13 @@ table raca {
     timestamp created_at?=now {
       visibility = "private"
     }
-  
+
     text nome? filters=trim
-    int especie_id? {
+    text? nome_normalizado? {
+      visibility = "internal"
+    }
+
+    int especie_id {
       table = "especie"
     }
   }
@@ -16,6 +20,13 @@ table raca {
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {
+      type : "btree|unique"
+      field: [
+        {name: "especie_id", op: "asc"}
+        {name: "nome_normalizado", op: "asc"}
+      ]
+    }
   ]
 
   tags = ["vettech"]

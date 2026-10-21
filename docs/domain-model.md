@@ -1,5 +1,12 @@
 ## O que é o Vet Tech?
 
+Contrato de implementação da fundação clínica: ver
+[`record-foundation-verification.md`](record-foundation-verification.md).
+O DER em `project-overview.md` representa os vínculos obrigatórios de consulta
+e exame e o timestamp dos logs. Esses contratos estão nos artefatos locais;
+publicação, reconciliação de dados antigos e integração Xano exigem ambiente
+de desenvolvimento e não são comprovadas por validação sintática.
+
 O VetTech é um sistema que atende clínicas veterinárias, veterinários e tutores de pets, com o objetivo de centralizar o histórico de saúde dos animais.
 
 ## Regras do Sistema

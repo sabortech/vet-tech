@@ -229,15 +229,45 @@ source .venv/bin/activate        # Linux/macOS
 # 3. Instale as dependências
 pip install -r requirements.txt
 
-# 4. Inicie o Reflex
-reflex run
+# 4. Configure a origem do workspace de desenvolvimento
+cp .env.example .env
+# Edite XANO_API_BASE_URL no .env antes de continuar.
+set -a
+source .env
+set +a
+
+# 5. Inicie o Reflex
+reflex run --env prod --single-port 2>&1 | tee reflex.log
 ```
 
-O app abre em `http://localhost:3000`.
+Consulte no log o endereço e a porta usados pela aplicação.
 
 ### Configuração do backend (Xano)
 
-Configure a URL base da API do seu workspace Xano no frontend (`vet_tech/`) e importe o xanoscript da pasta [`xano/`](./xano) para recriar as tabelas e endpoints.
+Defina `XANO_API_BASE_URL` no ambiente com a origem HTTP(S) do workspace, sem
+`/api:grupo`, credenciais ou parâmetros. O cliente em `shared/xano_client.py`
+compõe os grupos e endpoints. Não há fallback para outro workspace: o backend
+interrompe a inicialização quando a configuração falta ou é inválida. Imports e
+compilação não exigem conexão Xano. O `.env` é local e ignorado pelo Git;
+o comando acima o carrega explicitamente. `.env.example` usa uma origem fictícia.
+
+Os artefatos oficiais estão em [`xano/`](./xano). Antes de publicar mudanças,
+revise o [contrato e plano de migração](./docs/backend-foundation.md).
+
+### Verificações
+
+```bash
+python -m unittest discover -s tests/unit -v
+reflex compile --dry
+openspec validate --all --strict
+git diff --check
+```
+
+Os testes unitários usam configuração fictícia e transporte HTTP simulado,
+sem acessar Xano. Integrações reais ficam em `tests/integration` e exigem
+execução explícita contra desenvolvimento, conforme seus docstrings. Não use
+dados ou tokens de produção. Testes locais não comprovam autorização e auditoria
+de endpoints ainda não implementados.
 
 > ⚠️ A pasta `reflex.lock` é gerada automaticamente pelo Reflex e não deve ser versionada.
 
@@ -387,3 +417,10 @@ Desenvolvimento incremental por módulo:
 © Projeto desenvolvido para fins acadêmicos.
 
 Faculdade Impacta e Tecnologia (FIT)
+# Verificação do backend clínico
+
+Contratos dos endpoints, decisão de identidade com dois perfis, preparo de
+fixtures e testes reais do Xano estão em
+[`docs/record-foundation-verification.md`](docs/record-foundation-verification.md).
+A suíte remota é separada dos testes unitários e exige configuração explícita
+de um ambiente de desenvolvimento; não usa fallback para produção.

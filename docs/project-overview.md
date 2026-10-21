@@ -177,6 +177,12 @@ erDiagram
     VETERINARIO ||--o{ ACESSO_AUTORIZADO : recebe
     PET ||--o{ LOG_ACESSO : registra
     VETERINARIO ||--o{ LOG_ACESSO : gera
+    LOG_ACESSO {
+        int pet_id FK "obrigatório"
+        int veterinario_id FK "obrigatório"
+        timestamp data_hora "obrigatório, com horário"
+        text acao "visualizacao, edicao, exportacao"
+    }
 ```
 
 ### Entidades
@@ -261,7 +267,7 @@ Liga PET e DOENCA: representa o **histórico consolidado** do pet, com **status*
 - **Relaciona-se com:** PET (N:1), VETERINARIO (N:1).
 
 #### LOG_ACESSO
-- **Campos:** pet, veterinário, ação (visualização, edição, exportação), data.
+- **Campos:** pet e veterinário obrigatórios, ação (visualização, edição, exportação), timestamp com data e horário obrigatórios.
 - **Regras:** todo acesso de veterinário ao prontuário gera registro automaticamente; **imutável** (não pode ser editado nem apagado por nenhum usuário); permite ao tutor e à administração verificar quem acessou os dados e quando.
 - **Relaciona-se com:** PET (N:1), VETERINARIO (N:1).
 

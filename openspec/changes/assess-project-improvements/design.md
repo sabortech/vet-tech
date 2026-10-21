@@ -2,8 +2,9 @@
 
 ## Context
 
-O repositório contém a visão de produto e o modelo de domínio em `docs/`, mas
-não contém ainda código de aplicação, contrato de API, modelo Xano ou testes.
+O repositório contém visão de produto e domínio em `docs/`, aplicação Reflex,
+APIs de tutor/pets, tabelas Xano e testes. Os contratos existentes, lacunas e
+responsabilidades estão registrados em `docs/backend-foundation.md`.
 A solução deve permanecer em Python com Reflex no frontend e Xano no backend e
 deve tratar dados de tutores e de saúde animal como sensíveis. Ver `proposal.md`
 para a motivação e `specs/` para os contratos comportamentais.
@@ -84,16 +85,32 @@ exportação. Cada fatia terá testes de regra e integração com dados sintéti
 
 ## Plano de migração
 
-Não há migração de dados, pois o repositório não contém implementação ou base
-de produção. A adoção deverá começar em ambiente de desenvolvimento com
-variáveis de ambiente sintéticas; se a integração falhar, a reversão consiste
-em não ativar a nova aplicação e remover apenas a configuração de
-desenvolvimento criada para a mudança.
+Há implementação existente e não se pode pressupor uma base vazia. Seguir o
+inventário, a reconciliação de vínculos e o rollback de
+`docs/backend-foundation.md`, preservando histórico e autoria. Não truncar
+tabelas nem inventar referências. Testes locais não comprovam migração ou
+publicação remota.
 
 ## Questões em aberto
 
-- Os endpoints e o mecanismo de autenticação disponíveis no workspace Xano
-  ainda precisam ser confirmados antes da implementação da integração.
+- Os artefatos locais confirmam autenticação de tutor e APIs de pets. A
+  identidade veterinária usa a política definida abaixo; não confundir login
+  genérico de `user` com o domínio.
 - O formato final de exportação do prontuário deve ser definido em uma mudança
   específica de exportação, sem alterar os requisitos de autorização desta
   proposta.
+
+## Decisão de identidade e implementação local (2026-10-20)
+
+O usuário autorizou resolver as decisões e continuar a aplicação. A mesma pessoa
+pode ter e-mail em tutor e veterinário; a unicidade continua sendo por tabela.
+O endpoint compartilhado `profiles/login` verifica as duas senhas de domínio
+independentemente e emite tokens somente para as identidades comprovadas.
+Senhas diferentes autenticam somente o perfil correspondente; senhas iguais
+permitem retornar ambos. IDs iguais entre tabelas não são a mesma identidade.
+Não criar tabela genérica ou unificar senhas automaticamente. Essa escolha
+substitui a pendência de política de e-mail e orienta `unificar-acesso-perfis`.
+
+Detalhes dos endpoints, índices, migração preservando histórico, evidências e
+testes reproduzíveis em `docs/record-foundation-verification.md`. Os artefatos
+locais não equivalem a publicação ou integração remota concluída.

@@ -69,9 +69,10 @@ Manter as identidades nas entidades de domínio `tutor` e `veterinario`, sem
 introduzir a tabela genérica `user` apenas para unificar a interface. A futura
 change `unificar-acesso-perfis` definirá a resolução de credenciais, emissão
 de token e identificação do perfil compatíveis com o Xano. IDs iguais nas
-duas tabelas não podem ser confundidos. A política para e-mail presente nos
-dois perfis precisa ser decidida antes dessa implementação; não escolher o
-primeiro perfil encontrado nem conceder privilégios pela ordem das consultas.
+duas tabelas não podem ser confundidos. A política foi definida na fundação: e-mail permitido entre tabelas e validação
+independente de cada senha; retornar somente tokens de perfis comprovados. Não
+escolher o primeiro perfil encontrado nem conceder privilégios pela ordem das
+consultas. Ver `docs/record-foundation-verification.md`.
 
 Reutilização das páginas não significa que o tutor poderá executar operações
 clínicas do veterinário. Logout ou mudança de identidade limpa perfil, pet
@@ -128,7 +129,7 @@ mapa de trabalho:
 
 1. Antes de `unificar-acesso-perfis`: confirmar vínculo com clínica obrigatório
    ou opcional, critérios de CRMV, especialidade e espécies atendidas e a
-   política para uma pessoa/e-mail com ambos os perfis. O compartilhamento
+   integração da política de identidade dupla definida na fundação. O compartilhamento
    das páginas e a identificação do perfil no backend já estão aprovados.
 2. Antes de `solicitar-exames-pet`: confirmar solicitação inicialmente sem anexo
    e política para resultado/arquivo externo; reconciliar conflito documental.

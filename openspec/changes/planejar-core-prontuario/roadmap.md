@@ -90,3 +90,13 @@ Mapeamento inicial de capacidades, sujeito à revisão de cada proposta:
 Upload de foto/laudo, notificações automáticas, exportação PDF, login social,
 recuperação de senha, administração completa, gestão de clínicas, pagamentos,
 telemedicina e aplicativo nativo. Consulta de datas clínicas permanece incluída.
+
+## Atualização da fundação (2026-10-20)
+
+`assess-project-improvements` contém agora artefatos XanoScript locais de
+identidade veterinária autenticada, consentimento individual, consultas/exames
+e auditoria transacional. A integração remota ainda não foi executada. A etapa
+2 deve reutilizar `Authentication/profiles/login`, sem mesclar contas somente
+por e-mail; a etapa 3 deve reutilizar as funções `records/*` e o grupo
+`vettech-records`, verificando a implantação antes de apresentar como pronto.
+O cadastro profissional, as telas e as demais etapas continuam futuras.

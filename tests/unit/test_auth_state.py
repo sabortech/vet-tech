@@ -1,7 +1,12 @@
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from vet_tech.features.auth.state import State
+from vet_tech.features.auth.state import (
+    State,
+    display_pet_sex,
+    format_pet_birth_date,
+)
 from vet_tech.shared.xano_client import XanoRequestError
 
 
@@ -35,6 +40,18 @@ async def submit_signup(state, data):
 
 
 class AuthStateTests(unittest.IsolatedAsyncioTestCase):
+    def test_pet_display_formatting_preserves_unknown_values(self):
+        self.assertEqual(format_pet_birth_date("2026-10-05"), "05/10/2026")
+        self.assertEqual(
+            format_pet_birth_date("2026-10-05T11:30:00Z"),
+            "05/10/2026",
+        )
+        self.assertEqual(format_pet_birth_date("data inválida"), "data inválida")
+        self.assertEqual(display_pet_sex("macho"), "Macho")
+        self.assertEqual(display_pet_sex("Masc"), "Macho")
+        self.assertEqual(display_pet_sex("FEM"), "Fêmea")
+        self.assertEqual(display_pet_sex("Outro"), "Outro")
+
     async def test_password_confirmation_and_required_fields_block_api(self):
         data = {
             "nome": "Ana Silva", "cpf": "52998224725",
@@ -204,8 +221,58 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(state.pets[0]["raca"], "SRD")
         self.assertEqual(state.pets[0]["sexo"], "")
         self.assertEqual(state.pets[0]["data_nasc"], "")
+        self.assertEqual(state.pets[0]["foto"], "")
+        self.assertEqual(state.pets[0]["metadados"], "Cachorro · SRD")
         self.assertEqual(state.pets[0]["peso_atual"], "0")
         self.assertFalse(state.is_loading_pets)
+
+    async def test_pet_list_maps_authenticated_photo_url_and_optional_metadata(self):
+        state = make_state()
+        state._auth_token = "session-token"
+        state.species_options = [{"id": "1", "nome": "Cachorro"}]
+
+        with patch(
+            "vet_tech.features.auth.state.xano_request",
+            new_callable=AsyncMock,
+            return_value=[
+                {
+                    "id": 10,
+                    "nome": "Rex",
+                    "especie_id": 1,
+                    "sexo": "Masc",
+                    "data_nasc": "2026-10-05",
+                    "foto": {"url": "https://cdn.example.invalid/rex.jpg"},
+                }
+            ],
+        ):
+            await state._load_pets()
+
+        self.assertEqual(state.pets[0]["foto"], "https://cdn.example.invalid/rex.jpg")
+        self.assertEqual(state.pets[0]["sexo"], "Macho")
+        self.assertEqual(state.pets[0]["data_nasc"], "05/10/2026")
+        self.assertEqual(state.pets[0]["metadados"], "Cachorro · SRD · Macho · 05/10/2026")
+
+    async def test_pet_list_does_not_expose_private_storage_path_as_photo_url(self):
+        state = make_state()
+        state._auth_token = "session-token"
+
+        with patch(
+            "vet_tech.features.auth.state.xano_request",
+            new_callable=AsyncMock,
+            return_value=[
+                {
+                    "id": 11,
+                    "nome": "Luna",
+                    "foto": {
+                        "access": "private",
+                        "path": "private/luna.jpg",
+                    },
+                }
+            ],
+        ):
+            await state._load_pets()
+
+        self.assertEqual(state.pets[0]["foto"], "")
 
     async def test_breed_failure_still_displays_all_pets(self):
         state = make_state()
@@ -217,8 +284,10 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
                                 [{"id": 3, "nome": "Siamês"}]]):
             await state._load_pets()
         self.assertEqual([pet["nome"] for pet in state.pets], ["Rex", "Luna"])
-        self.assertEqual(state.pets[0]["raca"], "Raça")
+        self.assertEqual(state.pets[0]["raca"], "")
+        self.assertEqual(state.pets[0]["metadados"], "")
         self.assertEqual(state.pets[1]["raca"], "Siamês")
+        self.assertEqual(state.pets[1]["metadados"], "Siamês")
         self.assertIn("Catálogo indisponível", state.pet_message)
 
     async def test_species_failure_keeps_new_session_and_loads_its_pets(self):
@@ -273,6 +342,58 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(request.await_args_list[0].kwargs["json_payload"], {"nome": "Rex", "especie_id": "1"})
         self.assertEqual(state.pets[0]["raca"], "SRD")
         self.assertEqual(state.pet_message, "Pet cadastrado com sucesso.")
+
+    async def test_create_pet_preserves_iso_birth_date_in_xano_payload(self):
+        state = make_state()
+        state._auth_token = "session-token"
+        state.pet_name = "Rex"
+        state.selected_species_id = "1"
+        state.pet_birth_date = "2026-10-05"
+        with patch(
+            "vet_tech.features.auth.state.xano_request",
+            new_callable=AsyncMock,
+            side_effect=[{"id": 10}, []],
+        ) as request:
+            events = await State.create_pet.fn(state, [])
+        self.assertEqual(
+            request.await_args_list[0].kwargs["json_payload"],
+            {
+                "nome": "Rex",
+                "especie_id": "1",
+                "data_nasc": "2026-10-05",
+            },
+        )
+        self.assertEqual(len(events), 2)
+
+    async def test_create_pet_with_photo_preserves_multipart_payload_and_clears_selection(self):
+        state = make_state()
+        state._auth_token = "session-token"
+        state.pet_name = "Rex"
+        state.selected_species_id = "1"
+        upload = SimpleNamespace(
+            name="rex.png",
+            content_type="image/png",
+            read=AsyncMock(return_value=b"image-bytes"),
+        )
+
+        with patch(
+            "vet_tech.features.auth.state.xano_request",
+            new_callable=AsyncMock,
+            side_effect=[{"id": 10}, []],
+        ) as request:
+            events = await State.create_pet.fn(state, [upload])
+
+        upload.read.assert_awaited_once()
+        self.assertEqual(
+            request.await_args_list[0].kwargs["form_data"],
+            {"nome": "Rex", "especie_id": "1"},
+        )
+        self.assertEqual(
+            request.await_args_list[0].kwargs["files"],
+            {"foto": ("rex.png", b"image-bytes", "image/png")},
+        )
+        self.assertIsNone(request.await_args_list[0].kwargs["json_payload"])
+        self.assertEqual(len(events), 2)
 
 
 if __name__ == "__main__":

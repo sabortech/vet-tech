@@ -15,6 +15,17 @@ query "pets" verb=POST {
   }
 
   stack {
+    db.get tutor {
+      field_name = "id"
+      field_value = $auth.id
+      output = ["id"]
+    } as $tutor
+
+    precondition ($tutor != null) {
+      error_type = "accessdenied"
+      error = "Tutor não autenticado."
+    }
+
     db.get especie {
       field_name = "id"
       field_value = $input.especie_id

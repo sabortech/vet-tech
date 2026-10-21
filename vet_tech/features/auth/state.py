@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
 
@@ -10,6 +11,48 @@ from vet_tech.shared.xano_client import (
     XanoRequestError,
     xano_request,
 )
+
+
+_CLEAR_PET_PHOTO_PREVIEW_SCRIPT = """
+window.dispatchEvent(new Event("vettech:pet-photo-clear"));
+"""
+
+
+def format_pet_birth_date(value: Any) -> str:
+    date_value = str(value or "")
+    if not date_value:
+        return ""
+    try:
+        parsed = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
+    except ValueError:
+        return date_value
+    return parsed.strftime("%d/%m/%Y")
+
+
+def display_pet_sex(value: Any) -> str:
+    sex = str(value or "")
+    normalized = sex.casefold().strip()
+    aliases = {
+        "m": "Macho",
+        "male": "Macho",
+        "masc": "Macho",
+        "masculino": "Macho",
+        "macho": "Macho",
+        "f": "Fêmea",
+        "female": "Fêmea",
+        "fem": "Fêmea",
+        "femea": "Fêmea",
+        "fêmea": "Fêmea",
+    }
+    return aliases.get(normalized, sex)
+
+
+def _pet_photo_url(value: Any) -> str:
+    candidate = value.get("url") if isinstance(value, dict) else value
+    if not isinstance(candidate, str):
+        return ""
+    url = candidate.strip()
+    return url if url.startswith(("https://", "http://")) else ""
 
 
 class State(rx.State):
@@ -258,24 +301,38 @@ class State(rx.State):
                 for breed in breeds:
                     breed_names[breed["id"]] = breed["nome"]
 
-            self.pets = [
-                {
-                    "id": str(item.get("id") or ""),
-                    "nome": str(item.get("nome") or "Pet"),
-                    "especie": species_names.get(
-                        str(item.get("especie_id")),
-                        "Espécie",
-                    ),
-                    "raca": breed_names.get(
-                        str(item.get("raca_id")),
-                        "SRD" if not item.get("raca_id") else "Raça",
-                    ),
-                    "sexo": str(item.get("sexo") or ""),
-                    "data_nasc": str(item.get("data_nasc") or ""),
-                    "peso_atual": str(item["peso_atual"]) if item.get("peso_atual") is not None else "",
-                }
-                for item in result or []
-            ]
+            self.pets = []
+            for item in result or []:
+                species_name = species_names.get(str(item.get("especie_id")), "")
+                breed_name = (
+                    "SRD"
+                    if not item.get("raca_id")
+                    else breed_names.get(str(item.get("raca_id")), "")
+                )
+                sex = display_pet_sex(item.get("sexo"))
+                birth_date = format_pet_birth_date(item.get("data_nasc"))
+                metadata = " · ".join(
+                    value
+                    for value in (species_name, breed_name, sex, birth_date)
+                    if value
+                )
+                self.pets.append(
+                    {
+                        "id": str(item.get("id") or ""),
+                        "nome": str(item.get("nome") or "Pet"),
+                        "especie": species_name,
+                        "raca": breed_name,
+                        "sexo": sex,
+                        "data_nasc": birth_date,
+                        "metadados": metadata,
+                        "foto": _pet_photo_url(item.get("foto")),
+                        "peso_atual": (
+                            str(item["peso_atual"])
+                            if item.get("peso_atual") is not None
+                            else ""
+                        ),
+                    }
+                )
         except XanoRequestError as error:
             self.pet_message = str(error)
         finally:
@@ -353,7 +410,10 @@ class State(rx.State):
             self.pet_microchip = ""
             self.pet_message = "Pet cadastrado com sucesso."
             await self._load_pets()
-            return rx.clear_selected_files("pet-photo")
+            return [
+                rx.clear_selected_files("pet-photo"),
+                rx.call_script(_CLEAR_PET_PHOTO_PREVIEW_SCRIPT),
+            ]
         except XanoRequestError as error:
             self.pet_message = str(error)
         finally:
