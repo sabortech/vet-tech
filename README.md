@@ -3,6 +3,8 @@
 
 > Prontuário digital para pets: o histórico de saúde do animal acompanha o pet por toda a vida, independentemente de clínica, cidade ou veterinário.
 
+Consulte o [guia rápido de uso](docs/guia-rapido.md) para conhecer as telas e as configurações disponíveis.
+
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![Reflex](https://img.shields.io/badge/Frontend-Reflex-5646ED)
 ![Xano](https://img.shields.io/badge/Backend-Xano-1C4EFF)
