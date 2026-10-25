@@ -14,4 +14,5 @@ query "audit" verb=GET {
     } as $registros
   }
   response = $registros
+  guid = "97dkv_3411tO4sAPs17O20kF_BQ"
 }

@@ -10,8 +10,8 @@ Separar o estado de pets futuramente deve seguir a evolução gradual de
 `docs/architecture.md`, sem mover módulos apenas para reorganizar pastas.
 
 O backend autoritativo é `xano/`. Tabelas clínicas não comprovam API funcional,
-autorização ou auditoria. `assess-project-improvements` implementa artefatos locais de controles
-transversais; `planejar-core-prontuario/roadmap.md` ordena as futuras entregas
+autorização ou auditoria. `assess-project-improvements` publica controles transversais no workspace
+de desenvolvimento confirmado; `openspec/changes/archive/2026-10-25-planejar-core-prontuario/roadmap.md` ordena as futuras entregas
 de identidade, acesso e prontuário, que devem reutilizar esses controles.
 
 ## Contratos encontrados
@@ -33,17 +33,17 @@ revelar credenciais ou dados clínicos contidos em respostas arbitrárias.
 | Vínculo/regra | Estado no XanoScript | Contrato necessário |
 |---|---|---|
 | Pet → tutor | `pet.tutor_id` obrigatório; cadastro atribui `$auth.id` | Um único tutor existente; cliente não escolhe outro proprietário |
-| Raça → espécie | `raca.especie_id` obrigatório no artefato local; cadastro valida compatibilidade | Toda raça pertence a uma espécie existente |
-| Consulta → pet e veterinário | Obrigatórios no artefato local; endpoint autenticado em `clinical_records/` | Ambos obrigatórios e existentes; autoria autenticada no backend |
-| Exame → pet | Obrigatório no artefato local | Pet obrigatório e existente |
+| Raça → espécie | `raca.especie_id` obrigatório no schema publicado; cadastro valida compatibilidade | Toda raça pertence a uma espécie existente |
+| Consulta → pet e veterinário | Obrigatórios no schema publicado; endpoint autenticado em `clinical_records/` | Ambos obrigatórios e existentes; autoria autenticada no backend |
+| Exame → pet | Obrigatório no schema publicado | Pet obrigatório e existente |
 | Exame → consulta | Opcional | Continuar opcional; se presente, consulta deve pertencer ao mesmo pet |
 | Identidade veterinária | `auth = true`, campo legado `cmv`, índices únicos de e-mail/CRMV | Login por perfil valida credenciais no backend; cadastro profissional na futura change |
-| Log de acesso | Timestamp e vínculos obrigatórios no artefato local; legado requer reconciliação | Timestamp com hora, vínculos e ação obrigatórios; imutabilidade |
+| Log de acesso | Timestamp e vínculos obrigatórios no schema publicado; legado requer reconciliação | Timestamp com hora, vínculos e ação obrigatórios; imutabilidade |
 
 Os contratos possuem implementação XanoScript local em `xano/api/clinical_records/`
-e funções reutilizáveis em `xano/function/records/`. Ainda exigem publicação e
-integração em desenvolvimento. `event_log` genérico não substitui log clínico.
-Contrato, política de identidade dupla e comandos em
+e funções reutilizáveis em `xano/function/records/`, publicados em desenvolvimento.
+A cobertura e os resultados de integração estão registrados na change. `event_log` genérico não substitui log clínico.
+Contrato, política de identidade por domínio e comandos em
 [`record-foundation-verification.md`](record-foundation-verification.md).
 
 ## Migração preservando histórico
@@ -60,7 +60,16 @@ Contrato, política de identidade dupla e comandos em
 6. Verificar contagens, autoria e histórico com fixtures em desenvolvimento.
    Rollback reverte endpoints/schema pelo backup sem truncar tabelas ou apagar logs.
 
-Não foi executada migração ou publicação remota. A política de dois perfis foi
-definida: mesmo e-mail permitido entre tabelas; cada senha de domínio precisa
-ser comprovada e cada token é vinculado à tabela correta. A integração remota
-continua necessária antes de considerar os controles operacionais.
+A decisão de identidade foi reconciliada por autorização explícita do usuário:
+o e-mail é único entre tutor e veterinário. O contrato remoto `acesso/login`
+valida `reserva_email`, a senha e a tabela de domínio, retornando um único perfil
+autenticado. Não publicar o contrato local alternativo `profiles/login`.
+O workspace foi confirmado como desenvolvimento; a publicação e as verificações
+são registradas na change antes de declarar os controles operacionais.
+
+## Limite temporário de requisições no login
+
+Se o Xano responder HTTP 429, o cliente informa que o serviço limitou
+temporariamente as solicitações e orienta aguardar. Não classifica esse retorno
+como senha inválida nem repete credenciais automaticamente. A limitação foi
+observada no ambiente configurado; não foram alterados plano, cotas ou contas.

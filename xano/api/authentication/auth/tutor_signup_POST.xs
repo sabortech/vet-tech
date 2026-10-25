@@ -11,14 +11,7 @@ query "tutor/signup" verb=POST {
   }
 
   stack {
-    precondition (
-      $input.nome != "" &&
-      $input.cpf != "" &&
-      $input.email != "" &&
-      $input.telefone != "" &&
-      $input.endereco != "" &&
-      $input.password != ""
-    ) {
+    precondition ($input.nome != "" && $input.cpf != "" && $input.email != "" && $input.telefone != "" && $input.endereco != "" && $input.password != "") {
       error_type = "inputerror"
       error = "Preencha todos os campos obrigatórios."
     }
@@ -37,18 +30,7 @@ query "tutor/signup" verb=POST {
       error = "Informe um CPF válido."
     }
 
-    precondition (
-      $cpf_digits != "00000000000" &&
-      $cpf_digits != "11111111111" &&
-      $cpf_digits != "22222222222" &&
-      $cpf_digits != "33333333333" &&
-      $cpf_digits != "44444444444" &&
-      $cpf_digits != "55555555555" &&
-      $cpf_digits != "66666666666" &&
-      $cpf_digits != "77777777777" &&
-      $cpf_digits != "88888888888" &&
-      $cpf_digits != "99999999999"
-    ) {
+    precondition ($cpf_digits != "00000000000" && $cpf_digits != "11111111111" && $cpf_digits != "22222222222" && $cpf_digits != "33333333333" && $cpf_digits != "44444444444" && $cpf_digits != "55555555555" && $cpf_digits != "66666666666" && $cpf_digits != "77777777777" && $cpf_digits != "88888888888" && $cpf_digits != "99999999999") {
       error_type = "inputerror"
       error = "Informe um CPF válido."
     }
@@ -62,43 +44,73 @@ query "tutor/signup" verb=POST {
     }
 
     var $cpf_d0 {
-      value = $cpf_number|divide:10000000000|floor|modulus:10
+      value = $cpf_number
+        |divide:10000000000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d1 {
-      value = $cpf_number|divide:1000000000|floor|modulus:10
+      value = $cpf_number
+        |divide:1000000000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d2 {
-      value = $cpf_number|divide:100000000|floor|modulus:10
+      value = $cpf_number
+        |divide:100000000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d3 {
-      value = $cpf_number|divide:10000000|floor|modulus:10
+      value = $cpf_number
+        |divide:10000000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d4 {
-      value = $cpf_number|divide:1000000|floor|modulus:10
+      value = $cpf_number
+        |divide:1000000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d5 {
-      value = $cpf_number|divide:100000|floor|modulus:10
+      value = $cpf_number
+        |divide:100000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d6 {
-      value = $cpf_number|divide:10000|floor|modulus:10
+      value = $cpf_number
+        |divide:10000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d7 {
-      value = $cpf_number|divide:1000|floor|modulus:10
+      value = $cpf_number
+        |divide:1000
+        |floor
+        |modulus:10
     }
 
     var $cpf_d8 {
-      value = $cpf_number|divide:100|floor|modulus:10
+      value = $cpf_number
+        |divide:100
+        |floor
+        |modulus:10
     }
 
     var $cpf_d9 {
-      value = $cpf_number|divide:10|floor|modulus:10
+      value = $cpf_number
+        |divide:10
+        |floor
+        |modulus:10
     }
 
     var $cpf_d10 {
@@ -261,16 +273,34 @@ query "tutor/signup" verb=POST {
       error = "Já existe uma conta com esse CPF ou e-mail."
     }
 
-    db.add tutor {
-      data = {
-        nome     : $input.nome
-        cpf      : $cpf_digits
-        email    : $input.email
-        telefone : $input.telefone
-        endereco : $input.endereco
-        password : $input.password
+    function.run "Identity/check_email_available" {
+      input = {email: $input.email}
+    } as $email_check
+
+    db.transaction {
+      stack {
+        db.add reserva_email {
+          data = {email: $input.email, perfil: "tutor"}
+        } as $reservation
+
+        db.add tutor {
+          data = {
+            nome    : $input.nome
+            cpf     : $cpf_digits
+            email   : $input.email
+            telefone: $input.telefone
+            endereco: $input.endereco
+            password: $input.password
+          }
+        } as $tutor
+
+        db.edit reserva_email {
+          field_name = "id"
+          field_value = $reservation.id
+          data = {identidade_id: $tutor.id}
+        } as $complete
       }
-    } as $tutor
+    }
   }
 
   response = {success: true}

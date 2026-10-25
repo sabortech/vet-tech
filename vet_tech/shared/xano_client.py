@@ -53,6 +53,12 @@ async def xano_request(
     except httpx.RequestError:
         raise XanoRequestError("Não foi possível conectar ao Xano.") from None
 
+    if response.status_code == 429:
+        raise XanoRequestError(
+            "O Xano limitou temporariamente as solicitações. "
+            "Aguarde alguns instantes e tente novamente."
+        )
+
     if not response.is_success:
         # Apenas mensagens de domínio conhecidas podem atravessar a fronteira
         # do backend. Erros arbitrários podem conter credenciais ou dados clínicos.

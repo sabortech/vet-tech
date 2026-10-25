@@ -5,10 +5,11 @@ query "audit/{log_id}" verb=PATCH {
     int log_id
   }
   stack {
-    throw {
-      name = "accessdenied"
-      value = "Registros de auditoria são imutáveis."
+    precondition (false) {
+      error_type = "accessdenied"
+      error = "Registros de auditoria são imutáveis."
     }
   }
   response = null
+  guid = "h1hwh-7K2HKNNGnkPhOfTlmjhCc"
 }

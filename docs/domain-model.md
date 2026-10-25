@@ -3,9 +3,9 @@
 Contrato de implementação da fundação clínica: ver
 [`record-foundation-verification.md`](record-foundation-verification.md).
 O DER em `project-overview.md` representa os vínculos obrigatórios de consulta
-e exame e o timestamp dos logs. Esses contratos estão nos artefatos locais;
-publicação, reconciliação de dados antigos e integração Xano exigem ambiente
-de desenvolvimento e não são comprovadas por validação sintática.
+e exame e o timestamp dos logs. A implantação de desenvolvimento e as verificações
+reais estão registradas em `openspec/changes/archive/2026-10-25-assess-project-improvements/verification.md`;
+a validação sintática isolada não comprova autorização ou rollback.
 
 O VetTech é um sistema que atende clínicas veterinárias, veterinários e tutores de pets, com o objetivo de centralizar o histórico de saúde dos animais.
 
@@ -83,7 +83,9 @@ Relaciona-se com: PET (N:1), VETERINARIO (N:1), EXAME (1:N), CONSULTA_DOENCA (1:
 ## Exame
 Um exame está sempre vinculado a um pet
 Um exame pode ou não estar vinculado a uma consulta específica (é possível registrar exames avulsos, sem consulta associada)
-Um exame contem no minimo 1 arquivo anexado (laudo, imagem, PDF)
+A visão de domínio prevê anexos (laudo, imagem, PDF). O contrato atual preserva
+o campo legado `arquivo` do tipo attachment, opcional no Xano; não introduz
+novo armazenamento de anexos nesta fundação. A evolução fica na change de exames.
 Relaciona-se com: PET (N:1), CONSULTA (N:1, opcional)
 
 
@@ -125,6 +127,9 @@ Relaciona-se com: PET (N:1), VETERINARIO (N:1)
 
 
 ## Log_Acesso
+Cada log exige pet, veterinário, ação e `data_hora` do tipo timestamp com horário.
+O campo compatível `ocorrido_em` é preservado. Horários históricos só são
+preenchidos com fonte confiável; datas sem hora não representam um instante exato.
 Todo acesso de um veterinário a um prontuário — visualização, edição ou exportação — gera automaticamente um registro de log
 O log não pode ser editado ou apagado por nenhum usuário, servindo como trilha de auditoria imutável
 O log permite ao tutor (e à administração do sistema) verificar quem acessou os dados do pet e quando

@@ -37,4 +37,5 @@ query "records/tutor" verb=GET {
     }
   }
   response = {pet_id: $pet.id, consultas: $consultas, exames: $exames_visiveis}
+  guid = "q8IL2Nz9lqErra_UqlTxUrU3fjc"
 }

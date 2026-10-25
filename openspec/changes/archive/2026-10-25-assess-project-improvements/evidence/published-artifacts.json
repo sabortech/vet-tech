@@ -1,0 +1,35 @@
+{
+  "original_artifacts": 75,
+  "original_artifacts_preserved": true,
+  "reviewed_changes": [
+    "api/pet/pets_GET.xs",
+    "api/pet/pets_POST.xs",
+    "function/clinical/assert_access.xs",
+    "function/clinical/audit.xs",
+    "table/acesso_autorizado.xs",
+    "table/consulta.xs",
+    "table/exame.xs",
+    "table/log_acesso.xs",
+    "table/raca.xs"
+  ],
+  "added_artifacts": [
+    "api/prontuario/audit/log_id_DELETE.xs",
+    "api/prontuario/audit/log_id_PATCH.xs",
+    "api/prontuario/audit_GET.xs",
+    "api/prontuario/authorizations_GET.xs",
+    "api/prontuario/authorizations_PUT.xs",
+    "api/prontuario/consultations_POST.xs",
+    "api/prontuario/exams_POST.xs",
+    "api/prontuario/prontuario.xs",
+    "api/prontuario/records/export_GET.xs",
+    "api/prontuario/records/tutor_GET.xs",
+    "api/prontuario/records_GET.xs",
+    "function/records/audit.xs",
+    "function/records/require_access.xs",
+    "function/records/require_owner.xs",
+    "function/records/validate_exam.xs"
+  ],
+  "audit_function_restored": true,
+  "audit_mutation_apis": false,
+  "login_signup_agenda_draft_finalization_unchanged": true
+}

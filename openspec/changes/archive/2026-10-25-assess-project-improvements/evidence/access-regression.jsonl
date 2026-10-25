@@ -1,0 +1,3 @@
+{"scenario": "auditoria permanece imutável para todos os usuários", "status": "passed"}
+{"scenario": "histórico clínico existente preserva resposta e gera auditoria com horário", "status": "passed"}
+{"scenario": "revogação imediata nega leitura/escrita/exportação e preserva outro veterinário", "status": "passed"}

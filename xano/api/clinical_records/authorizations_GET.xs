@@ -14,4 +14,5 @@ query "authorizations" verb=GET {
     } as $registros
   }
   response = $registros
+  guid = "EARL-EbtIP3PDlCijLt2la_k4Fc"
 }

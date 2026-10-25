@@ -131,6 +131,8 @@ class State(rx.State):
 
     @rx.event
     async def login(self, form_data: dict[str, Any]):
+        if self.is_busy:
+            return
         email = form_data.get("email", "").strip()
         password = form_data.get("password", "")
         if not email or not password:
@@ -139,6 +141,7 @@ class State(rx.State):
 
         self.is_busy = True
         self.login_message = ""
+        yield
         try:
             result = await xano_request(
                 "POST",
@@ -161,6 +164,9 @@ class State(rx.State):
             self.selected_species_id = ""
             self.selected_breed_id = ""
             self.pet_message = ""
+            self.is_loading_pets = True
+            # Publica a sessão antes das leituras auxiliares do perfil.
+            yield
             try:
                 await self._load_species()
             except XanoRequestError as error:
@@ -172,6 +178,7 @@ class State(rx.State):
             self.login_message = str(error)
         finally:
             self.is_busy = False
+            self.is_loading_pets = False
 
     @rx.event
     async def signup(self, form_data: dict[str, Any]):

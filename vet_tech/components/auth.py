@@ -7,7 +7,7 @@ def login_view() -> rx.Component:
     formulario = rx.form(
         rx.vstack(
             rx.input(
-                placeholder="E-mail ou CPF",
+                placeholder="E-mail",
                 type="email",
                 name="email",
                 required=True,

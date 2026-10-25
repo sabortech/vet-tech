@@ -100,17 +100,24 @@ publicação remota.
   específica de exportação, sem alterar os requisitos de autorização desta
   proposta.
 
-## Decisão de identidade e implementação local (2026-10-20)
+## Decisão de identidade reconciliada (2026-10-21)
 
-O usuário autorizou resolver as decisões e continuar a aplicação. A mesma pessoa
-pode ter e-mail em tutor e veterinário; a unicidade continua sendo por tabela.
-O endpoint compartilhado `profiles/login` verifica as duas senhas de domínio
-independentemente e emite tokens somente para as identidades comprovadas.
-Senhas diferentes autenticam somente o perfil correspondente; senhas iguais
-permitem retornar ambos. IDs iguais entre tabelas não são a mesma identidade.
-Não criar tabela genérica ou unificar senhas automaticamente. Essa escolha
-substitui a pendência de política de e-mail e orienta `unificar-acesso-perfis`.
+O usuário confirmou que o workspace configurado é de desenvolvimento e autorizou
+preservar a regra já publicada: e-mail único entre tutor e veterinário, com
+reserva em `reserva_email`. A decisão substitui a proposta local de dois perfis
+para um mesmo e-mail. Reutilizar `Authentication/acesso/login`: o backend valida
+a senha, a reserva e a tabela de domínio antes de emitir token com perfil e
+identidade. Campos de perfil ou autoria enviados pelo cliente não concedem acesso.
+O login atual de tutor permanece disponível; não publicar `profiles/login`.
 
-Detalhes dos endpoints, índices, migração preservando histórico, evidências e
-testes reproduzíveis em `docs/record-foundation-verification.md`. Os artefatos
-locais não equivalem a publicação ou integração remota concluída.
+A publicação é incremental e transacional, com cópia anterior dos artefatos,
+inventário e prévia sem exclusões. Preservar agenda, rascunhos, finalização,
+índices e campos já existentes. Testar somente identidades e pets sintéticos
+separados dos registros preexistentes. A falha de auditoria é injetada na função
+somente para o pet sintético e restaurada ao fim do ensaio, sem bypass público.
+
+Os controles `records/*` e `vettech-records` complementam os endpoints existentes.
+`Clinical/assert_access` reutiliza a política de identidade/consentimento,
+preservando sua resposta; a auditoria existente também preenche o timestamp novo.
+Os testes incluem regressão do histórico clínico existente e do login/pets.
+Detalhes em `docs/record-foundation-verification.md` e `verification.md`.

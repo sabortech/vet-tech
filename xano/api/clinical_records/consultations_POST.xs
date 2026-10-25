@@ -31,4 +31,5 @@ query "consultations" verb=POST {
     }
   }
   response = $consulta
+  guid = "IF1zGF2gihCxsXgix-WvBBdheWc"
 }

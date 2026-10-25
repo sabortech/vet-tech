@@ -5,10 +5,11 @@ query "audit/{log_id}" verb=DELETE {
     int log_id
   }
   stack {
-    throw {
-      name = "accessdenied"
-      value = "Registros de auditoria são imutáveis."
+    precondition (false) {
+      error_type = "accessdenied"
+      error = "Registros de auditoria são imutáveis."
     }
   }
   response = null
+  guid = "VpZ40tnUO_h24-RWHl6DvT3Ps74"
 }

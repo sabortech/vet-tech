@@ -16,6 +16,11 @@ Grupo `vettech-records`, com tokens Xano de tabelas de domínio distintas:
 | `POST /exams` | veterinário | Pet existente, consulta opcional do mesmo pet e um log |
 | `PATCH`, `DELETE /audit/{log_id}` | veterinário | Negativa explícita sem modificar o log |
 
+Exame avulso usa `consulta_id` ausente ou `null` na entrada. O tableref opcional
+do Xano pode retornar `0` para ausência de associação; isso não referencia uma
+consulta existente. O teste aceita essa representação, mantendo a validação
+de consulta existente e do mesmo pet quando um ID é informado.
+
 Tokens de tutor são rejeitados nos endpoints veterinários e vice-versa, mesmo
 quando os IDs numéricos coincidem. Não há endpoint público de escrita genérica
 nas tabelas. Credenciais da Meta API são administrativas e jamais devem ser
@@ -29,31 +34,20 @@ falhas não são capturadas nem convertidas em sucesso. Chamadas iniciadas depoi
 da resposta da revogação devem falhar com o mesmo token anterior. Operações já
 em andamento precisam de ensaio concorrente no Xano para aferir seu isolamento.
 
-## Identidade com dois perfis
+## Identidade com e-mail único entre perfis
 
-Por autorização para resolver as decisões e continuar, adotou-se e-mail único
-**dentro de cada tabela de domínio**, permitindo a mesma pessoa/e-mail nos dois
-perfis. Não foi criada tabela `user` ou uma terceira identidade. A decisão
-preserva os cadastros existentes e não mescla contas por coincidência de e-mail.
-
-`POST Authentication/profiles/login` valida separadamente `tutor.password` e
-`veterinario.senha`, e retorna `profiles`, cada item com `perfil`, `id` e
-`authToken` próprio. Só são retornados perfis cuja senha foi comprovada. Se as
-senhas diferirem, a credencial informada autentica somente seu perfil; se forem
-iguais, retorna ambos, sem escolher silenciosamente o primeiro. Não há migração
-ou sincronização automática de senhas. A futura `unificar-acesso-perfis` usará
-essa resposta na interface compartilhada; o login atual de tutor continua válido.
-
-O schema remoto já torna `veterinario` autenticável; são preservados os índices
-únicos de e-mail e do par `crmv_uf`/`crmv`.
-O nome legado `cmv` foi preservado para não renomear dados sem migração; representa
-CRMV. Cadastro profissional, validação de habilitação, especialidades e clínica
-continuam pertencendo à futura change de identidade. Um usuário da aplicação
-não pode criar seu próprio registro profissional por este contrato.
+A decisão atual, confirmada pelo usuário, preserva o Xano: `reserva_email` impede
+que um e-mail pertença a tutor e veterinário simultaneamente.
+`POST Authentication/acesso/login` valida senha, reserva e identidade de domínio,
+retornando `authToken`, `perfil` e `identidade_id`. Nenhum perfil enviado pelo
+cliente concede privilégios. O login específico de tutor permanece compatível.
+Não existe nova publicação de `profiles/login`; sua proposta anterior foi substituída.
+São preservados os índices de e-mail e CRMV/UF já publicados. Cadastro profissional,
+espécies, especialidades e telas compartilhadas continuam no roadmap específico.
 
 ## Preparo do Xano de desenvolvimento
 
-Não publicar diretamente em uma base com dados existentes. Executar primeiro
+Antes de publicar em desenvolvimento com dados existentes, executar primeiro
 o inventário e a reconciliação descritos em `backend-foundation.md`. Em especial:
 
 1. Identificar vínculos nulos/órfãos e e-mails/CRMV duplicados; resolver com fonte
@@ -62,14 +56,14 @@ o inventário e a reconciliação descritos em `backend-foundation.md`. Em espec
    conversão de `date` em `timestamp` não recupera horários. Logs sem fonte de
    horário devem permanecer no acervo legado identificado; não inventar meia-noite
    como horário real. A tabela de operações novas exige timestamp com hora.
-3. Importar tabelas, funções e endpoints em uma cópia isolada de desenvolvimento,
+3. Importar tabelas, funções e endpoints em um workspace confirmado de desenvolvimento, com fixtures isoladas,
    sem apagar histórico. Conferir autenticação veterinária por `senha`, ausência
    de CRUD público de logs e rollback de transações antes de liberar usuários.
 4. Criar somente fixtures sintéticas: dois tutores, dois veterinários, pet A do
    tutor A, pet B do tutor B, consulta de B, duas espécies e raça da outra espécie.
    Reservar um ID positivo inexistente para os testes negativos.
-5. Tutor A e veterinário A devem compartilhar o e-mail fictício e a senha de
-   teste; criar tokens por tabela. A senha de teste não é uma senha de usuário real.
+5. Criar e-mails fictícios distintos para cada identidade e tokens por tabela.
+   Senhas e tokens sintéticos ficam somente no arquivo ignorado de fixtures.
 
 Guardar a configuração em `.env.foundation-fixtures.json`, ignorado pelo Git:
 
@@ -90,8 +84,10 @@ Guardar a configuração em `.env.foundation-fixtures.json`, ignorado pelo Git:
   "especie_a": 1,
   "raca_other_species": 2,
   "missing_id": 2147483647,
-  "dual_email": "fixture-foundation@example.invalid",
-  "dual_password": "CONFIGURAR-SENHA-SINTETICA"
+  "identity_credentials": {
+    "tutor_a": {"email": "tutor-fixture@example.invalid", "password": "CONFIGURAR"},
+    "vet_a": {"email": "vet-fixture@example.invalid", "password": "CONFIGURAR"}
+  }
 }
 ```
 
@@ -110,13 +106,28 @@ git diff --check
 .venv/bin/python tests/integration/run_record_foundation_live.py --fixtures .env.foundation-fixtures.json
 ```
 
-A suíte remota verifica identidade dupla, invariantes de pets, consulta e exame,
+Para verificar também ausência de atores por chamadas diretas, sem invalidar
+contas existentes:
+
+```bash
+.venv/bin/python tests/integration/run_record_foundation_live.py --fixtures .env.foundation-fixtures.json --phase identity-negative
+```
+
+Para repetir o bloco de imutabilidade, histórico existente e revogação depois
+de uma correção localizada, reutilizando os mesmos cenários da fase normal:
+
+```bash
+.venv/bin/python tests/integration/run_record_foundation_live.py --fixtures .env.foundation-fixtures.json --phase access-regression
+```
+
+A suíte remota verifica identidade por domínio e e-mail único, invariantes de pets, consulta e exame,
 consentimento individual, dois veterinários, outro tutor/pet, autoria forjada,
 logs por operação, adulteração e revogação com os mesmos tokens. Qualquer falha
 encerra com código diferente de zero; ausência de configuração não é sucesso.
 
-Para a falha real de auditoria, exclusivamente na cópia isolada, salvar a função
-`records/audit` e temporariamente fazê-la lançar um erro antes da inserção do log.
+Para a falha real de auditoria, exclusivamente no desenvolvimento confirmado,
+salvar a função `records/audit` e temporariamente fazê-la lançar um erro antes
+da inserção do log, limitado ao ID do pet sintético das fixtures.
 Não adicionar flag ou bypass ao endpoint público. Executar:
 
 ```bash
@@ -137,8 +148,8 @@ dataset isolado e arquivar seus resultados; descartar a cópia descartável inte
 somente conforme a política de ambientes, sem usar exclusão de logs na aplicação.
 
 A validação sintática local não comprova autenticação, isolamento de tabelas,
-rollback ou permissões remotas. Nenhuma execução remota foi realizada nesta sessão
-porque não há perfil Xano nem arquivo de fixtures configurado.
+rollback ou permissões remotas. As evidências de execução remota ficam em `verification.md` na change;
+a preparação histórica abaixo não substitui os resultados da execução atual.
 
 ## Reconciliação com o workspace configurado em 2026-10-21
 
@@ -166,10 +177,28 @@ endpoints remotos. A auditoria nova preenche `data_hora` e `ocorrido_em`.
 A publicação deve ser limitada aos arquivos reconciliados desta change: não
 executar push integral de schemas locais antigos ou sobrescrever os endpoints
 remotos de cadastro/login, agenda e finalização clínica. A política remota de
-identidade (`acesso/login` e reserva de e-mail) foi identificada como diferente
-da proposta local de `profiles/login`; ambas precisam ser reconciliadas antes
-de publicar um segundo contrato de login. Não foi alterada a política remota.
+identidade (`acesso/login` e reserva de e-mail) foi preservada por decisão do
+usuário; a proposta local alternativa `profiles/login` foi retirada.
 
-Ainda não houve push ou integração. Foi solicitada confirmação de que o
-workspace configurado é o ambiente de desenvolvimento, pois há apenas a branch
-ativa e não é possível criar ambiente separado com as permissões atuais.
+Naquele inventário ainda não havia push ou integração. A confirmação solicitada
+do ambiente de desenvolvimento e da política de identidade foi recebida na
+continuação descrita abaixo.
+
+## Autorização de continuidade
+
+O usuário confirmou que o workspace é de desenvolvimento e pode receber as
+alterações e os testes sintéticos. Autorizou também preservar e-mail único entre
+perfis. Isso resolve as duas pendências descritas no inventário anterior.
+
+A migração aplicada usa os horários confiáveis de `ocorrido_em` para os 9 logs
+preexistentes cujo `data_hora` estava vazio. Primeiro o campo foi convertido
+para timestamp opcional; os valores foram preenchidos e comparados com a cópia
+anterior; depois passou a timestamp obrigatório com padrão para novos logs.
+Nenhum horário foi inventado ou registro histórico excluído. A função existente
+`Clinical/audit` também grava o novo campo, preservando os demais dados.
+
+O intervalo padrão de 2,2 segundos no harness evita rajadas de requisições;
+HTTP 429 continua sendo falha explícita, sem repetir credenciais automaticamente.
+As quatro identidades e os pets clínicos sintéticos permanecem em desenvolvimento
+como evidência, com autorizações revogadas. Os registros de usuários anteriores
+são comparados sem imprimir seus conteúdos.

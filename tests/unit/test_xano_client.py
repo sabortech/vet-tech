@@ -83,6 +83,24 @@ class XanoClientTests(unittest.IsolatedAsyncioTestCase):
             await self.request(lambda request: httpx.Response(400, json={
                 "message": "Já existe uma conta com esse CPF ou e-mail."}))
 
+    async def test_rate_limit_is_actionable_without_retrying_or_echoing_response(self):
+        for response_type in ("json", "text"):
+            calls = []
+
+            def handler(request):
+                calls.append(request)
+                if response_type == "json":
+                    return httpx.Response(429, json={"message": "secret-token"})
+                return httpx.Response(429, text="secret-token")
+
+            with self.subTest(response_type=response_type):
+                with self.assertRaises(XanoRequestError) as caught:
+                    await self.request(handler)
+                self.assertIn("limitou temporariamente", str(caught.exception))
+                self.assertIn("Aguarde", str(caught.exception))
+                self.assertNotIn("secret-token", str(caught.exception))
+                self.assertEqual(len(calls), 1)
+
     async def test_error_payloads_do_not_leak_sensitive_content(self):
         for payload in ({"message": "password=secret-token; prontuário Rex"},
                         {"error": {"password": "secret-token"}}, {"message": ["secret-token"]}):

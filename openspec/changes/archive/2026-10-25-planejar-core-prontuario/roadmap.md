@@ -4,7 +4,7 @@ Este é um mapa de futuras changes, não uma declaração de funcionalidades pro
 As prioridades representam ordem de construção; todos os itens abaixo integram
 o recorte solicitado. Datas e estimativas não foram atribuídas.
 
-## Situação encontrada
+## Situação encontrada no levantamento inicial
 
 | Área | Evidência atual | Falta principal |
 |---|---|---|
@@ -91,12 +91,18 @@ Upload de foto/laudo, notificações automáticas, exportação PDF, login socia
 recuperação de senha, administração completa, gestão de clínicas, pagamentos,
 telemedicina e aplicativo nativo. Consulta de datas clínicas permanece incluída.
 
-## Atualização da fundação (2026-10-20)
+## Atualização da fundação (2026-10-21)
 
-`assess-project-improvements` contém agora artefatos XanoScript locais de
-identidade veterinária autenticada, consentimento individual, consultas/exames
-e auditoria transacional. A integração remota ainda não foi executada. A etapa
-2 deve reutilizar `Authentication/profiles/login`, sem mesclar contas somente
-por e-mail; a etapa 3 deve reutilizar as funções `records/*` e o grupo
-`vettech-records`, verificando a implantação antes de apresentar como pronto.
-O cadastro profissional, as telas e as demais etapas continuam futuras.
+`assess-project-improvements` publicou os controles de autorização, vínculos
+clínicos e auditoria em Xano de desenvolvimento confirmado pelo usuário. O
+contrato de identidade reutiliza `Authentication/acesso/login`, preservando
+`reserva_email` e e-mail único entre perfis; o login atual de tutor permanece.
+A integração e suas evidências estão em `../2026-10-25-assess-project-improvements/verification.md`.
+
+As etapas 2 e 3 devem reutilizar a identidade já publicada e as funções
+`records/*`/grupo `vettech-records`, integrando as telas conforme suas próprias
+changes. Agenda, rascunho e finalização existentes no workspace foram preservados;
+sua existência não comprova a integração das futuras telas deste roadmap.
+O cadastro profissional compartilhado na interface, seleção do pet, complementos
+e as demais entregas continuam nas respectivas changes, sem declarar frontend
+novo como pronto por causa desta fundação.

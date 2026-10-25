@@ -40,4 +40,5 @@ query "records" verb=GET {
     }
   }
   response = {pet_id: $pet.id, consultas: $consultas, exames: $exames_visiveis}
+  guid = "96j7KGJZiAWVdXG1pvAqsx4F2xY"
 }

@@ -63,4 +63,5 @@ query "authorizations" verb=PUT {
     }
   }
   response = $autorizacao
+  guid = "uxbSgHrVZdGnTXTFQyXWYsfECOM"
 }

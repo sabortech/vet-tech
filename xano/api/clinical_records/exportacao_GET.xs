@@ -40,4 +40,5 @@ query "records/export" verb=GET {
     }
   }
   response = {pet_id: $pet.id, consultas: $consultas, exames: $exames_visiveis}
+  guid = "ZuqJqu-NX52-JeCu0L9vPQCOdng"
 }

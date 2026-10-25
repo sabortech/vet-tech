@@ -35,4 +35,5 @@ query "exams" verb=POST {
     }
   }
   response = $exame
+  guid = "Gkc66lzZoSLAK3uktYspPbtFWqE"
 }

@@ -1,0 +1,8 @@
+{"scenario": "identidades por domínio, senha, perfil forjado e e-mail único entre perfis verificados", "status": "passed"}
+{"scenario": "acesso sem consentimento e gestão por outro tutor negados", "status": "passed"}
+{"scenario": "múltiplos veterinários com autorizações independentes", "status": "passed"}
+{"scenario": "leitura e exportação JSON geram exatamente um log cada", "status": "passed"}
+{"scenario": "consulta deriva autoria da autenticação e gera um log", "status": "passed"}
+{"scenario": "pet ausente/inválido, pet alheio e identidade forjada rejeitados sem escrita", "status": "passed"}
+{"scenario": "exame avulso e vinculado aceitos; consulta inválida ou de outro pet rejeitada", "status": "passed"}
+{"scenario": "espécie/raça validadas e tentativa de forjar tutor não transfere propriedade", "status": "passed"}

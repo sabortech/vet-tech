@@ -15,7 +15,7 @@ table log_acesso {
       table = "veterinario"
     }
 
-    timestamp data_hora=now
+    timestamp data_hora?=now
     text acao filters=trim
     timestamp? ocorrido_em?
     int consulta_id? {
