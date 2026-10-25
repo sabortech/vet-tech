@@ -167,4 +167,4 @@ def settings_view():
 
 
 def configuracoes():
-    return rx.cond(State.is_authenticated, settings_view(), rx.box(rx.text("Redirecionando para o login...", role="status")))
+    return rx.cond(State.is_authenticated & (State.profile != "veterinario"), settings_view(), rx.box(rx.text("Redirecionando para o login...", role="status")))

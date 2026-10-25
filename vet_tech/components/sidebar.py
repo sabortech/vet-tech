@@ -12,7 +12,7 @@ _NAV_ITEMS = (
     ("configuracoes", "Configurações", "settings"),
 )
 
-_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes"}
+_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes", "prontuario": "/prontuario"}
 
 
 def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> rx.Component:

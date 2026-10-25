@@ -26,6 +26,8 @@
   const apply = value => {
     theme = value === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.vtTheme = theme;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
     document.documentElement.style.colorScheme = theme;
     syncControls();
   };

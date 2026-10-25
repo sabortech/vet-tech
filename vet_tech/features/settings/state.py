@@ -68,6 +68,10 @@ class SettingsState(rx.State):
             self.clear()
             yield rx.redirect("/login")
             return
+        if auth.profile == "veterinario":
+            self.clear()
+            yield rx.redirect("/")
+            return
         token = auth._auth_token
         if self._session != token:
             self.clear()

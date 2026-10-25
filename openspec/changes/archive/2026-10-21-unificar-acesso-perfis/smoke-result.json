@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "published_catalogs",
+    "published_tutor_signup_login_and_isolation",
+    "published_veterinario_signup_login_and_isolation",
+    "fixtures_removed_and_preexisting_records_preserved"
+  ],
+  "original_counts": {
+    "tutor": 3,
+    "veterinario": 0,
+    "clinica": 0,
+    "especie": 1,
+    "raca": 1,
+    "pet": 3
+  },
+  "reservation_count": 3,
+  "specialty_count": 5
+}

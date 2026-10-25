@@ -315,6 +315,16 @@ def pet_list() -> rx.Component:
                                 ),
                                 class_name="pet-entry__details",
                             ),
+                            rx.button(
+                                "Abrir ", pet["nome"],
+                                on_click=State.open_pet(pet["id"]),
+                                variant="outline",
+                                margin_top="0.5rem",
+                            ),
+                            rx.cond(
+                                State.selected_pet_id == pet["id"],
+                                rx.text("Pet selecionado", size="1", color="#50753F"),
+                            ),
                             class_name="pet-entry",
                         ),
                     ),
@@ -356,4 +366,61 @@ def profile_view() -> rx.Component:
             class_name="profile-page",
         ),
         pagina_ativa="meus_pets",
+    )
+
+
+def pet_detail_row(label: str, key: str) -> rx.Component:
+    return rx.vstack(
+        rx.text(label, weight="bold", size="2"),
+        rx.text(rx.cond(State.selected_pet[key] != "", State.selected_pet[key], "Não informado")),
+        align="start",
+        spacing="1",
+    )
+
+
+def pet_details() -> rx.Component:
+    """Pet-scoped area; future clinical sections use State.selected_pet_id."""
+    return rx.box(
+        rx.cond(
+            State.pet_target_id != "",
+            rx.vstack(
+                rx.button("Voltar à lista", on_click=State.close_pet, variant="outline"),
+                rx.cond(
+                    State.is_loading_pet,
+                    rx.text("Carregando dados do pet...", role="status"),
+                    rx.cond(
+                        State.selected_pet_id != "",
+                        rx.vstack(
+                            rx.heading(State.selected_pet["nome"], size="5"),
+                            rx.text(State.selected_pet["especie"], " · ", State.selected_pet["raca"]),
+                            rx.grid(
+                                pet_detail_row("Sexo", "sexo"),
+                                pet_detail_row("Nascimento", "data_nasc"),
+                                pet_detail_row("Peso atual", "peso_atual"),
+                                pet_detail_row("Pelagem", "cor_pelo"),
+                                pet_detail_row("Microchip", "num_microchip"),
+                                columns=rx.breakpoints(initial="1", sm="2"),
+                                spacing="4",
+                                width="100%",
+                            ),
+                            align="stretch",
+                            spacing="3",
+                            width="100%",
+                        ),
+                        rx.button("Tentar novamente", on_click=State.retry_pet),
+                    ),
+                ),
+                width="100%",
+                align="stretch",
+                spacing="3",
+            ),
+            rx.text("Escolha um pet na lista para abrir seus dados."),
+        ),
+        rx.text(State.pet_detail_message, role="status", margin_top="0.5rem"),
+        id="pet-details",
+        width="100%",
+        padding="1rem",
+        border="1px solid #d9dedb",
+        border_radius="0.75rem",
+        aria_label="Dados do pet selecionado",
     )

@@ -26,15 +26,13 @@ table consulta {
     timestamp? finalizada_em?
     date? data_atendimento?
     date? retorno_previsto?
-    int versao?
+    int versao?=0
     json? rascunho? {
       visibility = "internal"
     }
-
     text? operacao_chave? {
       visibility = "internal"
     }
-
     text? operacao_hash? {
       visibility = "internal"
     }
