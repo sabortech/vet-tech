@@ -96,7 +96,8 @@ class ProfileAccessTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(state.pet_modal_open)
         State.show_pet_picker.fn(state)
         self.assertTrue(state.pet_picker_open)
-        self.assertEqual(state.selected_pet_id, "7")
+        # Returning to the picker invalidates the pending pet load and its cache.
+        self.assertEqual(state.selected_pet_id, "")
 
     async def test_pet_create_response_after_logout_does_not_repopulate_data(self):
         state = make_state()

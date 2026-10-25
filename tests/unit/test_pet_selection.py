@@ -16,7 +16,15 @@ def signed_in_state():
 
 
 async def open_pet(state, pet_id):
-    return [update async for update in State.open_pet.fn(state, pet_id)]
+    events = [update async for update in State.open_pet.fn(state, pet_id)]
+    if state.pet_target_id:
+        await load_selected_pet(state)
+    return events
+
+
+async def load_selected_pet(state):
+    with patch.object(State, '__aenter__', AsyncMock(return_value=state)), patch.object(State, '__aexit__', AsyncMock(return_value=False)):
+        return [event async for event in State.load_selected_pet.fn(state, state._pet_context_generation)]
 
 
 def pet(pet_id="1", **extra):
@@ -33,6 +41,7 @@ class PetSelectionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(state.selected_pet_id, "")
             request.assert_not_awaited()
             _ = [item async for item in event]
+            await load_selected_pet(state)
         request.assert_awaited_once_with("GET", "vettech-pets", "pets/1", auth_token="test-session")
         self.assertEqual(state.selected_pet_id, "1")
         self.assertEqual(state.selected_pet["raca"], "SRD")
@@ -132,6 +141,7 @@ class PetSelectionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(state.selected_pet, {})
             self.assertEqual(state.pet_target_id, "2")
             _ = [item async for item in State.retry_pet.fn(state)]
+            await load_selected_pet(state)
         self.assertEqual(state.selected_pet_id, "2")
 
     async def test_refresh_revalidates_or_clears_selection_and_keeps_create_form(self):
@@ -143,6 +153,8 @@ class PetSelectionTests(unittest.IsolatedAsyncioTestCase):
             responses = [result, pet(nome="Atualizado")] if isinstance(result, list) and result else [result]
             with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock, side_effect=responses) as request:
                 _ = [update async for update in State.refresh_pets.fn(state)]
+                if state.is_loading_pet and state.pet_target_id:
+                    await load_selected_pet(state)
             if isinstance(result, list) and result:
                 self.assertEqual(state.selected_pet["nome"], "Atualizado")
                 self.assertEqual(request.await_count, 2)

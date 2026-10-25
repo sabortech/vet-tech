@@ -11,6 +11,28 @@ def notice() -> rx.Component:
     )
 
 
+def pet_loading() -> rx.Component:
+    return rx.vstack(
+        rx.hstack(rx.spinner(size='3'), rx.text('Carregando dados do pet…'), align='center', spacing='3'),
+        rx.skeleton(height='80px', width='100%'),
+        rx.skeleton(height='80px', width='100%'),
+        role='status', aria_live='polite', spacing='4', width='100%', padding='1rem',
+    )
+
+
+def tutor_clinical_content(content: rx.Component) -> rx.Component:
+    return rx.box(
+        rx.cond(State.is_loading_pet | State.clinic_loading, pet_loading(),
+            rx.cond(State.tutor_clinical_loaded, content,
+                rx.vstack(
+                    rx.text(State.clinic_message, role='status'),
+                    rx.cond(State.selected_pet_id != '', rx.button('Tentar novamente', on_click=State.load_tutor_clinical),
+                        rx.button('Tentar novamente', on_click=State.retry_pet)),
+                    align='stretch', spacing='3'))),
+        aria_busy=State.is_loading_pet | State.clinic_loading, width='100%',
+    )
+
+
 def options(rows, value, change, placeholder):
     return rx.select.root(
         rx.select.trigger(placeholder=placeholder, width="100%"),
@@ -125,8 +147,6 @@ def consultation_detail():
 
 def tutor_consultations():
     return rx.vstack(
-        rx.button("Atualizar consultas", on_click=State.load_tutor_clinical, variant="outline", disabled=State.clinic_loading),
-        notice(),
         rx.cond(State.detail_id != "", consultation_detail(), rx.vstack(
             rx.cond(State.consultation_rows.length() == 0, rx.text("Nenhuma consulta para este pet.")),
             rx.foreach(State.consultation_rows, lambda row: rx.card(rx.vstack(
@@ -137,15 +157,23 @@ def tutor_consultations():
                         rx.button("Ver prontuário", on_click=State.show_consultation_detail(row["id"]))),
                 align="stretch", spacing="2"), width="100%")),
             align="stretch", width="100%", spacing="3")),
-        rx.accordion.root(rx.accordion.item(
+        rx.button('Carregar permissões e histórico de acessos', on_click=State.load_tutor_auxiliary(False),
+                  disabled=State.auxiliary_loading, variant='outline'),
+        rx.cond(State.auxiliary_loading, rx.hstack(rx.spinner(), rx.text('Carregando permissões e acessos…'), role='status')),
+        rx.text(State.auxiliary_message, role='status'),
+        rx.cond(State.auxiliary_message != '', rx.button('Tentar novamente: permissões e acessos',
+                  on_click=State.load_tutor_auxiliary(True), disabled=State.auxiliary_loading)),
+        rx.cond(State.auxiliary_loaded, rx.accordion.root(rx.accordion.item(
             header="Permissões e histórico de acessos", content=rx.vstack(
+                rx.button('Atualizar permissões e acessos', on_click=State.load_tutor_auxiliary(True),
+                          disabled=State.auxiliary_loading, variant='outline'),
                 rx.foreach(State.access_rows, lambda row: rx.hstack(
                     rx.text("Veterinário ", row["veterinario_id"], " — ", row["status"]),
                     rx.button(rx.cond(row["status"] == "ativo", "Revogar", "Reativar"),
                               on_click=State.change_consent(row["id"], rx.cond(row["status"] == "ativo", "revogado", "ativo")),
                               disabled=State.clinic_busy), wrap="wrap")),
                 rx.foreach(State.audit_rows, lambda row: rx.text(row.get("acao", ""), " — ", row.get("ocorrido_em_legivel", ""))),
-                align="stretch", spacing="3")), collapsible=True, width="100%"),
+                align="stretch", spacing="3")), collapsible=True, width="100%")),
         align="stretch", width="100%", spacing="4",
     )
 

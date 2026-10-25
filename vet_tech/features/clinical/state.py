@@ -1,5 +1,7 @@
 """Feature mixin: keeps one authenticated State and its session generation."""
+import asyncio
 import calendar
+from time import monotonic
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -111,6 +113,15 @@ class ClinicalMixin(rx.State, mixin=True):
     clinic_loading: bool = False
     _clinic_generation: int = 0
     _tutor_history_pet: str = ""
+    _tutor_loaded_at: float = 0.0
+    _tutor_history_loaded_at: float = 0.0
+    _tutor_running: int = -1
+    tutor_clinical_loaded: bool = False
+    auxiliary_loading: bool = False
+    auxiliary_loaded: bool = False
+    auxiliary_message: str = ""
+    _auxiliary_generation: int = 0
+    _auxiliary_running: int = -1
     consultation_rows: list[dict[str, str]] = []
     history_rows: dict[str, list[dict[str, str]]] = {}
     access_rows: list[dict[str, str]] = []
@@ -152,6 +163,12 @@ class ClinicalMixin(rx.State, mixin=True):
 
     def _clear_clinical_pet(self):
         self._clinic_generation += 1
+        self._auxiliary_generation += 1
+        self._tutor_loaded_at = 0.0
+        self._tutor_history_loaded_at = 0.0
+        self.tutor_clinical_loaded = False
+        self.auxiliary_loading = self.auxiliary_loaded = False
+        self.auxiliary_message = ""
         self._tutor_history_pet = ""
         self.history_rows = {}
         self.consultation_rows = []
@@ -310,7 +327,12 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.booking_busy = False
                 self.booking_set_open(False)
                 self.clinic_message = "Consulta agendada. O profissional já pode consultar o histórico publicado do pet escolhido."
-                self._tutor_history_pet = ""
+                if str(self._booking_sent.get('pet_id')) == self.selected_pet_id:
+                    # Invalidate reads begun before the confirmed write.
+                    self.clinic_loading = False
+                    event = self._prepare_tutor_clinical(force=True, reservations_only=True)
+                    if event is not None:
+                        yield event
         except XanoRequestError as error:
             if self._clinical_current(session, token):
                 if error.status_code == 401:
@@ -327,42 +349,156 @@ class ClinicalMixin(rx.State, mixin=True):
         if section not in ("Início", "Consultas", "Vacinas", "Medicamentos", "Doenças"):
             return
         self.active_section = section
-        if section != "Início":
-            async for event in self.load_tutor_clinical():
-                yield event
+        event = self._prepare_tutor_clinical()
+        if event is not None:
+            yield event
+
+    def _prepare_tutor_clinical(self, force: bool = False, reservations_only: bool = False):
+        if self.profile != 'tutor' or not self.selected_pet_id or not self._auth_token:
+            return
+        if self.clinic_loading and not reservations_only:
+            return
+        if not force and self.tutor_clinical_loaded and monotonic() - self._tutor_loaded_at < 60:
+            return
+        reservations_only = (reservations_only and self.tutor_clinical_loaded
+                             and monotonic() - self._tutor_history_loaded_at < 60)
+        self._clinic_generation += 1
+        self.clinic_loading = True
+        self.clinic_message = ''
+        self._tutor_loaded_at = 0.0
+        self.tutor_clinical_loaded = False
+        self.detail_id = ''
+        self.detail = {}
+        self.detail_sections = {}
+        if not reservations_only:
+            self.history_rows = {}
+        self.consultation_rows = []
+        # The concrete State owns this mixin's background handlers.
+        return self.__class__.fetch_tutor_clinical(self._clinic_generation, reservations_only)
 
     @rx.event
     async def load_tutor_clinical(self):
-        pet = self.selected_pet_id
-        if self.profile != "tutor" or not pet:
-            self._clear_clinical_pet()
-            return
-        self._clinic_generation += 1
-        generation = self._clinic_generation
-        session, token = self._session_generation, self._auth_token
-        self.clinic_loading = True
-        self.clinic_message = ""
-        self.history_rows = {}
-        self.consultation_rows = []
-        self.detail_id = ""
-        yield
+        event = self._prepare_tutor_clinical(force=True)
+        if event is not None:
+            yield event
+
+    def _tutor_load_current(self, generation, session, token, pet):
+        return (generation == self._clinic_generation and self._clinical_current(session, token)
+                and pet == self.selected_pet_id)
+
+    @rx.event
+    def ensure_tutor_clinical(self):
+        return self._prepare_tutor_clinical()
+
+    def _tutor_load_error(self, error):
+        if error.status_code == 401:
+            self._expire_session()
+        elif error.status_code in (403, 404):
+            self._clear_pet_context()
+            self.pet_detail_message = str(error)
+            self.pet_message = str(error)
+        else:
+            self.clinic_message = str(error)
+
+    @rx.event(background=True)
+    async def fetch_tutor_clinical(self, generation: int, reservations_only: bool = False):
+        async with self:
+            session, token, pet = self._session_generation, self._auth_token, self.selected_pet_id
+            if not pet or not self.clinic_loading or not self._tutor_load_current(generation, session, token, pet):
+                return
+            if self._tutor_running == generation:
+                return
+            self._tutor_running = generation
+            history = {key: [dict(row) for row in rows] for key, rows in self.history_rows.items()}
+        error = None
         try:
-            history = await xano_request("GET", GROUP, f"tutor/pets/{pet}/historico", auth_token=token)
-            appointments = await xano_request("GET", GROUP, "tutor/consultas?" + urlencode({"pet_id": pet}), auth_token=token)
-            accesses = await xano_request("GET", GROUP, f"tutor/pets/{pet}/acessos", auth_token=token)
-            logs = await xano_request("GET", GROUP, f"tutor/pets/{pet}/auditoria", auth_token=token)
-            if generation == self._clinic_generation and self._clinical_current(session, token) and pet == self.selected_pet_id:
+            reads = [xano_request('GET', GROUP, 'tutor/consultas?' + urlencode({'pet_id': pet}), auth_token=token)]
+            if not reservations_only:
+                reads.insert(0, xano_request('GET', GROUP, f'tutor/pets/{pet}/historico', auth_token=token))
+            results = await asyncio.gather(*reads, return_exceptions=True)
+            errors = [item for item in results if isinstance(item, BaseException)]
+            if errors:
+                raise next((item for item in errors if isinstance(item, XanoRequestError) and item.status_code in (401, 403, 404)), errors[0])
+            if reservations_only:
+                appointments = results[0]
+            else:
+                history, appointments = results
+                if not isinstance(history, dict) or not all(isinstance(rows, list) for rows in history.values()):
+                    raise XanoRequestError('O Xano retornou uma resposta inválida.')
+                history = {key: cards(rows) for key, rows in history.items()}
+            if not isinstance(appointments, list):
+                raise XanoRequestError('O Xano retornou uma resposta inválida.')
+            appointments = cards(appointments)
+        except XanoRequestError as caught:
+            error = caught
+        except (TypeError, ValueError, KeyError):
+            error = XanoRequestError('O Xano retornou uma resposta inválida.')
+        async with self:
+            if not self._tutor_load_current(generation, session, token, pet):
+                return
+            self.clinic_loading = False
+            if error is not None:
+                self._tutor_load_error(error)
+            else:
                 self._tutor_history_pet = pet
-                self.history_rows = {key: cards(rows) for key, rows in history.items()}
-                self.consultation_rows = cards(appointments)
-                self.access_rows = cards(accesses)
-                self.audit_rows = cards(logs)
-        except XanoRequestError as error:
-            if generation == self._clinic_generation and self._clinical_current(session, token):
-                self._clinic_error(error)
-        finally:
-            if generation == self._clinic_generation and self._clinical_current(session, token):
-                self.clinic_loading = False
+                self.history_rows = history
+                self.consultation_rows = appointments
+                if not reservations_only:
+                    self._tutor_history_loaded_at = monotonic()
+                self._tutor_loaded_at = self._tutor_history_loaded_at
+                self.tutor_clinical_loaded = True
+
+    def _prepare_tutor_auxiliary(self, force: bool = False):
+        if self.profile != 'tutor' or not self.selected_pet_id or not self._auth_token:
+            return
+        if self.auxiliary_loading and not force:
+            return
+        if self.auxiliary_loaded and not force:
+            return
+        self._auxiliary_generation += 1
+        self.auxiliary_loading = True
+        self.auxiliary_loaded = False
+        self.auxiliary_message = ''
+        self.access_rows = self.audit_rows = []
+        return self.__class__.fetch_tutor_auxiliary(self._auxiliary_generation)
+
+    @rx.event
+    def load_tutor_auxiliary(self, force: bool = False):
+        return self._prepare_tutor_auxiliary(force)
+
+    @rx.event(background=True)
+    async def fetch_tutor_auxiliary(self, generation: int):
+        async with self:
+            session, token, pet = self._session_generation, self._auth_token, self.selected_pet_id
+            if not pet or generation != self._auxiliary_generation or not self.auxiliary_loading:
+                return
+            if self._auxiliary_running == generation:
+                return
+            self._auxiliary_running = generation
+        error = None
+        try:
+            # Auxiliary reads are sequential to limit pressure on the Xano quota.
+            accesses = await xano_request('GET', GROUP, f'tutor/pets/{pet}/acessos', auth_token=token)
+            logs = await xano_request('GET', GROUP, f'tutor/pets/{pet}/auditoria', auth_token=token)
+            if not isinstance(accesses, list) or not isinstance(logs, list):
+                raise XanoRequestError('O Xano retornou uma resposta inválida.')
+            accesses, logs = cards(accesses), cards(logs)
+        except XanoRequestError as caught:
+            error = caught
+        except (TypeError, ValueError, KeyError):
+            error = XanoRequestError('O Xano retornou uma resposta inválida.')
+        async with self:
+            if generation != self._auxiliary_generation or not self._clinical_current(session, token) or pet != self.selected_pet_id:
+                return
+            self.auxiliary_loading = False
+            if error is not None:
+                if error.status_code in (401, 403, 404):
+                    self._tutor_load_error(error)
+                else:
+                    self.auxiliary_message = str(error)
+            else:
+                self.access_rows, self.audit_rows = accesses, logs
+                self.auxiliary_loaded = True
 
     @rx.event
     def show_consultation_detail(self, value: str):
@@ -382,7 +518,8 @@ class ClinicalMixin(rx.State, mixin=True):
         try:
             await xano_request("PUT", GROUP, f"tutor/pets/{pet}/acessos/{access_id}", auth_token=token, json_payload={"status": status})
             if self._clinical_current(session, token) and pet == self.selected_pet_id:
-                async for event in self.load_tutor_clinical():
+                event = self._prepare_tutor_auxiliary(force=True)
+                if event is not None:
                     yield event
         except XanoRequestError as error:
             if self._clinical_current(session, token):
