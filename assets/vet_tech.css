@@ -855,3 +855,130 @@ textarea {
     display: none;
   }
 }
+
+/* Shared appearance: the document owns the theme, so portals and public pages follow it. */
+:root {
+  --vt-sidebar-bg: #689554;
+  --vt-error: #a33232;
+  --vt-success: #38662e;
+  --vt-primary-text: #fff;
+  --vt-readonly-bg: #e0e3e2;
+}
+html[data-vt-theme="dark"] {
+  --vt-page-bg: #141715;
+  --vt-surface: #202622;
+  --vt-text: #eef3ef;
+  --vt-green: #83b56c;
+  --vt-green-hover: #91c67a;
+  --vt-sidebar-bg: #183a2a;
+  --vt-field-bg: #2b332e;
+  --vt-readonly-bg: #252c28;
+  --vt-muted: #b4c0b7;
+  --vt-border: #526358;
+  --vt-icon-bg: #303e31;
+  --vt-focus: #9ac482;
+  --vt-focus-ring: rgb(154 196 130 / 38%);
+  --vt-card-border: rgb(224 238 227 / 12%);
+  --vt-shadow: 0 8px 28px rgb(0 0 0 / 22%);
+  --vt-error: #ffb4aa;
+  --vt-success: #a5d68e;
+  --vt-primary-text: #142218;
+}
+.sidebar { background: var(--vt-sidebar-bg); }
+.sidebar a.sidebar-item:hover, .sidebar a.sidebar-item:focus-visible { color: #1a3629; background: #ebeee5; text-decoration: none; }
+.sidebar-item--active { color: #1a3629; background: #fff; }
+.pet-form__submit { color: var(--vt-primary-text); }
+.settings-page { position: relative; width: 100%; max-width: 1200px; margin: 0 auto; padding-bottom: 24px; }
+.settings-subtitle { color: var(--vt-muted); margin: -12px 0 24px; }
+.settings-tab-row { display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--vt-border); margin-bottom: 24px; }
+.settings-tabs { display: flex; gap: 8px; min-width: 0; }
+.settings-tab { background: transparent; color: var(--vt-text); padding: 14px 24px; height: auto; border-radius: 14px 14px 0 0; border-bottom: 3px solid transparent; font-size: 18px; cursor: pointer; }
+.settings-tab--active { background: var(--vt-surface); border-bottom-color: var(--vt-green); }
+.settings-tab:focus-visible, .vt-primary:focus-visible, .vt-secondary:focus-visible, .settings-eye:focus-visible, .settings-switch:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+.settings-card { padding: 28px; border-radius: 20px; background: var(--vt-surface); color: var(--vt-text); box-shadow: var(--vt-shadow); border: 1px solid var(--vt-card-border); }
+.settings-card h2 { margin: 0 0 16px; font-size: 26px; line-height: 1.3; color: var(--vt-text); }
+.settings-profile { margin: 0 0 28px; font-size: 18px; font-weight: 600; }
+.settings-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
+.settings-field { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.settings-field--wide { grid-column: 1 / -1; }
+.settings-field label { color: var(--vt-text); font-size: 15px; font-weight: 600; }
+.settings-control { position: relative; }
+.settings-input { width: 100%; height: 48px; background: var(--vt-field-bg); color: var(--vt-text); border-radius: 12px; border: 1px solid transparent; box-shadow: none; }
+.settings-input input { color: inherit; padding: 0 16px; }
+.settings-input:has(input[readonly]) { background: var(--vt-readonly-bg); padding-right: 32px; }
+.settings-input:focus-within { border-color: var(--vt-focus); outline: 2px solid var(--vt-focus-ring); }
+.settings-lock { position: absolute; right: 14px; top: 15px; color: var(--vt-muted); pointer-events: none; }
+.settings-hint { font-size: 13px; line-height: 1.5; color: var(--vt-muted); margin: 0; }
+.settings-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.vt-primary, .vt-secondary { min-height: 46px; height: auto; padding: 10px 24px; border-radius: 999px; font-size: 15px; cursor: pointer; }
+.vt-primary { background: var(--vt-green); color: var(--vt-primary-text); border: 1px solid transparent; }
+.vt-primary:hover { background: var(--vt-green-hover); }
+.vt-secondary { background: transparent; color: var(--vt-text); border: 1px solid var(--vt-green); }
+.vt-primary:disabled, .vt-secondary:disabled { opacity: .5; cursor: not-allowed; }
+.settings-feedback { color: var(--vt-error); min-height: 20px; margin-top: 16px; font-size: 14px; }
+.settings-feedback--ok { color: var(--vt-success); }
+.settings-card--security { width: 100%; max-width: 640px; margin: 0 auto; }
+.settings-card--security h2, .settings-card--security > .settings-hint { text-align: center; }
+.settings-card--security form { display: grid; gap: 18px; margin: 24px 0 16px; }
+.settings-card--security .settings-actions { justify-content: center; margin-top: 4px; }
+.settings-card--security .settings-feedback:empty { display: none; }
+.settings-card--security input { padding-right: 48px; }
+.settings-eye { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: transparent; color: var(--vt-muted); border-radius: 8px; cursor: pointer; }
+.settings-preferences { display: grid; gap: 24px; }
+.settings-preference { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+.settings-preference label { font-size: 17px; font-weight: 600; display: block; margin-bottom: 4px; }
+.settings-switch { appearance: none; flex: 0 0 44px; width: 44px; height: 26px; border-radius: 999px; background: var(--vt-muted); cursor: pointer; position: relative; }
+.settings-switch:checked { background: var(--vt-green); }
+.settings-switch::after { content: ''; position: absolute; width: 20px; height: 20px; top: 3px; left: 3px; border-radius: 50%; background: #fff; transition: transform 160ms; }
+.settings-switch:checked::after { transform: translateX(18px); }
+.settings-mascot { display: block; flex: 0 0 auto; width: 112px; height: 98px; object-fit: contain; object-position: center bottom; margin: 0; }
+.settings-discard { background: var(--vt-surface); color: var(--vt-text); border: 1px solid var(--vt-border); border-radius: 20px; }
+html[data-vt-theme="dark"] .rt-SelectContent, html[data-vt-theme="dark"] .rt-DialogContent,
+html[data-vt-theme="dark"] .rt-AlertDialogContent { background: var(--vt-surface); color: var(--vt-text); }
+html[data-vt-theme="dark"] .rt-SelectItem[data-highlighted] { background: var(--vt-icon-bg); }
+@media (max-width: 767px) {
+  .settings-card { padding: 20px 16px; }
+  .settings-card h2 { font-size: 23px; }
+  .settings-subtitle { font-size: 14px; margin-top: -8px; }
+  .settings-tab-row { gap: 0; }
+  .settings-tabs { gap: 0; width: 100%; }
+  .settings-tab { flex: 1; padding: 12px 6px; font-size: 14px; }
+  .settings-fields { grid-template-columns: 1fr; gap: 18px; }
+  .settings-mascot { display: none; }
+  .settings-actions > button { flex: 1; }
+  .settings-preference { gap: 16px; }
+}
+.rt-TextFieldInput::placeholder { color: var(--vt-field-placeholder); opacity: 1; }
+@media (max-width: 479px) {
+  .settings-actions { flex-direction: column-reverse; }
+  .settings-actions > button { width: 100%; flex: auto; }
+}
+/* Read-only values remain readable in either theme, including Radix defaults. */
+.settings-control .settings-input input[readonly] {
+  color: var(--vt-muted);
+  -webkit-text-fill-color: var(--vt-muted);
+  opacity: 1;
+}
+input.settings-input { padding: 0 16px; }
+.settings-control input.settings-input[readonly] {
+  background: var(--vt-readonly-bg);
+  padding-right: 42px;
+  color: var(--vt-muted);
+  -webkit-text-fill-color: var(--vt-muted);
+}
+
+.settings-eye .password-eye-open { display: none; }
+.settings-eye[aria-pressed="true"] .password-eye-open { display: block; }
+.settings-eye[aria-pressed="true"] .password-eye-closed { display: none; }
+
+.settings-field-icon { position: absolute; z-index: 1; left: 15px; top: 15px; color: var(--vt-muted); pointer-events: none; }
+.settings-control--with-icon input.settings-input,
+.settings-control--with-icon input.settings-input[readonly],
+.settings-control--with-icon .settings-input input { padding-left: 44px; }
+
+.pet-form__icon-field { position: relative; min-width: 0; width: 100%; }
+.pet-form__icon { position: absolute; z-index: 3; top: 50%; left: 14px; transform: translateY(-50%); margin: 0; color: var(--vt-muted); pointer-events: none; }
+.pet-form__fields .pet-form__icon-field .pet-form__field,
+.pet-form__fields .pet-form__icon-field [role="combobox"] { padding-left: 44px; }
+.pet-form__icon-field .pet-form__date-control input[type="date"] { padding-left: 44px; }
+.pet-form__icon-field .pet-form__date-label { left: 44px; max-width: calc(100% - 96px); }

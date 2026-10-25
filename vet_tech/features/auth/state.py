@@ -57,6 +57,7 @@ def _pet_photo_url(value: Any) -> str:
 
 class State(rx.State):
     login_message: str = ""
+    login_message_success: bool = False
     is_authenticated: bool = False
     is_busy: bool = False
     is_registering: bool = False
@@ -91,6 +92,7 @@ class State(rx.State):
     def show_signup(self):
         self.is_registering = True
         self.login_message = ""
+        self.login_message_success = False
         self.signup_message = ""
         self.signup_cpf = ""
         return rx.redirect("/cadastro")
@@ -141,6 +143,7 @@ class State(rx.State):
 
         self.is_busy = True
         self.login_message = ""
+        self.login_message_success = False
         yield
         try:
             result = await xano_request(
@@ -225,19 +228,25 @@ class State(rx.State):
             self.is_registering = False
             self.signup_cpf = ""
             self.login_message = "Cadastro realizado. Entre com seu e-mail e senha."
+            self.login_message_success = True
             yield rx.redirect("/login")
         finally:
             self.is_busy = False
 
     @rx.event
     async def logout(self):
+        from vet_tech.features.settings.state import SettingsState
+        settings = await self.get_state(SettingsState)
+        settings.clear()
         self._auth_token = ""
         self.is_authenticated = False
         self.login_message = ""
+        self.login_message_success = False
         self.pet_message = ""
         self.species_options = []
         self.breed_options = []
         self.pets = []
+        return rx.redirect("/login")
 
     async def _load_species(self):
         result = await xano_request(

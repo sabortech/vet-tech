@@ -73,3 +73,65 @@ Se o Xano responder HTTP 429, o cliente informa que o serviço limitou
 temporariamente as solicitações e orienta aguardar. Não classifica esse retorno
 como senha inválida nem repete credenciais automaticamente. A limitação foi
 observada no ambiente configurado; não foram alterados plano, cotas ou contas.
+
+## Configurações do tutor
+
+A rota `/configuracoes` usa `features/settings/state.py`, compondo a navegação
+existente. A consulta só ocorre quando a pessoa abre a área; não aumenta as
+chamadas do login. Token permanece privado no estado de autenticação do servidor.
+Acesso sem sessão redireciona para `/login`; recarregar a página não restaura login.
+
+No grupo Authentication (`H62nB-j2`), os contratos adicionais são:
+
+| Contrato | Autorização e resposta |
+|---|---|
+| `GET tutor/account` | `auth = tutor`, conta de `$auth.id`; nome, e-mail, CPF mascarado, telefone e endereço |
+| `PATCH tutor/account` | Somente nome, telefone e endereço obrigatórios; ID, CPF, e-mail, senha e vínculos nunca entram no conjunto de escrita |
+| `POST tutor/password` | Senha atual conferida no servidor, nova senha não vazia e confirmação idêntica; retorno somente de sucesso |
+
+O `GET tutor/me` preexistente de identidade permanece intacto, assim como
+`auth/me` e os endpoints de reset do domínio genérico `user`. Senhas não sofrem
+trim nem recebem regra nova de complexidade nesta entrega. CPF é mascarado antes
+da resposta; valor malformado usa máscara integral. Não há mudança no DER/schema.
+Nenhuma dessas operações lê prontuário ou gera o log clínico de veterinário.
+
+O estado de configurações mantém snapshot e rascunho separados. Cancelar restaura
+a última versão confirmada; erro conserva o rascunho e sucesso só aparece após
+resposta válida. Uma resposta de sessão anterior é descartada. Logout limpa dados
+de conta e pets; troca de senha concluída limpa campos e sessão e volta ao login
+com confirmação. Isso não representa revogação global de tokens já emitidos.
+Erros de senha atual não são confundidos com sessão expirada. HTTP 429 e falhas
+de rede não provocam repetição automática de credenciais ou escritas.
+
+O descarte de edições é confirmado ao mudar de aba, navegar pelo menu ou sair.
+O aviso nativo de fechamento/recarga depende do suporte e interação prévia exigidos
+pelo navegador; não garante recuperação em fechamento forçado ou queda de conexão.
+
+### Preferências de interface
+
+`assets/preferences.js`, carregado no head, aplica `data-vt-theme` no documento
+antes da primeira renderização e usa os tokens de `assets/vet_tech.css`.
+`vet_tech_theme` contém somente `light` ou `dark`, com padrão claro. O tema cobre
+Configurações, Meus Pets, login, cadastro, portais e a cor da sidebar (verde profundo
+no escuro), sem alterar fotografias ou estrutura das telas públicas. Mudanças
+valem imediatamente, são sincronizadas entre abas e permanecem após logout.
+Se storage de tema falhar, a preferência funciona em memória na página atual.
+
+`vet_tech_sidebar_expanded` continua sendo a única preferência de expansão,
+compartilhada pelo botão da sidebar e controle de Configurações. No celular a
+expansão desktop não abre automaticamente a gaveta. Não existe sincronização por
+conta ou entre dispositivos. Senhas, token, CPF e dados pessoais não são gravados
+nessas preferências.
+
+Ver comandos de integração e limites de teste em `docs/settings-verification.md`.
+
+### Navegação sem espera por consulta remota
+
+Links da sidebar usam o router diretamente quando não há rascunho pessoal ou
+escrita em andamento. O guard local intercepta apenas esses casos; abas Segurança
+ou Preferências não são consideradas alteradas por não conterem os inputs de conta.
+A leitura `SettingsState.load_account` é um evento de background: bloqueia estado
+somente para capturar sessão e aplicar resultado, liberando navegação durante HTTP.
+Uma conta confirmada pode ser reutilizada por 60 segundos na mesma sessão; salvar
+atualiza esse cache e logout o limpa. Revalidação desabilita edição até terminar,
+sem impedir sair da página. Isso não substitui autorização no backend.

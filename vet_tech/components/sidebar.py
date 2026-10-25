@@ -12,7 +12,7 @@ _NAV_ITEMS = (
     ("configuracoes", "Configurações", "settings"),
 )
 
-_EXISTING_ROUTES = {"meus_pets": "/"}
+_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes"}
 
 
 def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> rx.Component:
@@ -20,7 +20,7 @@ def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> r
     class_name = (
         "sidebar-item sidebar-item--active"
         if active
-        else "sidebar-item sidebar-item--disabled"
+        else ("sidebar-item" if item_id in _EXISTING_ROUTES else "sidebar-item sidebar-item--disabled")
     )
     contents = rx.hstack(
         rx.icon(icon_name, class_name="sidebar-item__icon", size=20),

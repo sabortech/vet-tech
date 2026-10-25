@@ -4,9 +4,9 @@ import reflex as rx
 
 from vet_tech.features.auth.state import State
 
-VERDE = "#689554"
-VERDE_ESCURO = "#1A3629"
-CINZA_CAMPO = "#EEF0F2"
+VERDE = "var(--vt-green)"
+VERDE_ESCURO = "var(--vt-text)"
+CINZA_CAMPO = "var(--vt-field-bg)"
 LARGURA_FORMULARIO = "320px"
 
 
@@ -47,22 +47,22 @@ def botao_primario() -> rx.Component:
         height="36px",
         padding="0",
         background=VERDE,
-        color="white",
+        color="var(--vt-primary-text)",
         border="none",
         border_radius="999px",
         font_family="Nunito",
         font_size="14px",
         font_weight="600",
         cursor="pointer",
-        _hover={"background": "#5D874A"},
+        _hover={"background": "var(--vt-green-hover)"},
     )
 
 
 def divisor_ou() -> rx.Component:
     return rx.hstack(
-        rx.box(height="1px", flex="1", background="#D9DDE0"),
-        rx.text("ou", color="#8A8F98", font_family="Nunito", font_size="11px"),
-        rx.box(height="1px", flex="1", background="#D9DDE0"),
+        rx.box(height="1px", flex="1", background="var(--vt-border)"),
+        rx.text("ou", color="var(--vt-muted)", font_family="Nunito", font_size="11px"),
+        rx.box(height="1px", flex="1", background="var(--vt-border)"),
         width="100%",
         align="center",
         spacing="2",
@@ -85,9 +85,9 @@ def botao_google() -> rx.Component:
         justify_content="center",
         gap="9px",
         padding="0",
-        background="white",
-        color="#111111",
-        border="1px solid #333333",
+        background="var(--vt-surface)",
+        color="var(--vt-text)",
+        border="1px solid var(--vt-border)",
         border_radius="999px",
         font_weight="400",
         disabled=True,
@@ -139,7 +139,7 @@ def conteudo_cadastro() -> rx.Component:
         rx.vstack(
             rx.text(
                 "Olá, Seja Bem-vindo!",
-                color="#111111",
+                color="var(--vt-text)",
                 font_family="Nunito",
                 font_size="22px",
                 font_weight="700",
@@ -147,7 +147,7 @@ def conteudo_cadastro() -> rx.Component:
             ),
             rx.text(
                 "Cuide dos seus pets com qualidade!",
-                color="#111111",
+                color="var(--vt-text)",
                 font_family="Nunito",
                 font_size="17px",
                 line_height="1.25",
@@ -163,7 +163,7 @@ def conteudo_cadastro() -> rx.Component:
             rx.hstack(
                 rx.text(
                     "Já tem uma conta?",
-                    color="#111111",
+                    color="var(--vt-text)",
                     font_family="Nunito",
                     font_size="13px",
                 ),
@@ -194,7 +194,7 @@ def conteudo_cadastro() -> rx.Component:
                 width=["100%", "100%", "50%"],
                 height="100%",
                 padding=["28px 22px", "36px 30px", "48px 48px"],
-                background="white",
+                background="var(--vt-surface)",
                 display="flex",
                 align_items="center",
                 justify_content="center",
@@ -236,7 +236,7 @@ def conteudo_cadastro() -> rx.Component:
         min_height="auto",
         overflow="hidden",
         border_radius="32px",
-        background="white",
+        background="var(--vt-surface)",
         box_shadow="0 22px 65px rgba(20, 39, 24, 0.24)",
     )
 

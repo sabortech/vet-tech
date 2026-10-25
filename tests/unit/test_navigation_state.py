@@ -38,7 +38,7 @@ class NavigationStateTests(unittest.TestCase):
 
     def test_unimplemented_navigation_items_have_no_route(self):
         route_ids = set(_EXISTING_ROUTES)
-        self.assertEqual(route_ids, {"meus_pets"})
+        self.assertEqual(route_ids, {"meus_pets", "configuracoes"})
         self.assertEqual(_EXISTING_ROUTES["meus_pets"], "/")
 
         for item_id, label, icon_name in _NAV_ITEMS:

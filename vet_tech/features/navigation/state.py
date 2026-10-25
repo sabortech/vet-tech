@@ -30,7 +30,7 @@ class NavigationState(rx.State):
 
     @rx.var
     def sidebar_expanded(self) -> bool:
-        return self.sidebar_preference == "true"
+        return self.sidebar_preference != "false"
 
     @rx.event
     def toggle_sidebar(self):
@@ -49,3 +49,7 @@ class NavigationState(rx.State):
     def close_drawer(self):
         self.drawer_open = False
         return rx.call_script(_CLOSE_DRAWER_KEYBOARD_LISTENER)
+
+    @rx.event
+    def set_sidebar_expanded(self, value: bool):
+        self.sidebar_preference = "true" if value else "false"

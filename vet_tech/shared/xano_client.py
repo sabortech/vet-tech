@@ -9,7 +9,13 @@ PET_API_GROUP = "vettech-pets"
 
 
 class XanoRequestError(Exception):
-    pass
+    def __init__(self, message: str, status_code: int | None = None):
+        super().__init__(message)
+        self.status_code = status_code
+
+    @property
+    def session_invalid(self) -> bool:
+        return self.status_code == 401 or str(self) == "Sessão inválida."
 
 
 async def xano_request(
@@ -64,6 +70,9 @@ async def xano_request(
         # do backend. Erros arbitrários podem conter credenciais ou dados clínicos.
         message = "Não foi possível concluir a solicitação."
         safe_messages = {
+            "Sessão inválida.",
+            "Senha atual incorreta.",
+            "As senhas não coincidem.",
             "Preencha todos os campos obrigatórios.",
             "Já existe uma conta com esse CPF ou e-mail.",
             "E-mail já cadastrado.",
@@ -82,7 +91,7 @@ async def xano_request(
                     message = candidate
         except ValueError:
             pass
-        raise XanoRequestError(str(message))
+        raise XanoRequestError(str(message), status_code=response.status_code)
 
     if not response.content:
         return None

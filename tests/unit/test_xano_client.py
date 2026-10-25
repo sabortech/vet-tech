@@ -122,6 +122,18 @@ class XanoClientTests(unittest.IsolatedAsyncioTestCase):
                 await self.request(handler)
             self.assertNotIn("secret-token", "".join(traceback.format_exception(caught.exception)))
 
+    async def test_settings_auth_and_domain_failures_remain_distinct(self):
+        for status, message, invalid in ((401, "secret-response", True),
+                                         (403, "Sessão inválida.", True),
+                                         (400, "Senha atual incorreta.", False),
+                                         (403, "secret-response", False)):
+            with self.subTest(status=status, message=message):
+                with self.assertRaises(XanoRequestError) as caught:
+                    await self.request(lambda request: httpx.Response(status, json={"message": message}))
+                self.assertEqual(caught.exception.status_code, status)
+                self.assertEqual(caught.exception.session_invalid, invalid)
+                self.assertNotIn("secret-response", str(caught.exception))
+
     async def test_missing_configuration_does_not_send_request(self):
         with patch.dict(os.environ, {}, clear=True), patch(
             "vet_tech.shared.xano_client.httpx.AsyncClient"

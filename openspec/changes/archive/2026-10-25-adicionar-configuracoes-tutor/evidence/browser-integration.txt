@@ -1,0 +1,14 @@
+PASS account loaded
+PASS save and cancel
+PASS discard guard
+PASS theme storage, tabs and sidebar
+PASS responsive themes and mobile drawer
+PASS password validation, logout and new login
+PASS direct settings access without session
+PASS blocked storage fallback
+PASS dark theme before first public form
+PASS complete settings browser integration
+PASS history guard retains draft
+PASS readonly readable and no overflow at 1366, 1920, 768 and 390 px, light/dark
+PASS dark pet selector
+PASS final visual and history checks

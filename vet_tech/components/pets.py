@@ -123,6 +123,14 @@ def breed_select() -> rx.Component:
     )
 
 
+def pet_field(icon: str, control: rx.Component) -> rx.Component:
+    return rx.box(
+        rx.icon(icon, size=18, class_name="pet-form__icon", aria_hidden=True),
+        control,
+        class_name="pet-form__icon-field",
+    )
+
+
 def pet_form() -> rx.Component:
     return rx.box(
         rx.heading(
@@ -132,23 +140,23 @@ def pet_form() -> rx.Component:
             class_name="pet-card__title",
         ),
         rx.box(
-            rx.input(
+            pet_field("paw-print", rx.input(
                 placeholder="Nome do pet",
                 aria_label="Nome do pet",
                 value=State.pet_name,
                 on_change=State.set_pet_name,
                 class_name="pet-form__field",
-            ),
-            species_select(),
-            breed_select(),
-            rx.input(
+            )),
+            pet_field("dog", species_select()),
+            pet_field("dna", breed_select()),
+            pet_field("venus-and-mars", rx.input(
                 placeholder="Sexo (opcional)",
                 aria_label="Sexo (opcional)",
                 value=State.pet_sex,
                 on_change=State.set_pet_sex,
                 class_name="pet-form__field",
-            ),
-            rx.box(
+            )),
+            pet_field("cake", rx.box(
                 rx.input(
                     id="pet-birth-date",
                     type="date",
@@ -180,8 +188,8 @@ def pet_form() -> rx.Component:
                         "true",
                     ),
                 },
-            ),
-            rx.input(
+            )),
+            pet_field("weight", rx.input(
                 placeholder="Peso atual (opcional)",
                 aria_label="Peso atual (opcional)",
                 type="number",
@@ -190,15 +198,15 @@ def pet_form() -> rx.Component:
                 value=State.pet_weight,
                 on_change=State.set_pet_weight,
                 class_name="pet-form__field",
-            ),
-            rx.input(
+            )),
+            pet_field("palette", rx.input(
                 placeholder="Cor da pelagem (opcional)",
                 aria_label="Cor da pelagem (opcional)",
                 value=State.pet_coat_color,
                 on_change=State.set_pet_coat_color,
                 class_name="pet-form__field",
-            ),
-            rx.input(
+            )),
+            pet_field("microchip", rx.input(
                 placeholder="Microchip (opcional)",
                 aria_label="Microchip (opcional)",
                 type="number",
@@ -207,13 +215,13 @@ def pet_form() -> rx.Component:
                 value=State.pet_microchip,
                 on_change=State.set_pet_microchip,
                 class_name="pet-form__field",
-            ),
+            )),
             class_name="pet-form__fields",
         ),
         rx.box(
             rx.upload(
                 rx.vstack(
-                    rx.icon("camera", size=32),
+                    rx.icon("camera", size=32, aria_hidden=True),
                     rx.text("Selecionar foto (opcional)"),
                     align="center",
                     spacing="2",
