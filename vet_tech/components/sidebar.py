@@ -1,27 +1,26 @@
 import reflex as rx
 
-from vet_tech.features.navigation.state import NavigationState
+from vet_tech.features.navigation.state import CLINICAL_DESTINATIONS, NavigationState
 
 _NAV_ITEMS = (
     ("dashboard", "Dashboard", "house"),
     ("prontuario", "Prontuário", "clipboard-list"),
     ("vacinas", "Vacinas", "syringe"),
+    ("medicamentos", "Medicamentos", "pill"),
+    ("doencas", "Doenças", "heart-pulse"),
     ("consultas", "Consultas", "calendar-days"),
     ("exames", "Exames", "microscope"),
     ("meus_pets", "Meus Pets", "paw-print"),
     ("configuracoes", "Configurações", "settings"),
 )
 
-_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes", "prontuario": "/prontuario"}
+_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes", **CLINICAL_DESTINATIONS}
 
 
 def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> rx.Component:
     active = item_id == pagina_ativa
-    class_name = (
-        "sidebar-item sidebar-item--active"
-        if active
-        else ("sidebar-item" if item_id in _EXISTING_ROUTES else "sidebar-item sidebar-item--disabled")
-    )
+    class_name = rx.cond(active, "sidebar-item sidebar-item--active",
+                        "sidebar-item" if item_id in _EXISTING_ROUTES else "sidebar-item sidebar-item--disabled")
     contents = rx.hstack(
         rx.icon(icon_name, class_name="sidebar-item__icon", size=20),
         rx.text(label, class_name="sidebar-item__label"),
@@ -34,11 +33,12 @@ def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> r
         return rx.link(
             contents,
             href=_EXISTING_ROUTES[item_id],
+            on_click=NavigationState.close_drawer,
             class_name=class_name,
             title=label,
             custom_attrs={
                 "aria-label": label,
-                "aria-current": "page" if active else "false",
+                "aria-current": rx.cond(active, "page", "false"),
             },
         )
 
@@ -98,7 +98,7 @@ def _toggle_button(mobile: bool) -> rx.Component:
     )
 
 
-def _sidebar(pagina_ativa: str) -> rx.Component:
+def _sidebar(pagina_ativa: str, actions: rx.Component | None = None) -> rx.Component:
     sidebar_class = rx.cond(
         NavigationState.drawer_open,
         "sidebar sidebar--mobile-open",
@@ -132,14 +132,15 @@ def _sidebar(pagina_ativa: str) -> rx.Component:
             role="navigation",
             custom_attrs={"aria-label": "Navegação principal"},
         ),
+        *([rx.box(actions, class_name='sidebar-actions')] if actions is not None else []),
         id="vet-tech-sidebar",
         class_name=sidebar_class,
     )
 
 
-def layout_com_menu(conteudo: rx.Component, pagina_ativa: str) -> rx.Component:
+def layout_com_menu(conteudo: rx.Component, pagina_ativa: str, actions: rx.Component | None = None) -> rx.Component:
     return rx.box(
-        _sidebar(pagina_ativa),
+        _sidebar(pagina_ativa, actions),
         rx.button(
             on_click=NavigationState.close_drawer,
             id="vet-tech-drawer-escape-close",

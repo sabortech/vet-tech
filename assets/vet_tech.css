@@ -88,6 +88,7 @@ textarea {
 }
 
 .sidebar-header {
+  flex-shrink: 0;
   min-height: 48px;
   margin-bottom: var(--vt-space-8);
 }
@@ -147,6 +148,7 @@ textarea {
 }
 
 .sidebar-navigation {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: var(--vt-space-2);
@@ -154,6 +156,7 @@ textarea {
 }
 
 .sidebar-item {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   min-width: 0;
@@ -252,6 +255,18 @@ textarea {
 .sidebar-backdrop {
   display: none;
 }
+
+/* A single scrollable sidebar keeps all clinical actions reachable. */
+.sidebar { overflow-x: hidden; overflow-y: auto; }
+.sidebar-actions { flex-shrink: 0; margin-top: auto; padding-top: var(--vt-space-4); }
+.sidebar-action-list { display: flex; flex-direction: column; gap: var(--vt-space-2); }
+.sidebar .sidebar-action {
+  width: 100%; height: auto; border: 0; background: transparent;
+  box-shadow: none; color: var(--vt-sidebar-brand); font: inherit;
+  cursor: pointer; justify-content: flex-start;
+}
+.sidebar .sidebar-action:hover { color: #1a3629; background: #ebeee5; }
+.sidebar .sidebar-action:disabled { opacity: .6; cursor: default; }
 
 .app-content {
   position: relative;

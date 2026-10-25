@@ -1,5 +1,16 @@
 import reflex as rx
 
+# Shared server allowlist; labels are mapped to the existing clinical State.
+CLINICAL_SECTIONS = {
+    'inicio': 'Início', 'vacinas': 'Vacinas', 'medicamentos': 'Medicamentos',
+    'doencas': 'Doenças', 'consultas': 'Consultas',
+}
+CLINICAL_DESTINATIONS = {
+    'prontuario': '/prontuario',
+    **{key: f'/prontuario?secao={key}' for key in CLINICAL_SECTIONS if key != 'inicio'},
+}
+TUTOR_DESTINATIONS = frozenset({'/', '/configuracoes', '/prontuario?secao=inicio', *CLINICAL_DESTINATIONS.values()})
+
 _OPEN_DRAWER_KEYBOARD_LISTENER = """(() => {
   if (window.__vetTechDrawerEscapeHandler) {
     window.removeEventListener("keydown", window.__vetTechDrawerEscapeHandler);
@@ -47,8 +58,11 @@ class NavigationState(rx.State):
 
     @rx.event
     def close_drawer(self):
+        was_open = self.drawer_open
         self.drawer_open = False
-        return rx.call_script(_CLOSE_DRAWER_KEYBOARD_LISTENER)
+        return rx.call_script(_CLOSE_DRAWER_KEYBOARD_LISTENER + (
+            "document.querySelector('.sidebar-toggle--mobile')?.focus();" if was_open else ''
+        ))
 
     @rx.event
     def set_sidebar_expanded(self, value: bool):

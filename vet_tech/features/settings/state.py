@@ -6,6 +6,7 @@ from typing import Any
 import reflex as rx
 
 from vet_tech.features.auth.state import State as AuthState
+from vet_tech.features.navigation.state import NavigationState, TUTOR_DESTINATIONS
 from vet_tech.shared.xano_client import AUTH_API_GROUP, XanoRequestError, xano_request
 
 _PASSWORD_RESET = """document.querySelector('#settings-password-form')?.reset();
@@ -220,7 +221,7 @@ class SettingsState(rx.State):
     def request_action(self, action: str):
         if self.saving:
             return
-        allowed = {"account", "security", "preferences", "/", "/configuracoes", "logout", "history"}
+        allowed = {"account", "security", "preferences", "logout", "history", *TUTOR_DESTINATIONS}
         if action not in allowed:
             return
         if self.dirty:
@@ -228,6 +229,14 @@ class SettingsState(rx.State):
             self.discard_open = True
             return
         return self._execute(action)
+
+    @rx.event
+    def request_navigation(self, destination: str):
+        """The browser guard detected unsaved live inputs, possibly before a delta."""
+        if self.saving or destination not in TUTOR_DESTINATIONS:
+            return
+        self._pending = destination
+        self.discard_open = True
 
     def _execute(self, action: str):
         self.message = ""
@@ -239,12 +248,13 @@ class SettingsState(rx.State):
             return AuthState.logout
         if action == "history":
             return rx.call_script("window.vetTechLeaveHistory?.();")
-        return rx.redirect(action)
+        return [NavigationState.close_drawer, rx.redirect(action)]
 
     @rx.event
     def keep_editing(self):
         self.discard_open = False
         self._pending = ""
+        return rx.call_script('requestAnimationFrame(() => window.__vetTechNavigationTrigger?.focus());')
 
     @rx.event
     def discard(self):

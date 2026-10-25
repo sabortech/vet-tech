@@ -493,7 +493,7 @@ class State(ClinicalMixin, rx.State):
         self._reset_pet_form()
         self.pet_modal_open = opened
         self.login_message_success = False
-        return [rx.clear_selected_files("pet-photo"), rx.redirect("/login")]
+        return rx.clear_selected_files("pet-photo")
 
     @rx.event
     def show_pet_picker(self):

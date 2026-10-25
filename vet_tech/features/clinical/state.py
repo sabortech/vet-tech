@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
+from vet_tech.features.navigation.state import CLINICAL_SECTIONS
 
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -352,6 +353,23 @@ class ClinicalMixin(rx.State, mixin=True):
         event = self._prepare_tutor_clinical()
         if event is not None:
             yield event
+
+    @rx.var
+    def clinical_menu_item(self) -> str:
+        return next((key for key, label in CLINICAL_SECTIONS.items()
+                     if label == self.active_section and key != 'inicio'), 'prontuario')
+
+    @rx.event
+    def enter_clinical_page(self):
+        """Runs for both path and query changes, including browser history."""
+        if not self.is_authenticated:
+            return rx.redirect('/login')
+        if self.profile != 'tutor':
+            return
+        key = self.router.url.query_parameters.get('secao', 'inicio')
+        self.active_section = CLINICAL_SECTIONS.get(key, 'Início')
+        self.detail_id = ''
+        return self._prepare_tutor_clinical()
 
     def _prepare_tutor_clinical(self, force: bool = False, reservations_only: bool = False):
         if self.profile != 'tutor' or not self.selected_pet_id or not self._auth_token:

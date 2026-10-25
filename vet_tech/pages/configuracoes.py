@@ -1,7 +1,7 @@
 """Configurações do tutor com os componentes visuais compartilhados."""
 import reflex as rx
 
-from vet_tech.components.sidebar import layout_com_menu
+from vet_tech.components.sidebar import _EXISTING_ROUTES, layout_com_menu
 from vet_tech.features.auth.state import State
 from vet_tech.features.navigation.state import NavigationState
 from vet_tech.features.settings.state import SettingsState as Settings
@@ -160,7 +160,10 @@ def settings_view():
             rx.box(rx.match(Settings.tab, ("account", account()), ("security", security()), preferences()), id="settings-panel", role="tabpanel", custom_attrs={"aria-labelledby": "tab-" + Settings.tab}),
             discard_dialog(),
             rx.button(on_click=Settings.history_back, id="settings-history-guard", display="none"),
-            rx.button(on_click=Settings.request_action("/"), id="settings-sidebar-guard", display="none"),
+            *[rx.button(on_click=Settings.request_navigation(destination),
+                        custom_attrs={'data-settings-destination': destination},
+                        display='none', tab_index=-1, aria_hidden=True)
+              for destination in _EXISTING_ROUTES.values()],
             class_name="settings-page", custom_attrs={"data-dirty": Settings.dirty.to(str), "data-baseline": Settings.baseline_json, "data-saving": Settings.saving.to(str)},
         ), pagina_ativa="configuracoes",
     )

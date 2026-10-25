@@ -99,6 +99,23 @@ def stats():
         return json.load(response)
 
 
+def open_menu(page):
+    if page.viewport_size['width'] < 768 and not page.locator('#vet-tech-sidebar').is_visible():
+        page.locator('.sidebar-toggle--mobile').click()
+        from playwright.sync_api import expect
+        expect(page.locator('#vet-tech-sidebar')).to_be_visible()
+
+
+def navigate(page, label):
+    open_menu(page)
+    page.get_by_role('link', name=label, exact=True).click()
+
+
+def menu_action(page, label):
+    open_menu(page)
+    page.get_by_role('button', name=label, exact=True).click()
+
+
 def browser_check():
     from playwright.sync_api import expect, sync_playwright
 
@@ -121,19 +138,16 @@ def browser_check():
                 page.get_by_label('Senha', exact=True).fill('synthetic-local-only')
                 page.get_by_role('button', name='Login', exact=True).click()
                 expect(page.get_by_role('heading', name='Perfil do tutor', exact=True)).to_be_visible()
-                if width < 500:
-                    page.get_by_role('button', name='Abrir menu', exact=True).click()
-                page.get_by_role('link', name='Prontuário', exact=True).click()
+                navigate(page, 'Prontuário')
+                expect(page.get_by_role('heading', name='Início', exact=True)).to_be_visible()
                 first = page.get_by_role('button', name='Abrir Pet QA A', exact=True)
                 expect(first).to_be_visible()
-                if width < 500:
-                    page.get_by_role('button', name='Recolher menu', exact=True).click()
                 first.focus()
                 start = time.perf_counter()
                 first.click()
                 expect(page.get_by_text('Carregando dados do pet…', exact=True).first).to_be_visible()
                 loading_ms = round((time.perf_counter() - start) * 1000)
-                page.get_by_role('button', name='Vacinas', exact=True).click()
+                navigate(page, 'Vacinas')
                 expect(page.get_by_role('heading', name='Vacinas', exact=True)).to_be_visible()
                 expect(page.get_by_text('Nenhum registro publicado para este pet.')).not_to_be_visible()
                 expect(page.get_by_text('Vacina QA 1', exact=True)).to_be_visible()
@@ -141,11 +155,12 @@ def browser_check():
                 print(f'{width}: initial loading and parallel fetch passed', flush=True)
                 initial = stats()
                 start = time.perf_counter()
-                page.get_by_role('button', name='Medicamentos', exact=True).focus()
-                page.get_by_role('button', name='Medicamentos', exact=True).press('Enter')
+                open_menu(page)
+                page.get_by_role('link', name='Medicamentos', exact=True).focus()
+                page.get_by_role('link', name='Medicamentos', exact=True).press('Enter')
                 expect(page.get_by_text('Nenhum registro publicado para este pet.', exact=True)).to_be_visible()
                 navigation_ms = round((time.perf_counter() - start) * 1000)
-                page.get_by_role('button', name='Doenças', exact=True).click()
+                navigate(page, 'Doenças')
                 expect(page.get_by_role('heading', name='Doenças', exact=True)).to_be_visible()
                 assert stats() == initial, 'Repeated API calls on cached navigation'
                 assert not any('/acessos' in route or '/auditoria' in route for route in initial)
@@ -164,34 +179,34 @@ def browser_check():
                 control(rate_limit=True)
                 page.get_by_role('button', name='Atualizar dados do pet', exact=True).click()
                 expect(page.get_by_text('Carregando dados do pet…', exact=True)).to_be_visible()
-                page.get_by_role('button', name='Medicamentos', exact=True).click()
+                navigate(page, 'Medicamentos')
                 expect(page.get_by_role('heading', name='Medicamentos', exact=True)).to_be_visible()
                 expect(page.get_by_text('Carregando dados do pet…', exact=True)).to_be_visible()
-                page.get_by_role('link', name='Configurações', exact=True).click()
+                navigate(page, 'Configurações')
                 expect(page.locator('#settings-nome')).to_have_value('Tutor QA')
-                page.get_by_role('link', name='Meus Pets', exact=True).click()
+                navigate(page, 'Meus Pets')
                 expect(page.get_by_role('heading', name='Perfil do tutor', exact=True)).to_be_visible()
-                if width < 500 and page.get_by_role('button', name='Abrir menu', exact=True).is_visible():
-                    page.get_by_role('button', name='Abrir menu', exact=True).click()
-                page.get_by_role('link', name='Prontuário', exact=True).click()
+                navigate(page, 'Prontuário')
+                expect(page.get_by_role('heading', name='Início', exact=True)).to_be_visible()
+                open_menu(page)
                 expect(page.get_by_role('button', name='Mudar pet', exact=True)).to_be_visible()
                 # A delayed A response must never fill B's sections.
                 control(delay=3)
-                page.get_by_role('button', name='Mudar pet', exact=True).click()
+                menu_action(page, 'Mudar pet')
                 page.get_by_role('button', name='Abrir Pet QA A', exact=True).click()
                 expect(page.get_by_text('Carregando dados do pet…', exact=True).first).to_be_visible()
-                page.get_by_role('button', name='Mudar pet', exact=True).click()
+                menu_action(page, 'Mudar pet')
                 page.get_by_role('button', name='Abrir Pet QA B', exact=True).click()
-                page.get_by_role('button', name='Vacinas', exact=True).click()
+                navigate(page, 'Vacinas')
                 expect(page.get_by_text('Vacina QA 2', exact=True)).to_be_visible()
                 expect(page.get_by_text('Vacina QA 1', exact=True)).not_to_be_visible()
-                page.get_by_role('button', name='Consultas', exact=True).click()
+                navigate(page, 'Consultas')
                 page.get_by_role('button', name='Carregar permissões e histórico de acessos', exact=True).click()
                 expect(page.get_by_role('button', name='Permissões e histórico de acessos', exact=True)).to_be_visible()
                 assert any('/acessos' in route for route in stats())
                 assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'Horizontal overflow'
                 assert not errors, 'Browser runtime errors: ' + repr(errors)
-                page.get_by_role('button', name='Sair', exact=True).click()
+                menu_action(page, 'Sair')
                 expect(page.get_by_role('button', name='Login', exact=True)).to_be_visible()
                 results.append({'width': width, 'loading_ms': loading_ms, 'load_ms': loaded_ms,
                                 'cached_navigation_ms': navigation_ms, 'initial_requests': initial, 'passed': True})
