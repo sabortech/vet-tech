@@ -77,13 +77,18 @@
     const link = event.target.closest('.sidebar a.sidebar-item');
     if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const destination = new URL(link.href, location.href);
-    if (destination.pathname.replace(/\/$/, '') === location.pathname.replace(/\/$/, '')) {
+    if (destination.pathname.replace(/\/$/, '') === location.pathname.replace(/\/$/, '') && destination.search === location.search) {
       event.preventDefault(); event.stopImmediatePropagation(); return;
     }
     const saving = document.querySelector('.settings-page')?.dataset.saving === 'true';
     if (!dirty() && !saving) return;
     event.preventDefault(); event.stopImmediatePropagation();
-    if (!saving) document.getElementById('settings-sidebar-guard')?.click();
+    if (!saving) {
+      window.__vetTechNavigationTrigger = link;
+      const target = destination.pathname + destination.search;
+      [...document.querySelectorAll('[data-settings-destination]')]
+        .find(control => control.dataset.settingsDestination === target)?.click();
+    }
   }, true);
   window.addEventListener('beforeunload', event => {
     if (dirty()) { event.preventDefault(); event.returnValue = ''; }

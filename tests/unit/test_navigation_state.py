@@ -38,7 +38,7 @@ class NavigationStateTests(unittest.TestCase):
 
     def test_unimplemented_navigation_items_have_no_route(self):
         route_ids = set(_EXISTING_ROUTES)
-        self.assertEqual(route_ids, {"meus_pets", "configuracoes", "prontuario"})
+        self.assertEqual(route_ids, {"meus_pets", "configuracoes", "prontuario", "vacinas", "medicamentos", "doencas", "consultas"})
         self.assertEqual(_EXISTING_ROUTES["meus_pets"], "/")
 
         for item_id, label, icon_name in _NAV_ITEMS:
@@ -48,6 +48,17 @@ class NavigationStateTests(unittest.TestCase):
                     type(item).__name__,
                     "Link" if item_id in route_ids else "Box",
                 )
+
+    def test_catalog_order_and_clinical_destinations_are_shared(self):
+        from vet_tech.features.navigation.state import CLINICAL_SECTIONS, TUTOR_DESTINATIONS
+        self.assertEqual([item[0] for item in _NAV_ITEMS], [
+            'dashboard', 'prontuario', 'vacinas', 'medicamentos', 'doencas',
+            'consultas', 'exames', 'meus_pets', 'configuracoes',
+        ])
+        for key in CLINICAL_SECTIONS:
+            self.assertIn('/prontuario?secao=' + key, TUTOR_DESTINATIONS)
+        self.assertNotIn('/exames', TUTOR_DESTINATIONS)
+        self.assertNotIn('https://example.invalid', TUTOR_DESTINATIONS)
 
 
 if __name__ == "__main__":

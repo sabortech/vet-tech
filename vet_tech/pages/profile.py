@@ -1,16 +1,14 @@
 import reflex as rx
 
-from vet_tech.features.navigation.state import NavigationState
-
-from vet_tech.components.navigation import sidebar
+from vet_tech.components.navigation import clinical_menu_actions
+from vet_tech.components.sidebar import layout_com_menu
 from vet_tech.components.pets import pet_details, pet_list
 from vet_tech.features.auth.state import State
 from vet_tech.components.clinical import booking_dialog, pet_loading, records, tutor_clinical_content, tutor_consultations, veterinary_content, veterinary_sidebar
 
 
 def tutor_area() -> rx.Component:
-    return rx.hstack(
-        sidebar(),
+    return layout_com_menu(
         rx.box(
             rx.hstack(
                 rx.vstack(rx.text("Área do tutor", size="2", color="var(--vt-muted)"),
@@ -37,19 +35,9 @@ def tutor_area() -> rx.Component:
                         ("Doenças", tutor_clinical_content(records("doencas"))),
                         pet_details())),
             rx.text(State.pet_message, role="status", margin_top="1rem"),
-            as_="main", id="main-content", width="100%", min_width="0", min_height="100dvh",
+            as_="main", id="main-content", width="100%", min_width="0",
             overflow_wrap="anywhere",
-            padding=rx.breakpoints(initial="24px 16px", lg="40px"),
-            margin_left=rx.breakpoints(initial="72px", lg="0"),
-        ),
-        rx.cond(NavigationState.sidebar_expanded, rx.box(
-            rx.button("Fechar menu", on_click=NavigationState.toggle_sidebar, width="100%", height="100%",
-                      variant="ghost", aria_label="Fechar menu", opacity="0"),
-            position="fixed", inset="0", background="rgba(0,0,0,.3)", z_index="19",
-            display=rx.breakpoints(initial="block", lg="none"),
-        )),
-        width="100%", align="start", spacing="0", background="var(--vt-page-bg)", color="var(--vt-text)",
-        on_mount=State.ensure_tutor_clinical,
+        ), pagina_ativa=State.clinical_menu_item, actions=clinical_menu_actions(),
     )
 
 

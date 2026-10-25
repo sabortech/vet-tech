@@ -64,6 +64,30 @@ atual seja reescrita antes de continuar o desenvolvimento.
 
 ## Aplicação gradual
 
+### Navegação compartilhada do tutor
+
+`components/sidebar.py` contém o catálogo visual único e `layout_com_menu`, usado
+por Meus Pets, Configurações e Prontuário. A referência é a sidebar verde existente
+com marca, pill ativo branco, ícones e tokens `.sidebar-*` de `assets/vet_tech.css`.
+O layout aceita ações por composição; `components/navigation.py` fornece somente
+as ações clínicas e o modal, sem criar uma segunda sidebar ou estado de pet.
+
+Ordem das entradas: Dashboard, Prontuário, Vacinas, Medicamentos, Doenças,
+Consultas, Exames, Meus Pets e Configurações. Dashboard e Exames seguem desabilitados.
+O catálogo visual deriva os destinos clínicos da allowlist de
+`features/navigation/state.py`, também usada pelo guard do servidor.
+
+Prontuário representa Início. As demais seções usam `/prontuario?secao=<chave>`;
+as chaves permitidas são `inicio`, `vacinas`, `medicamentos`, `doencas` e `consultas`.
+A entrada de página aplica a intenção inclusive em mudança de query e histórico
+do navegador. O estado clínico mantém seleção, cache e carregamento; o menu não
+cria uma sessão paralela nem faz HTTP para renderizar ou alternar expansão.
+
+`NavigationState.sidebar_preference` conserva a preferência desktop existente;
+`drawer_open` é transitório e independente, abaixo de 768 px. O guard de
+Configurações valida o destino exato e só o executa depois do descarte confirmado.
+As páginas compõem as dependências para evitar o ciclo sidebar → pets → sidebar.
+
 O arquivo `vet_tech/vet_tech.py` atualmente concentra a entrada do app, estado,
 comunicação HTTP, páginas e componentes. Novas funcionalidades podem ser
 separadas por domínio sem exigir uma migração total imediata. Ao extrair um

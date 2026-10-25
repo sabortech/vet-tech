@@ -68,6 +68,18 @@ O backend usa `inputerror` para validação/estado/versão, `notfound` para refe
 
 ### Carregamento do tutor por pet
 
+O Prontuário usa a sidebar personalizada compartilhada com Meus Pets e
+Configurações. A entrada Prontuário abre Início; Vacinas, Medicamentos, Doenças e
+Consultas são links com `secao` na mesma rota. Navegar entre essas áreas preserva
+o pet autorizado. Sem seleção, a intenção da seção é mantida enquanto a pessoa
+escolhe um animal. Query desconhecida abre Início. Voltar/avançar reaplica a seção
+da URL e reutiliza o cache clínico quando válido.
+
+Novo pet abre/fecha o modal sem redirecionar para login; Mudar pet mantém a
+limpeza de contexto existente. A sidebar não inicia consultas por expansão ou
+renderização. O drawer móvel fecha após a navegação; Configurações com edição
+pendente só executa o destino exato depois de confirmar descarte.
+
 Selecionar explicitamente um pet agenda a consulta de seus dados básicos em
 background. Após a confirmação de propriedade, histórico publicado e reservas
 são consultados em paralelo (duas leituras clínicas por carga). O detalhe pode
