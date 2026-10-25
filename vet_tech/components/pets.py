@@ -322,6 +322,11 @@ def pet_list() -> rx.Component:
                                 margin_top="0.5rem",
                             ),
                             rx.cond(
+                                (State.pet_target_id == pet['id']) & (State.is_loading_pet | State.clinic_loading),
+                                rx.hstack(rx.spinner(size='1'), rx.text('Carregando dados do pet…', size='1'),
+                                          role='status', aria_live='polite'),
+                            ),
+                            rx.cond(
                                 State.selected_pet_id == pet["id"],
                                 rx.text("Pet selecionado", size="1", color="#50753F"),
                             ),
@@ -387,7 +392,7 @@ def pet_details() -> rx.Component:
                 rx.button("Voltar à lista", on_click=State.close_pet, variant="outline"),
                 rx.cond(
                     State.is_loading_pet,
-                    rx.text("Carregando dados do pet...", role="status"),
+                    rx.hstack(rx.spinner(size='3'), rx.text("Carregando dados do pet…"), role="status", aria_live='polite'),
                     rx.cond(
                         State.selected_pet_id != "",
                         rx.vstack(
@@ -423,4 +428,5 @@ def pet_details() -> rx.Component:
         border="1px solid #d9dedb",
         border_radius="0.75rem",
         aria_label="Dados do pet selecionado",
+        aria_busy=State.is_loading_pet,
     )

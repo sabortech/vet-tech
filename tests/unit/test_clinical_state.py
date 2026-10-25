@@ -158,12 +158,14 @@ class ClinicalStateTests(unittest.IsolatedAsyncioTestCase):
             return {} if args[2].endswith("historico") else []
 
         with patch(TARGET, side_effect=request):
-            pending = asyncio.create_task(consume(State.load_tutor_clinical.fn(state)))
-            await started.wait()
-            state._clear_pet_context()
-            state.selected_pet = {"id": "2"}
-            release.set()
-            await pending
+            await consume(State.load_tutor_clinical.fn(state))
+            with patch.object(State, '__aenter__', AsyncMock(return_value=state)), patch.object(State, '__aexit__', AsyncMock(return_value=False)):
+                pending = asyncio.create_task(State.fetch_tutor_clinical.fn(state, state._clinic_generation, False))
+                await started.wait()
+                state._clear_pet_context()
+                state.selected_pet = {"id": "2"}
+                release.set()
+                await pending
         self.assertEqual(state.history_rows, {})
         self.assertEqual(state._tutor_history_pet, "")
 

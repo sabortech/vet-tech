@@ -66,6 +66,36 @@ O backend usa `inputerror` para validação/estado/versão, `notfound` para refe
 
 ## Composição e verificação
 
+### Carregamento do tutor por pet
+
+Selecionar explicitamente um pet agenda a consulta de seus dados básicos em
+background. Após a confirmação de propriedade, histórico publicado e reservas
+são consultados em paralelo (duas leituras clínicas por carga). O detalhe pode
+consultar o catálogo de raças se o nome não estiver disponível. HTTP ocorre
+fora do bloqueio do estado Reflex; menu, configurações, troca de pet e saída
+continuam disponíveis durante a espera, inclusive ao aguardar retry de 429.
+
+Vacinas, Medicamentos, Doenças e Consultas reutilizam o conjunto confirmado
+por até 60 segundos na seleção atual. Entrar novamente na área do pet ou trocar
+de seção depois desse prazo agenda revalidação. Não há polling. “Atualizar dados
+do pet” força a atualização clínica; durante uma carga já iniciada, não cria
+outra. Os dados básicos podem ser revalidados ao voltar à lista/abrir o pet.
+Permissões e histórico de acessos são carregados pelo botão próprio em Consultas,
+com estados de loading e falha independentes; não fazem parte da carga inicial.
+
+O loading apresenta spinner/skeleton e texto acessível na área do conteúdo,
+sem bloquear o menu. Estado vazio só aparece depois do sucesso. Falha de rede
+mantém o detalhe básico autorizado e oferece nova tentativa; 401 expira a sessão
+e 403/404 eliminam o contexto protegido. Trocar de pet, voltar à lista e sair
+invalidam cargas antigas; elas não podem alterar dados, mensagens ou loading.
+
+O cache pertence somente ao pet e à sessão atual no servidor. Não é gravado no
+navegador nem compartilhado entre contas. Um agendamento confirmado para o pet
+atual revalida reservas; consentimento confirmado revalida permissões e auditoria,
+invalidando respostas anteriores à escrita. Mudanças externas podem aparecer na
+atualização manual ou na próxima navegação após a validade. O fluxo veterinário
+mantém suas verificações de autorização e auditoria existentes.
+
 `ClinicalMixin` é composto à única `State` autenticada; usa seu token e contador de sessão. Logout/expiração limpam agenda, atendimento, histórico e modal. Troca de pet limpa as seções e invalida respostas antigas sem modificar a seleção independente do modal. Buscas de profissionais e histórico prévio têm contadores próprios para descartar respostas ultrapassadas. Dados clínicos permanecem somente no servidor da sessão, sem armazenamento de token em componente ou sessão paralela.
 
 O percurso remoto, as fixtures propostas e os limites da publicação estão em `openspec/changes/fluxo-consultas-prontuario/deployment-review.md`. Testes locais de validação/projeção executam as Lambdas JavaScript reais; testes de estado usam HTTP mockado. Compilação e dry-run não substituem testes de transação, identidade e navegador.
