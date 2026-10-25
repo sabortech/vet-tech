@@ -1,0 +1,29 @@
+{
+  "metric": "click_to_heading_visible_ms",
+  "environment": "local Chromium, synthetic development fixture",
+  "before": {
+    "configuracoes": [
+      103,
+      46,
+      57
+    ],
+    "meus_pets": [
+      3828,
+      1324,
+      1312
+    ]
+  },
+  "after": {
+    "configuracoes": [
+      72,
+      55,
+      66
+    ],
+    "meus_pets": [
+      74,
+      69,
+      65
+    ]
+  },
+  "guards": "passed"
+}

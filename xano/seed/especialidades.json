@@ -1,0 +1,7 @@
+[
+  {"chave": "clinica-geral", "nome": "Clínica geral"},
+  {"chave": "dermatologia", "nome": "Dermatologia"},
+  {"chave": "cardiologia", "nome": "Cardiologia"},
+  {"chave": "cirurgia", "nome": "Cirurgia"},
+  {"chave": "animais-silvestres-exoticos", "nome": "Animais silvestres e exóticos"}
+]

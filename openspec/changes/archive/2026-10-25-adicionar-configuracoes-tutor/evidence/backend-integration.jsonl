@@ -1,0 +1,3 @@
+{"scenario":"consulta própria, CPF mascarado e negativa sem token/token inválido/veterinário/user","status":"passed"}
+{"scenario":"edição com allowlist, preservação da outra conta, CPF/e-mail/senha protegidos e sem escrita parcial","status":"passed"}
+{"scenario":"senha atual e confirmação verificadas, senha anterior rejeitada e nova aceita","status":"passed"}

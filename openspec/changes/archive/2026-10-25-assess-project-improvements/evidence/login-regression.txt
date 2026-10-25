@@ -1,0 +1,2 @@
+PASS: existing tutor/login remains compatible.
+PASS: UI login, own pet listing and WebSocket port 3000 remain operational.

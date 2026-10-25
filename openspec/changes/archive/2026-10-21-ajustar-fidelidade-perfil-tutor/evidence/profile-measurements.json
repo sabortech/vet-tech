@@ -1,0 +1,942 @@
+[
+  {
+    "width": 1920,
+    "height": 1080,
+    "docWidth": 1920,
+    "docHeight": 1080,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 1080,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 1426.109375,
+      "y": 962.15625,
+      "w": 220,
+      "h": 117.84375,
+      "display": "block"
+    },
+    "upload": {
+      "x": 337,
+      "y": 441,
+      "w": 818.21875,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 308,
+      "y": 116,
+      "w": 876.21875,
+      "h": 582,
+      "display": "grid"
+    },
+    "list": {
+      "x": 1200.21875,
+      "y": 116,
+      "w": 671.78125,
+      "h": 330,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 354,
+      "y": 314,
+      "w": 367.109375,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "876.219px 671.781px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": true
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "docWidth": 1920,
+    "docHeight": 1080,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 76,
+      "h": 1080,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 1344.28125,
+      "y": 962.15625,
+      "w": 220,
+      "h": 117.84375,
+      "display": "block"
+    },
+    "upload": {
+      "x": 227,
+      "y": 441,
+      "w": 838.59375,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 198,
+      "y": 116,
+      "w": 896.59375,
+      "h": 582,
+      "display": "grid"
+    },
+    "list": {
+      "x": 1110.59375,
+      "y": 116,
+      "w": 687.390625,
+      "h": 330,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 244,
+      "y": 314,
+      "w": 377.296875,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "896.594px 687.391px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": false
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "docWidth": 1366,
+    "docHeight": 768,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 768,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 1004.734375,
+      "y": 660.84375,
+      "w": 200,
+      "h": 107.140625,
+      "display": "block"
+    },
+    "upload": {
+      "x": 332.703125,
+      "y": 436.703125,
+      "w": 509.5,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 303.703125,
+      "y": 111.703125,
+      "w": 567.5,
+      "h": 582,
+      "display": "grid"
+    },
+    "list": {
+      "x": 887.203125,
+      "y": 111.703125,
+      "w": 435.078125,
+      "h": 330,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 349.703125,
+      "y": 309.703125,
+      "w": 212.75,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "567.5px 435.078px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": true
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "docWidth": 1366,
+    "docHeight": 768,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 76,
+      "h": 768,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 964.8125,
+      "y": 660.84375,
+      "w": 200,
+      "h": 107.140625,
+      "display": "block"
+    },
+    "upload": {
+      "x": 148.703125,
+      "y": 436.703125,
+      "w": 613.65625,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 119.703125,
+      "y": 111.703125,
+      "w": 671.65625,
+      "h": 582,
+      "display": "grid"
+    },
+    "list": {
+      "x": 807.359375,
+      "y": 111.703125,
+      "w": 514.921875,
+      "h": 330,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 165.703125,
+      "y": 309.703125,
+      "w": 264.828125,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "671.656px 514.922px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": false
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "docWidth": 1024,
+    "docHeight": 1036,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 768,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 315.265625,
+      "y": 419.265625,
+      "w": 653.46875,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 292.765625,
+      "y": 100.765625,
+      "w": 698.46875,
+      "h": 569,
+      "display": "grid"
+    },
+    "list": {
+      "x": 292.765625,
+      "y": 685.765625,
+      "w": 698.46875,
+      "h": 317,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 332.265625,
+      "y": 292.265625,
+      "w": 284.734375,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "698.469px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": true
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "docWidth": 1024,
+    "docHeight": 1036,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 76,
+      "h": 768,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 131.265625,
+      "y": 419.265625,
+      "w": 837.46875,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 108.765625,
+      "y": 100.765625,
+      "w": 882.46875,
+      "h": 569,
+      "display": "grid"
+    },
+    "list": {
+      "x": 108.765625,
+      "y": 685.765625,
+      "w": 882.46875,
+      "h": 317,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 148.265625,
+      "y": 292.265625,
+      "w": 376.734375,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "882.469px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": false
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "docWidth": 768,
+    "docHeight": 1261,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 1024,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 303.5625,
+      "y": 663.5625,
+      "w": 420.875,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 284.5625,
+      "y": 92.5625,
+      "w": 458.875,
+      "h": 818,
+      "display": "grid"
+    },
+    "list": {
+      "x": 284.5625,
+      "y": 926.5625,
+      "w": 458.875,
+      "h": 310,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 320.5625,
+      "y": 408.5625,
+      "w": 386.875,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "458.875px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": true
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "docWidth": 768,
+    "docHeight": 1024,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 76,
+      "h": 1024,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 119.5625,
+      "y": 407.5625,
+      "w": 604.875,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 100.5625,
+      "y": 92.5625,
+      "w": 642.875,
+      "h": 562,
+      "display": "grid"
+    },
+    "list": {
+      "x": 100.5625,
+      "y": 670.5625,
+      "w": 642.875,
+      "h": 310,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 136.5625,
+      "y": 280.5625,
+      "w": 260.4375,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "642.875px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": false
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "docHeight": 1276,
+    "sidebar": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 844,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 33,
+      "y": 697,
+      "w": 324,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 16,
+      "y": 128,
+      "w": 358,
+      "h": 814,
+      "display": "grid"
+    },
+    "list": {
+      "x": 16,
+      "y": 958,
+      "w": 358,
+      "h": 302,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 50,
+      "y": 442,
+      "w": 290,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "358px",
+    "icons": [
+      38,
+      38,
+      38,
+      38,
+      38,
+      38,
+      38
+    ],
+    "opened": true
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "docWidth": 390,
+    "docHeight": 1276,
+    "sidebar": {
+      "x": -273,
+      "y": 0,
+      "w": 260,
+      "h": 844,
+      "display": "flex"
+    },
+    "mascot": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none"
+    },
+    "upload": {
+      "x": 33,
+      "y": 697,
+      "w": 324,
+      "h": 148,
+      "display": "flex"
+    },
+    "form": {
+      "x": 16,
+      "y": 128,
+      "w": 358,
+      "h": 814,
+      "display": "grid"
+    },
+    "list": {
+      "x": 16,
+      "y": 958,
+      "w": 358,
+      "h": 302,
+      "display": "block"
+    },
+    "petCount": 3,
+    "date": {
+      "x": 50,
+      "y": 442,
+      "w": 290,
+      "h": 46,
+      "display": "flex"
+    },
+    "fields": [
+      {
+        "name": "Nome do pet",
+        "height": 46
+      },
+      {
+        "name": "Selecione a esp\u00e9cie",
+        "height": 48
+      },
+      {
+        "name": "Ra\u00e7a (opcional; deixe vazio para SRD)",
+        "height": 48
+      },
+      {
+        "name": "Sexo (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Data de nascimento",
+        "height": 46
+      },
+      {
+        "name": "Peso atual (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Cor da pelagem (opcional)",
+        "height": 46
+      },
+      {
+        "name": "Microchip (opcional)",
+        "height": 46
+      }
+    ],
+    "columns": "358px",
+    "icons": [
+      -143,
+      -143,
+      -143,
+      -143,
+      -143,
+      -143,
+      -143
+    ],
+    "opened": false
+  }
+]

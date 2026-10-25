@@ -15,11 +15,13 @@ table doenca {
     text descricao? filters=trim
     text tipo? filters=trim
     text gravidade? filters=trim
+    text? nome_normalizado?
   }
 
   index = [
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
+    {type: "btree|unique", field: [{name: "nome_normalizado", op: "asc"}]}
   ]
 
   tags = ["vettech"]

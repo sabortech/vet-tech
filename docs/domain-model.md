@@ -1,5 +1,12 @@
 ## O que é o Vet Tech?
 
+Contrato de implementação da fundação clínica: ver
+[`record-foundation-verification.md`](record-foundation-verification.md).
+O DER em `project-overview.md` representa os vínculos obrigatórios de consulta
+e exame e o timestamp dos logs. A implantação de desenvolvimento e as verificações
+reais estão registradas em `openspec/changes/archive/2026-10-25-assess-project-improvements/verification.md`;
+a validação sintática isolada não comprova autorização ou rollback.
+
 O VetTech é um sistema que atende clínicas veterinárias, veterinários e tutores de pets, com o objetivo de centralizar o histórico de saúde dos animais.
 
 ## Regras do Sistema
@@ -12,7 +19,7 @@ As espécies (cachorro, gato, ave etc.) e raças são cadastradas de forma padro
 
 Os veterinários também se cadastram no sistema, informando nome, CRMV (registro profissional), especialidade, e-mail, telefone e senha. 
 
-Cada veterinário está vinculado a uma clínica, que possui nome, CNPJ, endereço e telefone. Uma clínica pode empregar vários veterinários.
+Cada veterinário pode estar vinculado a uma clínica, que possui nome, CNPJ, endereço e telefone. O vínculo é opcional. Uma clínica pode empregar vários veterinários.
 
 Quando um pet é levado a atendimento, é registrada uma consulta, contendo a data, o motivo do atendimento, o diagnóstico do veterinário e observações adicionais. Uma consulta está sempre associada a um pet e a um veterinário responsável pelo atendimento. 
 
@@ -37,11 +44,13 @@ Relaciona-se com: PET (1:N) e NOTIFICACAO (1:N)
 
 ## Veterinário
 
-Um veterinário deve possuir CRMV único no sistema, garantindo que é um profissional habilitado
-opcional:Um veterinário está sempre vinculado a uma clínica
+Um veterinário informa CRMV e UF, únicos em conjunto após normalização. A validação local de caracteres não comprova habilitação profissional e não consulta sistemas externos.
+Um veterinário pode estar vinculado a uma clínica; o vínculo é opcional.
+Um e-mail normalizado pertence a um único perfil (tutor ou veterinário), sem dupla identidade nesta etapa.
+Espécies atendidas e especialidades são catálogos distintos, com múltiplos vínculos por veterinário.
 Um veterinário só pode acessar o prontuário de um pet se possuir autorização ativa concedida pelo tutor
 Um veterinário pode realizar consultas, aplicar vacinas e registrar diagnósticos em qualquer pet ao qual tenha acesso autorizado
-Relaciona-se com: CLINICA (N:1), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
+Relaciona-se com: CLINICA (N:0..1), ESPECIE (N:N, via VETERINARIO_ESPECIE), ESPECIALIDADE (N:N, via VETERINARIO_ESPECIALIDADE), CONSULTA (1:N), VACINA (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
 
 ## Clinica
 Uma clínica deve possuir CNPJ único
@@ -68,6 +77,7 @@ O histórico do pet nunca é apagado, mesmo que o tutor mude de clínica ou de v
 Relaciona-se com: TUTOR (N:1), ESPECIE (N:1), RACA (N:1), CONSULTA (1:N), EXAME (1:N), VACINA (1:N), MEDICAMENTO (1:N), PET_DOENCA (1:N), ANEXO (1:N), NOTIFICACAO (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
 
 ## Consulta
+O fluxo estruturado de consultas, agenda e associativas clínicas em implementação está detalhado em [clinical-flow.md](clinical-flow.md). A migração preserva os registros anteriores e distingue reserva, rascunho e publicação.
 Toda consulta deve estar vinculada a um pet e a um veterinário responsável pelo atendimento
 Uma consulta pode gerar um ou mais exames complementares
 Uma consulta pode resultar no diagnóstico de uma ou mais doenças, registradas através da associação com DOENCA
@@ -76,7 +86,9 @@ Relaciona-se com: PET (N:1), VETERINARIO (N:1), EXAME (1:N), CONSULTA_DOENCA (1:
 ## Exame
 Um exame está sempre vinculado a um pet
 Um exame pode ou não estar vinculado a uma consulta específica (é possível registrar exames avulsos, sem consulta associada)
-Um exame contem no minimo 1 arquivo anexado (laudo, imagem, PDF)
+A visão de domínio prevê anexos (laudo, imagem, PDF). O contrato atual preserva
+o campo legado `arquivo` do tipo attachment, opcional no Xano; não introduz
+novo armazenamento de anexos nesta fundação. A evolução fica na change de exames.
 Relaciona-se com: PET (N:1), CONSULTA (N:1, opcional)
 
 
@@ -118,6 +130,9 @@ Relaciona-se com: PET (N:1), VETERINARIO (N:1)
 
 
 ## Log_Acesso
+Cada log exige pet, veterinário, ação e `data_hora` do tipo timestamp com horário.
+O campo compatível `ocorrido_em` é preservado. Horários históricos só são
+preenchidos com fonte confiável; datas sem hora não representam um instante exato.
 Todo acesso de um veterinário a um prontuário — visualização, edição ou exportação — gera automaticamente um registro de log
 O log não pode ser editado ou apagado por nenhum usuário, servindo como trilha de auditoria imutável
 O log permite ao tutor (e à administração do sistema) verificar quem acessou os dados do pet e quando

@@ -19,6 +19,7 @@ query "pets" verb=GET {
         "peso_atual"
         "cor_pelo"
         "num_microchip"
+        "foto"
         "created_at"
       ]
       return = {type: "list"}
