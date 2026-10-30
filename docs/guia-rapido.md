@@ -34,11 +34,12 @@ clínicos segue as permissões aplicadas pelo backend.
 
 O Dashboard depende da publicação do endpoint `tutor/dashboard` no grupo clínico
 do Xano; o código-fonte correspondente fica em
-`xano/api/clinical/tutor_dashboard_GET.xs`. Sem esse endpoint, a tela apresenta
+`xano/api/clinical/tutor/dashboard_GET.xs`. Sem esse endpoint, a tela apresenta
 um erro de leitura e permite tentar novamente. A API é chamada por pet; no escopo
 geral, o app carrega apenas os pets da lista autenticada, com no máximo quatro
-chamadas simultâneas. As consultas clínicas validam novamente a propriedade do
-tutor e retornam prévias ordenadas e limitadas, não o histórico clínico completo.
+chamadas simultâneas. O endpoint valida a propriedade com `Clinical/assert_owner`
+e repete o filtro de tutor em cada consulta clínica. Retorna prévias ordenadas e
+limitadas, não o histórico clínico completo.
 
 As alterações foram reunidas na branch `integracao/vet-tech`, no PR #5.
 A verificação incluiu 134 testes unitários, compilação, build de produção,

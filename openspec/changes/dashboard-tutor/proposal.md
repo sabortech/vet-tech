@@ -22,6 +22,6 @@ O tutor precisa de uma visão inicial que reúna informações relevantes dos se
 ## Impact
 
 - Frontend Reflex: navegação do tutor, nova página ou composição do Dashboard e estado do seletor de escopo.
-- Backend Xano: avaliar consultas de leitura agregadas e limitadas aos pets do tutor autenticado para compor a visão “Todos os pets”; o resumo individual pode reutilizar dados já disponíveis por pet.
+- Backend Xano: adicionar uma leitura por pet no grupo `Clinical`, autenticada para Tutor, com validação `Clinical/assert_owner`, filtros de propriedade em todas as consultas e projeções limitadas aos campos usados pelo Dashboard. O escopo geral continua sendo composto no frontend a partir dos pets retornados pela listagem autenticada; não são necessárias alterações de tabelas nem de APIs existentes.
 - Dados sensíveis: o Dashboard exibirá informações de perfil e saúde dos pets. A autorização de leitura permanece vinculada à identidade do tutor e à propriedade do pet no backend; o filtro visual não concede acesso.
 - Sem novas dependências ou entidades de domínio previstas. Não há efeito sobre notificações automáticas, que não serão implementadas por esta change.

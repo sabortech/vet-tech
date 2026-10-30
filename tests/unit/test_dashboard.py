@@ -1,7 +1,9 @@
 import asyncio
 from datetime import date, timedelta
+import json
 from pathlib import Path
 import re
+import subprocess
 import unittest
 from unittest.mock import AsyncMock, patch
 
@@ -15,7 +17,7 @@ from vet_tech.shared.xano_client import XanoRequestError
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ENDPOINT = ROOT / "xano" / "api" / "clinical" / "tutor_dashboard_GET.xs"
+ENDPOINT = ROOT / "xano" / "api" / "clinical" / "tutor" / "dashboard_GET.xs"
 
 
 async def consume(generator):
@@ -29,6 +31,28 @@ def signed_in_state():
     state.is_authenticated = True
     state.pets = [{"id": "1", "nome": "Pet 1"}, {"id": "2", "nome": "Pet 2"}]
     return state
+
+
+def execute_dashboard_lambda(variables: dict[str, object]) -> dict[str, object]:
+    source = ENDPOINT.read_text(encoding="utf-8")
+    match = re.search(r'code = """(.*?)"""', source, re.DOTALL)
+    if match is None:
+        raise AssertionError("Dashboard Xano Lambda was not found.")
+    runner = (
+        "let s='';process.stdin.setEncoding('utf8');"
+        "process.stdin.on('data',x=>s+=x);"
+        "process.stdin.on('end',()=>{const d=JSON.parse(s);"
+        "process.stdout.write(JSON.stringify(new Function('$var',d.code)(d.vars)));});"
+    )
+    result = subprocess.run(
+        ["node", "-e", runner],
+        input=json.dumps({"code": match.group(1), "vars": variables}),
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        check=True,
+    )
+    return json.loads(result.stdout)
 
 
 class DashboardProjectionTests(unittest.TestCase):
@@ -152,8 +176,10 @@ class DashboardProjectionTests(unittest.TestCase):
     def test_dashboard_endpoint_scopes_and_bounds_every_clinical_query(self):
         source = ENDPOINT.read_text(encoding="utf-8")
         self.assertIn('auth = "tutor"', source)
-        self.assertIn("$db.pet.id == $input.pet_id && $db.pet.tutor_id == $auth.id", source)
-        self.assertIn("precondition ($owned_pet != null)", source)
+        self.assertIn('function.run "Clinical/assert_owner"', source)
+        self.assertIn("pet_id: $input.pet_id", source)
+        self.assertIn("tutor_id: $auth.id", source)
+        self.assertIn("$db.pet.id == $owned_pet.id && $db.pet.tutor_id == $auth.id", source)
         self.assertNotIn("$var.pets|count", source)
         queries = re.findall(
             r"db\.query (consulta|vacina|exame) \{(.*?)\n    \} as \$",
@@ -171,11 +197,61 @@ class DashboardProjectionTests(unittest.TestCase):
         self.assertIn("exame.data_realizacao == null", source)
         self.assertIn("per_page: 11", source)
         self.assertIn("acompanhamentos_truncados", source)
+        self.assertIn("query \"tutor/dashboard\" verb=GET", source)
+        self.assertIn('api_group = "Clinical"', source)
+        self.assertIn("return = {", source)
+        self.assertIn("rows.set(id,{...rows.get(id),...row})", source)
         self.assertNotIn('"especie_id"', source)
         self.assertNotIn('"diagnostico"', source)
         self.assertNotIn('"obs"', source)
         self.assertNotIn('"resultado"', source)
         self.assertNotIn('"arquivo"', source)
+
+    def test_dashboard_endpoint_returns_single_pet_contract_and_merges_limited_rows(self):
+        response = execute_dashboard_lambda({
+            "pet": {
+                "id": 7,
+                "nome": "Luna",
+                "especie_nome": "Gato",
+                "data_nasc": "2023-02-01",
+                "peso_atual": 4.2,
+            },
+            "next_consultations": [
+                {"id": 1, "pet_id": 7, "status": "agendada", "agendada_para": "2030-01-01"}
+            ],
+            "next_returns": [
+                {"id": 1, "pet_id": 7, "retorno_previsto": "2030-01-02"}
+            ],
+            "overdue_returns": [],
+            "recent_attended_consultations": [],
+            "recent_legacy_consultations": [],
+            "next_vaccines": [{"id": 2, "pet_id": 7, "vacina": "Raiva", "data_prox_dose": "2030-01-03"}],
+            "overdue_vaccines": [],
+            "recent_vaccines": [{"id": 2, "pet_id": 7, "vacina": "Raiva", "data_aplicacao": "2029-01-03"}],
+            "pending_exams": [
+                {"id": exam_id, "pet_id": 7, "tipo": "Exame", "status": "solicitado"}
+                for exam_id in range(10, 21)
+            ],
+        })
+
+        self.assertEqual(response["id"], 7)
+        self.assertEqual(response["nome"], "Luna")
+        self.assertEqual(
+            response["consultas"],
+            [{
+                "status": "agendada",
+                "agendada_para": "2030-01-01",
+                "retorno_previsto": "2030-01-02",
+            }],
+        )
+        self.assertEqual(response["vacinas"], [{
+            "vacina": "Raiva",
+            "data_prox_dose": "2030-01-03",
+            "data_aplicacao": "2029-01-03",
+        }])
+        self.assertEqual(len(response["exames"]), 10)
+        self.assertTrue(response["acompanhamentos_truncados"])
+        self.assertNotIn("pet_id", response["consultas"][0])
 
 
 class DashboardStateTests(unittest.IsolatedAsyncioTestCase):

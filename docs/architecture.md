@@ -89,8 +89,10 @@ O filtro do Dashboard é independente de
 prontuário define o pet de contexto da ação. As projeções derivam idade e mensagens
 de acompanhamento dos registros consultados, sem inferir unidade do peso, saúde
 geral ou cuidados completos. Falhas de leitura permanecem distintas do estado vazio.
-O endpoint fonte está em `xano/api/clinical/tutor_dashboard_GET.xs` e precisa estar
-publicado no ambiente Xano usado pela aplicação.
+O endpoint fonte está em `xano/api/clinical/tutor/dashboard_GET.xs`, no grupo
+`Clinical`, e precisa estar publicado no ambiente Xano usado pela aplicação.
+Ele valida o pet com `Clinical/assert_owner` e repete o filtro de propriedade
+nas consultas clínicas; a tela não depende das APIs de histórico sem limite.
 
 Prontuário representa Início. As demais seções usam `/prontuario?secao=<chave>`;
 as chaves permitidas são `inicio`, `vacinas`, `medicamentos`, `doencas` e `consultas`.

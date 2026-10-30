@@ -1,6 +1,6 @@
 ## 1. Leitura agregada protegida no backend
 
-- [ ] 1.1 Implementar a leitura autenticada por pet, com consultas e campos limitados, validação de propriedade em cada consulta clínica e testes locais do contrato; validar no Xano que um tutor não consegue obter perfil nem registros de outro tutor antes de concluir.
+- [ ] 1.1 Validar no Xano real a leitura em `xano/api/clinical/tutor/dashboard_GET.xs`: o endpoint foi encontrado na branch `v1` e uma chamada sem autenticação retornou HTTP 401. Ainda falta validar com sessão de Tutor a resposta de pet próprio e a rejeição de pet de outro tutor, além de conferir os campos e limites retornados.
 - [x] 1.2 Implementar projeções determinísticas de próxima dose, última consulta finalizada, próximo evento, registros recentes e itens a acompanhar; verificar datas passadas, hoje, futuras, campos ausentes e exame solicitado sem realização com testes unitários.
 
 ## 2. Dashboard do tutor
@@ -15,4 +15,4 @@
 - [x] 3.1 Executar os testes unitários focados do Dashboard e as regressões de navegação, seleção de pet, agendamento e carregamento clínico; verificar que todos passam com `python -m unittest discover -s tests\unit`.
 - [x] 3.2 Compilar/exportar a aplicação Reflex e verificar que a nova rota e os componentes do Dashboard não produzem erros de compilação.
 - [x] 3.3 Atualizar `docs/architecture.md` e o guia rápido para refletir o Dashboard habilitado, seu filtro independente e os limites dos dados; verificar links e consistência com os contratos OpenSpec.
-- [ ] 3.4 Executar verificação de navegador com tutor sem pets, com múltiplos pets, filtro individual e agendamento; confirmar visualmente que os dados exibidos correspondem ao pet/escopo e que erro de leitura não aparece como ausência de pendências.
+- [ ] 3.4 Validar no navegador tutor sem pets, tutor com múltiplos pets, filtro individual e início do agendamento. A sessão disponível mostrou a visão geral e o filtro individual, mas o preview registrou erro de transporte WebSocket; o início do agendamento não foi confirmado e falta testar uma conta sem pets.
