@@ -1,0 +1,80 @@
+.mascote {
+  --mascote-size: 140px;
+  position: fixed;
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: var(--mascote-size);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  z-index: 70;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 32%;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  isolation: isolate;
+}
+.mascote:focus-visible { outline: 3px solid #27824c; outline-offset: 5px; }
+.mascote span, .mascote img, .mascote svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.mascote img { object-fit: contain; -webkit-user-drag: none; }
+.mascote-image { opacity: 0; }
+.mascote-image.is-loaded { opacity: 1; }
+.mascote .mascote-fallback {
+  display: grid; place-items: center;
+  font-size: calc(var(--mascote-size) * .75);
+}
+.mascote.assets-ready .mascote-fallback { opacity: 0; }
+.mascote-idle, .mascote-hover { transition: opacity 150ms ease; }
+.mascote-hover { opacity: 0; }
+.mascote.hover-ready:is(:focus-visible, .is-pressed, .is-hovered) .mascote-idle { opacity: 0; }
+.mascote.hover-ready:is(:focus-visible, .is-pressed, .is-hovered) .mascote-hover { opacity: 1; }
+.mascote-art, .mascote-tracking, .mascote-shadow, .mascote-glow { will-change: transform; }
+.mascote-tracking, .mascote-art { transform-origin: 50% 94%; }
+.mascote .mascote-shadow {
+  inset: 91% 23% auto; width: 54%; height: 8%; z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #172d2940 0%, #172d291a 45%, transparent 72%);
+  animation: mascote-shadow 3.5s ease-in-out infinite;
+}
+.mascote:is(:focus-visible, .is-pressed, .is-hovered) .mascote-art { animation: mascote-pop 260ms ease-out; }
+.mascote .mascote-glow {
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #39ff88a8 0%, #39ff8850 35%, #39ff8800 70%);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.mascote:is(:focus-visible, .is-pressed, .is-hovered) .mascote-glow { animation: mascote-glow-intro 4s ease-in-out 1 forwards; }
+.mascote.is-hidden * { animation-play-state: paused !important; }
+@keyframes mascote-shadow { 50% { opacity: .8; transform: scale(.96); } }
+@keyframes mascote-pop { 50% { transform: scale(1.06); } }
+@keyframes mascote-glow-intro {
+  0% { opacity: 0; transform: scale(.96); }
+  25%, 75% { opacity: .95; transform: scale(1.08); }
+  50% { opacity: .12; transform: scale(.98); }
+  100% { opacity: .75; transform: scale(1); }
+}
+@media (max-width: 767px) { .mascote { --mascote-size: 96px; } }
+@media (prefers-reduced-motion: reduce) {
+  .mascote *, .mascote:is(:focus-visible, .is-pressed, .is-hovered) * { animation: none !important; transition: none !important; }
+  .mascote:is(:focus-visible, .is-pressed, .is-hovered) .mascote-glow { opacity: .75; }
+}
+
+/* Chat owns the active pose until its dialog closes. */
+.mascote.hover-ready.is-chat-open .mascote-idle { opacity: 0; }
+.mascote.hover-ready.is-chat-open .mascote-hover { opacity: 1; }
+.mascote.is-chat-open .mascote-glow {
+  animation: none !important;
+  opacity: .85;
+  transform: scale(1.08);
+}

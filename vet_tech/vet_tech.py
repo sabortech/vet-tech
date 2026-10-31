@@ -1,5 +1,7 @@
 import reflex as rx
 
+from vet_tech.components.mascote_flutuante import mascote_app_wrap
+
 from vet_tech.pages.cadastro import cadastro
 from vet_tech.pages.configuracoes import configuracoes
 from vet_tech.features.settings.state import SettingsState
@@ -11,10 +13,14 @@ from vet_tech.features.auth.state import State
 from vet_tech.features.navigation.state import NavigationState
 
 app = rx.App(
-    head_components=[rx.el.script(src="/preferences.js")],
+    extra_app_wraps={(6, "VetTechMascote"): mascote_app_wrap},
+    head_components=[rx.el.script(src="/preferences.js"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
+	toaster=rx.toast.provider(offset="calc(208px + env(safe-area-inset-bottom, 0px))"),
 	stylesheets=[
 		"https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap",
 		"/vet_tech.css",
+		"/mascote.css",
+		"/support-chat.css",
 	],
 	style={
 		'.rt-CheckboxRoot[data-state="checked"]': {

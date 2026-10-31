@@ -37,8 +37,9 @@
 html,
 body,
 #root {
-  min-height: 100%;
+  min-height: 100dvh;
   margin: 0;
+  background-size: cover;
 }
 
 body {
