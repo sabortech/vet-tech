@@ -197,7 +197,7 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
     if isinstance(photo, dict):
         photo = photo.get("url", "")
     photo = photo.strip() if isinstance(photo, str) else ""
-    if not photo.startswith(("https://", "http://")):
+    if not photo.startswith(("https://", "http://", "data:image/")):
         photo = ""
 
     followups_limited = row.get("acompanhamentos_truncados") is True

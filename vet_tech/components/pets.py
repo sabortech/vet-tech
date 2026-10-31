@@ -239,7 +239,8 @@ def pet_form() -> rx.Component:
                     "image/webp": [".webp"],
                 },
                 max_files=1,
-                max_size=5 * 1024 * 1024,
+                # A foto vai em base64 para uma coluna de texto: limite menor evita payloads enormes.
+                max_size=1024 * 1024,
                 width="100%",
                 class_name="pet-form__upload",
                 custom_attrs={
