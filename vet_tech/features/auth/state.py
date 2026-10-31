@@ -6,6 +6,7 @@ import reflex as rx
 
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
 from vet_tech.features.clinical.state import ClinicalMixin
+from vet_tech.features.dashboard.state import TutorDashboardMixin
 from vet_tech.features.support_chat.state import SupportChatMixin
 from vet_tech.features.veterinarians.validation import professional_payload
 from vet_tech.shared.xano_client import (
@@ -89,7 +90,7 @@ async def _fetch_pet_details(pet_id, token, species, known_pet):
     return details, warnings
 
 
-class State(SupportChatMixin, ClinicalMixin, rx.State):
+class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
@@ -157,6 +158,9 @@ class State(SupportChatMixin, ClinicalMixin, rx.State):
 
     def _clear_session(self):
         self._reset_support_chat()
+        self._clear_dashboard_session()
+        self._clear_clinical_session()
+        self.profile = ""
         self._clear_clinical_session()
         self.profile = ""
         self.identity_id = ""

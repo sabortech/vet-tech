@@ -14,7 +14,7 @@ _NAV_ITEMS = (
     ("configuracoes", "Configurações", "settings"),
 )
 
-_EXISTING_ROUTES = {"meus_pets": "/", "configuracoes": "/configuracoes", **CLINICAL_DESTINATIONS}
+_EXISTING_ROUTES = {"dashboard": "/dashboard", "meus_pets": "/", "configuracoes": "/configuracoes", **CLINICAL_DESTINATIONS}
 
 
 def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> rx.Component:

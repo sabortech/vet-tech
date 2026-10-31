@@ -14,6 +14,7 @@ vet_tech/
 ├── components/             # componentes de interface reutilizados
 ├── features/               # estado e lógica agrupados por funcionalidade
 │   ├── auth/
+│   ├── dashboard/
 │   ├── tutors/
 │   └── pets/
 └── shared/                 # integrações e utilitários compartilhados
@@ -67,15 +68,31 @@ atual seja reescrita antes de continuar o desenvolvimento.
 ### Navegação compartilhada do tutor
 
 `components/sidebar.py` contém o catálogo visual único e `layout_com_menu`, usado
-por Meus Pets, Configurações e Prontuário. A referência é a sidebar verde existente
+por Meus Pets, Configurações, Dashboard e Prontuário. A referência é a sidebar verde existente
 com marca, pill ativo branco, ícones e tokens `.sidebar-*` de `assets/vet_tech.css`.
 O layout aceita ações por composição; `components/navigation.py` fornece somente
 as ações clínicas e o modal, sem criar uma segunda sidebar ou estado de pet.
 
 Ordem das entradas: Dashboard, Prontuário, Vacinas, Medicamentos, Doenças,
-Consultas, Exames, Meus Pets e Configurações. Dashboard e Exames seguem desabilitados.
+Consultas, Exames, Meus Pets e Configurações. Dashboard está habilitado para tutor;
+Exames segue sem destino funcional na interface.
 O catálogo visual deriva os destinos clínicos da allowlist de
 `features/navigation/state.py`, também usada pelo guard do servidor.
+
+`/dashboard` apresenta a visão geral ou individual do tutor a partir de leituras
+autenticadas por pet em Xano. “Todos os pets” solicita cada pet próprio com até
+quatro chamadas concorrentes; o escopo individual envia somente o `pet_id`
+selecionado. Cada consulta clínica também valida a propriedade no backend e aplica
+ordenação e limites específicos para próximas datas, pendências e atividade recente.
+O filtro do Dashboard é independente de
+`selected_pet_id`; somente uma ação explícita de agendamento ou navegação para o
+prontuário define o pet de contexto da ação. As projeções derivam idade e mensagens
+de acompanhamento dos registros consultados, sem inferir unidade do peso, saúde
+geral ou cuidados completos. Falhas de leitura permanecem distintas do estado vazio.
+O endpoint fonte está em `xano/api/clinical/tutor/dashboard_GET.xs`, no grupo
+`Clinical`, e precisa estar publicado no ambiente Xano usado pela aplicação.
+Ele valida o pet com `Clinical/assert_owner` e repete o filtro de propriedade
+nas consultas clínicas; a tela não depende das APIs de histórico sem limite.
 
 Prontuário representa Início. As demais seções usam `/prontuario?secao=<chave>`;
 as chaves permitidas são `inicio`, `vacinas`, `medicamentos`, `doencas` e `consultas`.

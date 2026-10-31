@@ -369,6 +369,15 @@ class ClinicalMixin(rx.State, mixin=True):
         key = self.router.url.query_parameters.get('secao', 'inicio')
         self.active_section = CLINICAL_SECTIONS.get(key, 'Início')
         self.detail_id = ''
+        pet_id = self.router.url.query_parameters.get('pet_id', '')
+        if pet_id:
+            if any(pet.get('id') == pet_id for pet in self.pets):
+                self._start_pet_selection(pet_id)
+                return type(self).load_selected_pet(self._pet_context_generation)
+            self._clear_pet_context()
+            self.pet_picker_open = True
+            self.pet_detail_message = 'Pet não disponível.'
+            return
         return self._prepare_tutor_clinical()
 
     def _prepare_tutor_clinical(self, force: bool = False, reservations_only: bool = False):

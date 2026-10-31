@@ -9,7 +9,7 @@ CLINICAL_DESTINATIONS = {
     'prontuario': '/prontuario',
     **{key: f'/prontuario?secao={key}' for key in CLINICAL_SECTIONS if key != 'inicio'},
 }
-TUTOR_DESTINATIONS = frozenset({'/', '/configuracoes', '/prontuario?secao=inicio', *CLINICAL_DESTINATIONS.values()})
+TUTOR_DESTINATIONS = frozenset({'/', '/dashboard', '/configuracoes', '/prontuario?secao=inicio', *CLINICAL_DESTINATIONS.values()})
 
 _OPEN_DRAWER_KEYBOARD_LISTENER = """(() => {
   if (window.__vetTechDrawerEscapeHandler) {
