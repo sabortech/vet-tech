@@ -238,12 +238,9 @@ pip install -r requirements.txt
 # 4. Configure a origem do workspace de desenvolvimento
 cp .env.example .env
 # Edite XANO_API_BASE_URL no .env antes de continuar.
-set -a
-source .env
-set +a
 
-# 5. Inicie o Reflex
-reflex run --env prod --single-port 2>&1 | tee reflex.log
+# 5. Inicie frontend e backend juntos (carrega .env automaticamente)
+bash scripts/run-local.sh
 ```
 
 Consulte no log o endereço e a porta usados pela aplicação.

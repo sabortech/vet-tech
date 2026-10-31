@@ -99,3 +99,12 @@ cópias de `api/`, `table/`, `function/`, `workspace/`, `addon/` ou `ai/` na rai
 Se arquivos XanoScript aparecerem na raiz, consolidar suas alterações com a
 versão autoritativa em `xano/` antes de remover a cópia; não manter duas árvores
 de workspace.
+
+### Assistente n8n
+
+`features/support_chat/state.py` fornece o mixin de conversa do State existente;
+`shared/n8n_client.py` contém transporte HTTP e validação de contrato. O wrapper
+global publica um formulário Reflex oculto, sem credenciais, e os assets mantêm
+somente apresentação, animação e histórico visual. Nome, perfil, token e contexto
+de envio são derivados pelo servidor. Ver `docs/n8n-chat.md` para configuração e
+limites de publicação/validação.

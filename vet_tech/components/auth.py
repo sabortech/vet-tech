@@ -212,6 +212,8 @@ def login_view() -> rx.Component:
     return rx.box(
         rx.box(
             position="absolute",
+            class_name="login-background",
+            aria_hidden="true",
             inset="-18px",
             background_image="url('/fundo02.jpeg')",
             background_size="cover",
@@ -262,7 +264,8 @@ def login_view() -> rx.Component:
             position="relative",
             z_index="1",
         ),
-        min_height="100vh",
+        min_height="100dvh",
+        class_name="login-view",
         width="100%",
         display="flex",
         align_items=["flex-start", "center"],

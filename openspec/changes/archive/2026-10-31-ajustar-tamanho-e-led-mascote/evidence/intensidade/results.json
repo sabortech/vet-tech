@@ -1,0 +1,74 @@
+{
+  "proportion": {
+    "width": 140,
+    "height": 140,
+    "ratio": 1,
+    "imageRatio": 1,
+    "fit": "contain",
+    "right": 24,
+    "bottom": 24
+  },
+  "login_full_background": {
+    "top": -36.719970703125,
+    "bottom": 936.719970703125,
+    "height": 900,
+    "position": "absolute",
+    "cover": "cover"
+  },
+  "backend_movement_events": 0,
+  "public_spa_same_node": true,
+  "public_geometry_unchanged": [
+    [
+      390,
+      "/login",
+      true
+    ],
+    [
+      390,
+      "/cadastro",
+      true
+    ],
+    [
+      1366,
+      "/login",
+      true
+    ],
+    [
+      1366,
+      "/cadastro",
+      true
+    ]
+  ],
+  "routes_with_global_button": [
+    "/",
+    "/login",
+    "/cadastro",
+    "/configuracoes",
+    "/prontuario",
+    "/atendimento/1"
+  ],
+  "two_slow_pulses_then_steady": {
+    "samples": [
+      0,
+      1,
+      0.16,
+      1,
+      0.95
+    ],
+    "iterations": 1,
+    "duration": 4000
+  },
+  "rgb_only_glow": true,
+  "whole_image_tracking": true,
+  "reduced_motion": true,
+  "hidden_pauses": true,
+  "tracking": {
+    "frames": 106,
+    "maxMs": 0.40000000037252903,
+    "readsInFrame": 0,
+    "moves": 1
+  },
+  "touch": true,
+  "missing_hover_keeps_idle": true,
+  "fallback": true
+}
