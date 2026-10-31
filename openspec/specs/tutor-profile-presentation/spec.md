@@ -33,14 +33,18 @@ O sistema SHALL manter o formulário e a lista utilizáveis sem rolagem horizont
 - **THEN** os campos do formulário se organizam em uma coluna quando necessário e todos os controles permanecem acessíveis
 
 ### Requirement: Lista mostra foto disponível e dados legíveis do pet
-O sistema SHALL exibir cada pet com avatar circular, usando sua foto quando disponível e uma patinha como fallback. SHALL exibir nome, espécie, raça, sexo e data sem criar separadores soltos para valores opcionais; datas válidas SHALL usar o formato dd/mm/aaaa e variações conhecidas de sexo SHALL ser apresentadas como “Macho” ou “Fêmea” sem modificar o valor persistido.
+O sistema SHALL exibir cada pet com avatar circular, usando sua foto quando disponível e uma patinha como fallback. SHALL considerar disponível somente foto em URL `http(s)://` ou data URI `data:image/`. SHALL exibir nome, espécie, raça, sexo e data sem criar separadores soltos para valores opcionais; datas válidas SHALL usar o formato dd/mm/aaaa e variações conhecidas de sexo SHALL ser apresentadas como “Macho” ou “Fêmea” sem modificar o valor persistido.
 
 #### Scenario: Pet possui foto e dados preenchidos
 - **WHEN** a listagem contém foto, data válida e uma variação conhecida do valor de sexo
 - **THEN** o perfil exibe a foto no avatar, formata a data como dd/mm/aaaa e normaliza somente a apresentação do sexo
 
+#### Scenario: Pet possui foto armazenada em base64
+- **WHEN** a listagem contém um pet cuja foto é um data URI `data:image/`
+- **THEN** o perfil e o dashboard exibem essa foto no avatar
+
 #### Scenario: Pet não possui foto ou dado opcional
-- **WHEN** a listagem contém um pet sem foto ou sem um ou mais dados opcionais
+- **WHEN** a listagem contém um pet sem foto, com foto em formato não reconhecido ou sem um ou mais dados opcionais
 - **THEN** o avatar usa a patinha e a descrição não apresenta separadores órfãos nem valores fabricados
 
 #### Scenario: Sexo desconhecido ou data inválida
@@ -48,7 +52,7 @@ O sistema SHALL exibir cada pet com avatar circular, usando sua foto quando disp
 - **THEN** o perfil preserva o texto recebido para o sexo e não apresenta uma data incorretamente reformatada
 
 ### Requirement: Formulário existente mantém o contrato e os feedbacks do cadastro
-O sistema SHALL preservar o contrato atual com o Xano, incluindo nomes de campos, validações, seleção de espécie e raça, upload opcional da foto, mensagens de estado e atualização da lista após cadastro. Todos os campos SHALL ter identificação visível e controles com a mesma altura e acabamento. Os campos SHALL usar espaçamento uniforme de aproximadamente 16 px entre linhas e colunas e altura de aproximadamente 48 px. A área de seleção de foto SHALL ter borda tracejada verde de 1,5–2 px, cantos arredondados e altura aproximada de 140–150 px; depois da seleção, SHALL mostrar um preview local sem iniciar um envio ao servidor antes do cadastro.
+O sistema SHALL preservar o contrato com o Xano, incluindo nomes de campos, validações, seleção de espécie e raça, foto opcional, mensagens de estado e atualização da lista após cadastro. A foto selecionada SHALL ser convertida em data URI base64 e enviada no campo `foto` do mesmo JSON do cadastro, com tamanho máximo de 1 MB no arquivo original. Todos os campos SHALL ter identificação visível e controles com a mesma altura e acabamento. Os campos SHALL usar espaçamento uniforme de aproximadamente 16 px entre linhas e colunas e altura de aproximadamente 48 px. A área de seleção de foto SHALL ter borda tracejada verde de 1,5–2 px, cantos arredondados e altura aproximada de 140–150 px; depois da seleção, SHALL mostrar um preview local sem iniciar um envio ao servidor antes do cadastro.
 
 #### Scenario: Campos apresentam rótulos e dimensões consistentes
 - **WHEN** o tutor visualiza o formulário vazio ou preenchido
@@ -64,11 +68,15 @@ O sistema SHALL preservar o contrato atual com o Xano, incluindo nomes de campos
 
 #### Scenario: Tutor cadastra pet com foto
 - **WHEN** o tutor envia o formulário válido com uma foto selecionada
-- **THEN** o evento existente envia os mesmos campos e a foto ao Xano, apresenta o feedback real da operação e atualiza a lista
+- **THEN** o evento existente envia os mesmos campos em JSON com a foto em data URI base64 no campo `foto`, apresenta o feedback real da operação e atualiza a lista
 
 #### Scenario: Tutor cadastra pet sem foto
 - **WHEN** o tutor envia o formulário válido sem uma foto selecionada
 - **THEN** o cadastro continua usando o fluxo existente sem exigir foto e a listagem atualizada usa a patinha como fallback
+
+#### Scenario: Foto acima do limite
+- **WHEN** o tutor tenta selecionar uma imagem maior que 1 MB
+- **THEN** a área de upload não aceita o arquivo e o cadastro não envia foto
 
 ### Requirement: Mascote decorativo não prejudica a interação
 O sistema SHALL apresentar a tartaruga na pose com os dois braços levantados, usando imagem com transparência real, centralizada na coluna direita abaixo do cartão “Meus pets” e encostada à borda inferior da viewport. A imagem SHALL ter largura aproximada de 200–220 px e integrar o fluxo da coluna para descer junto com o cartão se a lista crescer, sem sobrepor conteúdo. SHALL manter o elemento decorativo sem interceptar eventos de ponteiro. SHALL ocultá-lo quando as colunas empilharem, quando a viewport ficar abaixo de aproximadamente 1100 px ou a largura interna após os paddings ficar abaixo de aproximadamente 1000 px ou quando houver risco de sobreposição.

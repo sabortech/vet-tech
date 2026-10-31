@@ -443,7 +443,7 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(len(events), 2)
 
-    async def test_create_pet_with_photo_preserves_multipart_payload_and_clears_selection(self):
+    async def test_create_pet_with_photo_sends_base64_data_uri_and_clears_selection(self):
         state = make_state()
         state._auth_token = "session-token"
         state.pet_name = "Rex"
@@ -463,15 +463,29 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
 
         upload.read.assert_awaited_once()
         self.assertEqual(
-            request.await_args_list[0].kwargs["form_data"],
-            {"nome": "Rex", "especie_id": "1"},
+            request.await_args_list[0].kwargs["json_payload"],
+            {
+                "nome": "Rex",
+                "especie_id": "1",
+                "foto": "data:image/png;base64,aW1hZ2UtYnl0ZXM=",
+            },
         )
-        self.assertEqual(
-            request.await_args_list[0].kwargs["files"],
-            {"foto": ("rex.png", b"image-bytes", "image/png")},
-        )
-        self.assertIsNone(request.await_args_list[0].kwargs["json_payload"])
+        self.assertNotIn("files", request.await_args_list[0].kwargs)
         self.assertEqual(len(events), 2)
+
+    async def test_pet_list_displays_base64_photo(self):
+        state = make_state()
+        state._auth_token = "session-token"
+        photo = "data:image/png;base64,aW1hZ2UtYnl0ZXM="
+
+        with patch(
+            "vet_tech.features.auth.state.xano_request",
+            new_callable=AsyncMock,
+            return_value=[{"id": 12, "nome": "Mel", "foto": photo}],
+        ):
+            await state._load_pets()
+
+        self.assertEqual(state.pets[0]["foto"], photo)
 
 
 if __name__ == "__main__":

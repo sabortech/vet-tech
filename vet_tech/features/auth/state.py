@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
@@ -56,7 +57,7 @@ def _pet_photo_url(value: Any) -> str:
     if not isinstance(candidate, str):
         return ""
     url = candidate.strip()
-    return url if url.startswith(("https://", "http://")) else ""
+    return url if url.startswith(("https://", "http://", "data:image/")) else ""
 
 
 async def _fetch_pet_details(pet_id, token, species, known_pet):
@@ -782,20 +783,18 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         token = self._auth_token
         try:
             upload = files[0] if files else None
-            upload_files = None
             if upload:
                 content = await upload.read()
                 if session != self._session_generation:
                     return
-                upload_files = {"foto": (upload.name, content, upload.content_type or "application/octet-stream")}
+                content_type = upload.content_type or "application/octet-stream"
+                form_data["foto"] = f"data:{content_type};base64,{base64.b64encode(content).decode('ascii')}"
             await xano_request(
                 "POST",
                 PET_API_GROUP,
                 "pets",
                 auth_token=token,
-                form_data=form_data if upload_files else None,
-                files=upload_files,
-                json_payload=form_data if not upload_files else None,
+                json_payload=form_data,
             )
             if session != self._session_generation:
                 return

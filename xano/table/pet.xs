@@ -21,7 +21,7 @@ table pet {
     int peso_atual?
     text cor_pelo? filters=trim
     int num_microchip?
-    image? foto?
+    text? foto?
     int tutor_id {
       table = "tutor"
     }
