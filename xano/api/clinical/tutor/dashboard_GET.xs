@@ -55,6 +55,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 1
         }
@@ -75,6 +76,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 1
         }
@@ -95,6 +97,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 11
         }
@@ -115,6 +118,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 3
         }
@@ -135,6 +139,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 3
         }
@@ -155,6 +160,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 1
         }
@@ -175,6 +181,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 11
         }
@@ -195,6 +202,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 3
         }
@@ -215,6 +223,7 @@ query "tutor/dashboard" verb=GET {
       return = {
         type: "list"
         paging: {
+          metadata: false
           page: 1
           per_page: 11
         }

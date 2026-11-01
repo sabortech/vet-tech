@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
+from vet_tech.shared.dates import calendar_date, date_label, instant_datetime
 
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -52,19 +53,11 @@ class DashboardPet(TypedDict):
 
 
 def _date_value(value: Any) -> date | None:
-    if value in (None, ""):
-        return None
-    try:
-        if isinstance(value, (int, float)) or str(value).isdecimal():
-            return datetime.fromtimestamp(float(value) / 1000, TZ).date()
-        return date.fromisoformat(str(value)[:10])
-    except (ValueError, TypeError, OverflowError, OSError):
-        return None
+    return calendar_date(value)
 
 
 def _date_label(value: Any) -> str:
-    parsed = _date_value(value)
-    return parsed.strftime("%d/%m/%Y") if parsed else ""
+    return date_label(value)
 
 
 def _date_sort_key(value: Any) -> date:
@@ -115,11 +108,12 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
     for item in consultations:
         if item.get("status") == "agendada":
             when = item.get("agendada_para")
-            event_date = _date_value(when)
+            instant = instant_datetime(when)
+            event_date = instant.date() if instant else _date_value(when)
             if event_date and event_date >= current:
                 events.append({
                     "tipo": "Consulta agendada",
-                    "data": _date_label(when),
+                    "data": event_date.strftime("%d/%m/%Y"),
                     "ordem": event_date.isoformat(),
                 })
         when = item.get("retorno_previsto")
@@ -179,7 +173,7 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
         {
             "tipo": "Vacina",
             "nome": str(item.get("vacina") or "Vacina"),
-            "data": _date_label(item.get("data_aplicacao") or item.get("data")),
+            "data": str(item.get("data_aplicacao") or item.get("data")),
         }
         for item in recent_vaccines
     ]
@@ -187,11 +181,13 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
         {
             "tipo": "Consulta",
             "nome": "Consulta finalizada",
-            "data": _date_label(consultation_date(item)),
+            "data": str(consultation_date(item)),
         }
         for item in finalized[:3]
     )
     recent.sort(key=lambda item: _date_value(item["data"]) or date.min, reverse=True)
+    for item in recent:
+        item["data"] = _date_label(item["data"])
 
     photo = row.get("foto")
     if isinstance(photo, dict):
@@ -212,10 +208,10 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
         "proxima_vacina": ({
             "nome": str(upcoming_vaccines[0].get("vacina") or "Vacina"),
             "data": _date_label(upcoming_vaccines[0].get("data_prox_dose")),
-        } if upcoming_vaccines else {}),
+        } if upcoming_vaccines else {"nome": "", "data": ""}),
         "ultima_consulta": ({
             "data": _date_label(consultation_date(finalized[0])),
-        } if finalized else {}),
+        } if finalized else {"data": ""}),
         "proximo_evento": {
             "tipo": next_event.get("tipo", ""),
             "data": next_event.get("data", ""),

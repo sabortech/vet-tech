@@ -252,7 +252,15 @@ Defina `XANO_API_BASE_URL` no ambiente com a origem HTTP(S) do workspace, sem
 compõe os grupos e endpoints. Não há fallback para outro workspace: o backend
 interrompe a inicialização quando a configuração falta ou é inválida. Imports e
 compilação não exigem conexão Xano. O `.env` é local e ignorado pelo Git;
-o comando acima o carrega explicitamente. `.env.example` usa uma origem fictícia.
+a configuração compartilhada o carrega automaticamente, preservando variáveis já
+definidas no ambiente. `.env.example` usa uma origem fictícia. Reinicie a aplicação
+após editar o `.env`.
+
+No Windows (PowerShell), também é possível iniciar diretamente da raiz:
+
+```powershell
+.\.venv\Scripts\reflex.exe run --env prod --single-port
+```
 
 Os artefatos oficiais estão em [`xano/`](./xano). Antes de publicar mudanças,
 revise o [contrato e plano de migração](./docs/backend-foundation.md).

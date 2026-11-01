@@ -30,7 +30,19 @@ se a conta pertence a um tutor ou a um veterinário.
 A área veterinária reúne horários, consultas e atendimentos. O acesso aos dados
 clínicos segue as permissões aplicadas pelo backend.
 
-## Integração
+## Datas e próxima vacina
+
+As datas de nascimento, aplicação e próxima dose são exibidas como dia/mês/ano.
+Os calendários nativos podem ter aparência diferente conforme o navegador;
+abaixo do campo, “Data selecionada” confirma o dia/mês/ano escolhido. A aplicação
+envia datas sem horário como `AAAA-MM-DD` e apresenta horários de agenda e
+auditoria no fuso America/Sao_Paulo.
+
+“Próxima vacina” usa a próxima dose informada para hoje ou uma data futura.
+Cadastrar apenas a aplicação não define uma próxima dose. Nesse caso aparece
+“Sem próxima dose informada”; nenhuma data é calculada automaticamente.
+
+## Integração com o Xano
 
 O Dashboard depende da publicação do endpoint `tutor/dashboard` no grupo clínico
 do Xano; o código-fonte correspondente fica em

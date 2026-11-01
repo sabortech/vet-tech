@@ -1,5 +1,6 @@
 """Agenda, booking wizard and structured clinical forms."""
 import reflex as rx
+from vet_tech.components.date_input import date_hint
 
 from vet_tech.features.auth.state import State
 
@@ -212,7 +213,8 @@ def veterinary_content():
         notice(),
         rx.cond(State.vet_section == "Horários", rx.vstack(
             rx.el.label("Dia da agenda", html_for="agenda-day"),
-            rx.input(id="agenda-day", type="date", value=State.agenda_day, on_change=State.agenda_choose_day),
+            rx.input(id="agenda-day", type="date", value=State.agenda_day, on_change=State.agenda_choose_day, custom_attrs={"lang": "pt-BR"}),
+            date_hint(State.agenda_day),
             rx.button("Hoje", on_click=State.agenda_today, variant="outline", disabled=State.clinic_loading),
             rx.cond(State.agenda_rows.length() == 0, rx.text("Nenhuma consulta neste dia.")), timeline,
             align="stretch", width="100%", spacing="4"),
@@ -302,7 +304,10 @@ def clinical_line(row, group):
         *[rx.vstack(rx.text(label, as_="label"),
              rx.input(type=kind, value=row[key], placeholder=label, aria_label=label,
                       on_change=line_change(group, row, key),
-                      disabled=State.clinic_busy, width="100%"), align="stretch", width="100%", spacing="1")
+                      custom_attrs={"lang": "pt-BR"} if kind == "date" else {},
+                      disabled=State.clinic_busy, width="100%"),
+             *([date_hint(row[key])] if kind == "date" else []),
+             align="stretch", width="100%", spacing="1")
           for key, label, kind in LINE_FIELDS[group]],
         rx.button("Remover registro", on_click=State.clinical_remove_line(group, row["linha_id"]),
                   variant="ghost", color_scheme="red", disabled=State.clinic_busy),
@@ -324,7 +329,10 @@ def attendance_content():
                 *[rx.vstack(rx.el.label(label, html_for="clinic-"+key),
                      rx.input(id="clinic-"+key, type=kind, value=value,
                               on_change=header_change(key),
-                              disabled=State.clinic_busy, width="100%"), align="stretch", width="100%")
+                              custom_attrs={"lang": "pt-BR"} if kind == "date" else {},
+                              disabled=State.clinic_busy, width="100%"),
+                     *([date_hint(value)] if kind == "date" else []),
+                     align="stretch", width="100%")
                   for key, label, kind, value in (("data_atendimento", "Data do atendimento", "date", State.clinical_date),
                       ("motivo", "Motivo", "text", State.clinical_reason), ("diagnostico", "Diagnóstico", "text", State.clinical_diagnosis),
                       ("obs", "Observações", "text", State.clinical_notes), ("retorno_previsto", "Retorno (opcional)", "date", State.clinical_return))],

@@ -2,7 +2,18 @@
 
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from urllib.parse import urlsplit
+
+from dotenv import load_dotenv
+
+
+# Caminho independente do diretório de execução; o ambiente externo tem prioridade.
+load_dotenv(
+    dotenv_path=Path(__file__).resolve().parents[2] / ".env",
+    override=False,
+    encoding="utf-8-sig",
+)
 
 
 class ConfigurationError(ValueError):
