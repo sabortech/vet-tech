@@ -1,0 +1,15 @@
+{
+  "contraste": {
+    "texto": 14.93,
+    "secundário": 6.95,
+    "placeholder": 6.08,
+    "primário": 5.05,
+    "link": 7.07,
+    "sidebar": 5.05
+  },
+  "navegador": [
+    "/login: tema claro com preferência Reflex escura; sem contêineres escuros",
+    "/cadastro: tema claro com preferência Reflex escura; sem contêineres escuros",
+    "Componentes representativos, portal dinâmico, claro → escuro → claro: passou"
+  ]
+}

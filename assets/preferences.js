@@ -23,13 +23,20 @@
     const control = document.getElementById('theme-switch');
     if (control) { control.checked = theme === 'dark'; control.setAttribute('aria-checked', String(control.checked)); }
   };
+  // Reflex has its own theme preference. Keep its palette (including portals)
+  // aligned with the document's preference, which owns the VetTech surfaces.
+  const syncAppearance = () => {
+    for (const root of [document.documentElement, ...document.querySelectorAll('.radix-themes')]) {
+      root.classList.toggle('dark', theme === 'dark');
+      root.classList.toggle('light', theme === 'light');
+    }
+    document.documentElement.style.colorScheme = theme;
+    syncControls();
+  };
   const apply = value => {
     theme = value === 'dark' ? 'dark' : 'light';
     document.documentElement.dataset.vtTheme = theme;
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.classList.toggle("light", theme === "light");
-    document.documentElement.style.colorScheme = theme;
-    syncControls();
+    syncAppearance();
   };
   apply(theme);
   window.vetTechPreferences = {getTheme: () => theme};
@@ -103,5 +110,7 @@
       document.getElementById('settings-history-guard')?.click();
     }
   });
-  new MutationObserver(syncControls).observe(document.documentElement, {childList: true, subtree: true});
+  new MutationObserver(syncAppearance).observe(document.documentElement, {
+    childList: true, subtree: true, attributes: true, attributeFilter: ['class'],
+  });
 })();
