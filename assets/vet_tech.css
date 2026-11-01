@@ -1,14 +1,14 @@
 :root {
   --vt-page-bg: #f4f5f7;
   --vt-surface: #ffffff;
-  --vt-text: #1a3629;
-  --vt-green: #689554;
-  --vt-green-hover: #5d874a;
+  --vt-text: #182b21;
+  --vt-green: #477b36;
+  --vt-green-hover: #39652c;
   --vt-sidebar-brand: #ffffff;
   --vt-font: "Nunito", sans-serif;
   --vt-icon-bg: #ebeee5;
   --vt-field-bg: #eef0f2;
-  --vt-muted: #626b66;
+  --vt-muted: #4e5d55;
   --vt-field-placeholder: var(--vt-muted);
   --vt-border: #d9dedb;
   --vt-focus: #689554;
@@ -46,6 +46,35 @@ body {
   background: var(--vt-page-bg);
   color: var(--vt-text);
   font-family: var(--vt-font);
+}
+
+/* Shared typography also covers default Reflex components and portal roots. */
+.radix-themes {
+  color: var(--vt-text);
+}
+
+html[data-vt-theme="light"] .radix-themes {
+  --gray-11: var(--vt-muted);
+  --gray-12: var(--vt-text);
+  --gray-a11: var(--vt-muted);
+  --gray-a12: var(--vt-text);
+}
+
+html[data-vt-theme="light"] .radix-themes[data-accent-color="grass"] {
+  --accent-9: var(--vt-green);
+  --accent-10: var(--vt-green-hover);
+  --accent-11: #35632b;
+  --accent-12: var(--vt-text);
+  --accent-a9: var(--vt-green);
+  --accent-a10: var(--vt-green-hover);
+  --accent-a11: #35632b;
+  --accent-a12: var(--vt-text);
+  --accent-contrast: #fff;
+}
+
+html[data-vt-theme="light"] :is(.rt-TextFieldInput, .rt-TextAreaInput)::placeholder {
+  color: var(--vt-field-placeholder);
+  opacity: 1;
 }
 
 button,
@@ -874,7 +903,7 @@ textarea {
 
 /* Shared appearance: the document owns the theme, so portals and public pages follow it. */
 :root {
-  --vt-sidebar-bg: #689554;
+  --vt-sidebar-bg: #477b36;
   --vt-error: #a33232;
   --vt-success: #38662e;
   --vt-primary-text: #fff;
