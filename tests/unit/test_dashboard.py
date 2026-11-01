@@ -73,8 +73,8 @@ class DashboardProjectionTests(unittest.TestCase):
         self.assertEqual(projected["peso"], "0")
         self.assertEqual(projected["foto"], "https://example.invalid/luna.png")
         self.assertEqual(projected["raca"], "SRD")
-        self.assertEqual(projected["proxima_vacina"], {})
-        self.assertEqual(projected["ultima_consulta"], {})
+        self.assertEqual(projected["proxima_vacina"], {"nome": "", "data": ""})
+        self.assertEqual(projected["ultima_consulta"], {"data": ""})
         self.assertIn("Nenhum item de acompanhamento", projected["mensagem_acompanhamento"])
 
     def test_next_vaccine_last_finalized_consult_and_next_event_are_ordered(self):
@@ -146,7 +146,12 @@ class DashboardProjectionTests(unittest.TestCase):
         self.assertEqual(len(projected["atividade_recente"]), 6)
         self.assertEqual(
             [row["tipo"] for row in projected["atividade_recente"]],
-            ["Vacina", "Vacina", "Vacina", "Consulta", "Consulta", "Consulta"],
+            ["Vacina", "Consulta", "Vacina", "Consulta", "Vacina", "Consulta"],
+        )
+        self.assertEqual(
+            [row["data"] for row in projected["atividade_recente"]],
+            [(start + timedelta(days=day)).strftime("%d/%m/%Y")
+             for day in (999, 999, 998, 998, 997, 997)],
         )
 
     def test_missing_clinical_dates_do_not_create_events_or_raise(self):
@@ -168,8 +173,8 @@ class DashboardProjectionTests(unittest.TestCase):
             date(2025, 4, 2),
         )
         self.assertEqual(projected["proximo_evento"], {"tipo": "", "data": ""})
-        self.assertEqual(projected["proxima_vacina"], {})
-        self.assertEqual(projected["ultima_consulta"], {})
+        self.assertEqual(projected["proxima_vacina"], {"nome": "", "data": ""})
+        self.assertEqual(projected["ultima_consulta"], {"data": ""})
         self.assertEqual(projected["atividade_recente"], [])
         self.assertEqual([item["tipo"] for item in projected["acompanhamentos"]], ["exame"])
 
@@ -192,6 +197,7 @@ class DashboardProjectionTests(unittest.TestCase):
             self.assertIn("$db.pet.tutor_id == $auth.id", query, table)
             self.assertIn(f"$db.{table}.pet_id == $owned_pet.id", query, table)
             self.assertIn("paging:", query, table)
+            self.assertIn("metadata: false", query, table)
         self.assertIn("consulta.agendada_para: \"asc\"", source)
         self.assertIn("vacina.data_prox_dose: \"asc\"", source)
         self.assertIn("exame.data_realizacao == null", source)

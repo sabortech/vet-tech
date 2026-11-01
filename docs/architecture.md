@@ -60,6 +60,10 @@ atual seja reescrita antes de continuar o desenvolvimento.
   devem continuar garantidas pelo backend Xano.
 - Segredos e credenciais não devem ser escritos em código, páginas,
   componentes ou documentação; usar configuração por ambiente.
+- `shared/dates.py` separa datas civis ISO de instantes Xano em milissegundos
+  ou ISO com offset. Datas civis mantêm seu dia; instantes são apresentados no
+  fuso America/Sao_Paulo. `components/date_input.py` confirma a data selecionada
+  em formato brasileiro sem alterar o valor ISO do calendário nativo.
 - Manter os artefatos do backend em XanoScript e continuar tratando Xano como
   backend. Esta organização não introduz outro framework ou serviço.
 

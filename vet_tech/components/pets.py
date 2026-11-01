@@ -1,4 +1,5 @@
 import reflex as rx
+from vet_tech.components.date_input import date_hint
 
 from vet_tech.components.sidebar import layout_com_menu
 from vet_tech.features.auth.state import State
@@ -156,10 +157,11 @@ def pet_form() -> rx.Component:
                 on_change=State.set_pet_sex,
                 class_name="pet-form__field",
             )),
-            pet_field("cake", rx.box(
+            rx.vstack(pet_field("cake", rx.box(
                 rx.input(
                     id="pet-birth-date",
                     type="date",
+                    custom_attrs={"lang": "pt-BR"},
                     aria_label="Data de nascimento",
                     value=State.pet_birth_date,
                     on_change=State.set_pet_birth_date,
@@ -189,6 +191,7 @@ def pet_form() -> rx.Component:
                     ),
                 },
             )),
+            date_hint(State.pet_birth_date), align="stretch", spacing="1"),
             pet_field("weight", rx.input(
                 placeholder="Peso atual (opcional)",
                 aria_label="Peso atual (opcional)",

@@ -215,7 +215,7 @@ def _individual_pet(pet) -> rx.Component:
             ),
             _metric(
                 "Próxima vacina",
-                rx.cond(pet["proxima_vacina"]["nome"] != "", pet["proxima_vacina"]["nome"], "Não registrada"),
+                rx.cond(pet["proxima_vacina"]["nome"] != "", pet["proxima_vacina"]["nome"], "Sem próxima dose informada"),
                 pet["proxima_vacina"]["data"],
                 "syringe",
             ),
@@ -324,7 +324,7 @@ def _overview_pet(pet) -> rx.Component:
                     rx.cond(
                         pet["proxima_vacina"]["nome"] != "",
                         pet["proxima_vacina"]["nome"] + " · " + pet["proxima_vacina"]["data"],
-                        "Não registrada",
+                        "Sem próxima dose informada",
                     ),
                     color="var(--vt-text)",
                 ),

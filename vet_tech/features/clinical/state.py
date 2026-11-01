@@ -13,6 +13,7 @@ import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
 from vet_tech.features.navigation.state import CLINICAL_SECTIONS
+from vet_tech.shared.dates import date_label, instant_label
 
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -24,26 +25,21 @@ def today() -> str:
 
 
 def display_date(value) -> str:
-    if not value:
-        return "Não informado"
-    try:
-        if isinstance(value, (int, float)):
-            return datetime.fromtimestamp(value / 1000, TZ).strftime("%d/%m/%Y %H:%M")
-        return date.fromisoformat(str(value)[:10]).strftime("%d/%m/%Y")
-    except (ValueError, TypeError, OverflowError, OSError):
-        return "Não informado"
+    return date_label(value) or "Não informado"
 
 
 def cards(rows: list[dict]) -> list[dict[str, str]]:
     result = []
     for row in rows:
         item = {str(k): "" if v is None else str(v) for k, v in row.items()}
-        item["quando"] = display_date(row.get("agendada_para") or row.get("data_atendimento") or row.get("data"))
+        item["quando"] = (instant_label(row["agendada_para"]) if row.get("agendada_para")
+                          else date_label(row.get("data_atendimento") or row.get("data"))) or "Não informado"
         item["pet_nome"] = str(row.get("pet_nome") or ("Pet " + str(row.get("pet_id", ""))))
         item["autorizado"] = "sim" if row.get("autorizado", True) else "nao"
         item["status"] = str(row.get("status") or "legado")
         for key in ("data", "data_atendimento", "iniciada_em", "finalizada_em", "retorno_previsto", "data_aplicacao", "data_prox_dose", "data_inicio", "data_fim", "data_diagnostico", "data_evolucao", "data_solicitacao", "data_realizacao", "ocorrido_em"):
-            item[key + "_legivel"] = display_date(row.get(key)) if row.get(key) else ""
+            formatter = instant_label if key in {"iniciada_em", "finalizada_em", "ocorrido_em"} else date_label
+            item[key + "_legivel"] = formatter(row.get(key)) if row.get(key) else ""
         item["dose_legivel"] = (str(row["dose"]) + " " + str(row.get("unidade") or "")) if row.get("dose") is not None else (str(row["dosagem"]) + " (registro anterior)") if row.get("dosagem") is not None else ""
         item["origem_legivel"] = "Consulta " + str(row["consulta_id"]) if row.get("consulta_id") else "Registro anterior sem consulta vinculada"
         result.append(item)

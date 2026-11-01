@@ -1,5 +1,4 @@
 import base64
-from datetime import datetime
 from typing import Any
 from urllib.parse import urlencode
 
@@ -16,6 +15,7 @@ from vet_tech.shared.xano_client import (
     XanoRequestError,
     xano_request,
 )
+from vet_tech.shared.dates import calendar_date, date_label
 
 
 _CLEAR_PET_PHOTO_PREVIEW_SCRIPT = """
@@ -24,14 +24,7 @@ window.dispatchEvent(new Event("vettech:pet-photo-clear"));
 
 
 def format_pet_birth_date(value: Any) -> str:
-    date_value = str(value or "")
-    if not date_value:
-        return ""
-    try:
-        parsed = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
-    except ValueError:
-        return date_value
-    return parsed.strftime("%d/%m/%Y")
+    return date_label(value) or str(value or "")
 
 
 def display_pet_sex(value: Any) -> str:
@@ -762,7 +755,11 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         if self.pet_sex.strip():
             form_data["sexo"] = self.pet_sex.strip()
         if self.pet_birth_date:
-            form_data["data_nasc"] = self.pet_birth_date
+            birth = calendar_date(self.pet_birth_date)
+            if birth is None:
+                self.pet_message = "Informe uma data de nascimento válida."
+                return
+            form_data["data_nasc"] = birth.isoformat()
         if self.pet_weight:
             try:
                 form_data["peso_atual"] = str(int(self.pet_weight))
