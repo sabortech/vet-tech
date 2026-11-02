@@ -4,7 +4,7 @@ from vet_tech.components.navigation import clinical_menu_actions
 from vet_tech.components.sidebar import layout_com_menu
 from vet_tech.components.pets import pet_details, pet_list
 from vet_tech.features.auth.state import State
-from vet_tech.components.clinical import booking_dialog, pet_loading, records, tutor_clinical_content, tutor_consultations, veterinary_content, veterinary_sidebar
+from vet_tech.components.clinical import booking_dialog, pet_loading, records, tutor_clinical_content, tutor_consultations, veterinary_content
 
 
 def tutor_area() -> rx.Component:
@@ -42,11 +42,12 @@ def tutor_area() -> rx.Component:
 
 
 def veterinarian_area() -> rx.Component:
-    return rx.hstack(veterinary_sidebar(),
-        rx.box(veterinary_content(), as_="main", width="100%", min_width="0",
-               overflow_wrap="anywhere",
-               padding=rx.breakpoints(initial="16px", lg="40px")),
-        width="100%", align="start", spacing="0", on_mount=State.load_agenda)
+    from vet_tech.components.veterinary_schedule import veterinary_navigation, veterinary_actions
+    return layout_com_menu(
+        rx.box(veterinary_content(), as_="main", id="main-content", class_name="vet-schedule",
+               on_mount=State.enter_veterinary_agenda, width="100%", min_width="0"),
+        pagina_ativa="horarios", actions=veterinary_actions(), navigation=veterinary_navigation(),
+    )
 
 
 def profile_view() -> rx.Component:

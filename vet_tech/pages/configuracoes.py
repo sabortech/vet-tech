@@ -1,14 +1,14 @@
-"""Configurações do tutor com os componentes visuais compartilhados."""
+"""Configurações compartilhadas com identidade e menu específicos por perfil."""
 import reflex as rx
 
 from vet_tech.components.sidebar import _EXISTING_ROUTES, layout_com_menu
 from vet_tech.features.auth.state import State
-from vet_tech.features.navigation.state import NavigationState
+from vet_tech.features.navigation.state import NavigationState, VETERINARIAN_DESTINATIONS
 from vet_tech.features.settings.state import SettingsState as Settings
 
 
 def field(label: str, field_id: str, value, handler=None, locked=False, hint=""):
-    icon = {"settings-nome": "circle-user-round", "settings-email": "mail", "settings-cpf": "id-card", "settings-telefone": "phone", "settings-endereco": "building-2"}[field_id]
+    icon = {"settings-nome": "circle-user-round", "settings-email": "mail", "settings-cpf": "id-card", "settings-crmv": "badge-check", "settings-telefone": "phone", "settings-endereco": "building-2"}[field_id]
     return rx.box(
         rx.el.label(label, html_for=field_id),
         rx.box(
@@ -40,7 +40,7 @@ def feedback():
 def account():
     return rx.box(
         rx.heading("Dados pessoais", as_="h2"),
-        rx.text("Perfil: Tutor", class_name="settings-profile"),
+        rx.text(rx.cond(Settings.account_profile == "veterinario", "Perfil: Veterinário", "Perfil: Tutor"), class_name="settings-profile"),
         rx.cond(Settings.loading, rx.text("Carregando seus dados...", role="status")),
         rx.cond(
             ~Settings.loading & ~Settings.loaded,
@@ -49,9 +49,11 @@ def account():
                 rx.box(
                     field("Nome completo", "settings-nome", Settings.nome, Settings.edit_nome),
                     field("E-mail", "settings-email", Settings.email, locked=True, hint="E-mail utilizado para entrar no sistema. Não pode ser alterado aqui."),
-                    field("CPF", "settings-cpf", Settings.cpf_mascarado, locked=True, hint="CPF parcialmente oculto. Não pode ser alterado aqui."),
+                    rx.cond(Settings.account_profile == "veterinario",
+                        field("CRMV / UF", "settings-crmv", Settings.crmv_label, locked=True, hint="Registro profissional. Não pode ser alterado aqui."),
+                        field("CPF", "settings-cpf", Settings.cpf_mascarado, locked=True, hint="CPF parcialmente oculto. Não pode ser alterado aqui.")),
                     field("Telefone", "settings-telefone", Settings.telefone, Settings.edit_telefone),
-                    field("Endereço", "settings-endereco", Settings.endereco, Settings.edit_endereco),
+                    rx.cond(Settings.account_profile == "tutor", field("Endereço", "settings-endereco", Settings.endereco, Settings.edit_endereco)),
                     class_name="settings-fields",
                 ),
                 feedback(),
@@ -143,8 +145,8 @@ def discard_dialog():
 
 
 def settings_view():
-    return layout_com_menu(
-        rx.box(
+    from vet_tech.components.veterinary_schedule import veterinary_navigation, veterinary_actions
+    content = rx.box(
             rx.box(rx.heading("Configurações", as_="h1"), rx.button("Sair", on_click=Settings.request_action("logout"), class_name="profile-logout"), class_name="profile-heading"),
             rx.text("Gerencie seus dados, sua segurança e suas preferências.", class_name="settings-subtitle"),
             rx.box(
@@ -163,11 +165,15 @@ def settings_view():
             *[rx.button(on_click=Settings.request_navigation(destination),
                         custom_attrs={'data-settings-destination': destination},
                         display='none', tab_index=-1, aria_hidden=True)
-              for destination in _EXISTING_ROUTES.values()],
+              for destination in sorted(set(_EXISTING_ROUTES.values()) | VETERINARIAN_DESTINATIONS)],
             class_name="settings-page", custom_attrs={"data-dirty": Settings.dirty.to(str), "data-baseline": Settings.baseline_json, "data-saving": Settings.saving.to(str)},
-        ), pagina_ativa="configuracoes",
+        )
+    return rx.cond(
+        State.profile == "veterinario",
+        layout_com_menu(content, pagina_ativa="configuracoes", navigation=veterinary_navigation(in_settings=True), actions=veterinary_actions(in_settings=True)),
+        layout_com_menu(content, pagina_ativa="configuracoes"),
     )
 
 
 def configuracoes():
-    return rx.cond(State.is_authenticated & (State.profile != "veterinario"), settings_view(), rx.box(rx.text("Redirecionando para o login...", role="status")))
+    return rx.cond(State.is_authenticated & ((State.profile == "tutor") | (State.profile == "veterinario")), settings_view(), rx.box(rx.text("Redirecionando para o login...", role="status")))

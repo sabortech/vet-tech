@@ -1,0 +1,11 @@
+{
+  "autoplay": true,
+  "loop_decoded": true,
+  "muted": true,
+  "fixed_while_scrolling": true,
+  "history": true,
+  "mobile": true,
+  "light_dark": true,
+  "pause_resume": true,
+  "javascript_errors": []
+}

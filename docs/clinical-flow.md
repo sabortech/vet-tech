@@ -111,3 +111,30 @@ mantém suas verificações de autorização e auditoria existentes.
 `ClinicalMixin` é composto à única `State` autenticada; usa seu token e contador de sessão. Logout/expiração limpam agenda, atendimento, histórico e modal. Troca de pet limpa as seções e invalida respostas antigas sem modificar a seleção independente do modal. Buscas de profissionais e histórico prévio têm contadores próprios para descartar respostas ultrapassadas. Dados clínicos permanecem somente no servidor da sessão, sem armazenamento de token em componente ou sessão paralela.
 
 O percurso remoto, as fixtures propostas e os limites da publicação estão em `openspec/changes/fluxo-consultas-prontuario/deployment-review.md`. Testes locais de validação/projeção executam as Lambdas JavaScript reais; testes de estado usam HTTP mockado. Compilação e dry-run não substituem testes de transação, identidade e navegador.
+
+### Agenda visual do veterinário
+
+Horários utiliza o layout lateral compartilhado com Horários, Consultas e Configurações.
+O calendário seleciona dias no fuso America/Sao_Paulo; a grade inclui horários
+externos à faixa inicial 08–17 e empilha reservas sem presumir duração.
+O total é do dia; concluídas/em atendimento são contagens da página atual.
+`veterinario/agenda` adiciona `pet_foto` opcional (texto base64 ou URL do cadastro)
+no ramo de consentimento ativo, junto a `pet_nome`. O ramo revogado continua
+sem foto, nome, pet_id ou motivo. A ausência da nova propriedade mantém o fallback
+neutro, inclusive enquanto o contrato aditivo não estiver publicado no Xano.
+Nenhuma ação para criar reserva ou declarar disponibilidade é introduzida.
+
+O seletor de data da agenda oferece Hoje e um ícone de calendário. O ícone abre
+um diálogo mensal em português com seleção de mês/ano e tartaruga decorativa.
+Navegar no calendário ou fechar não altera a data ativa nem consulta o backend;
+selecionar um dia fecha o diálogo e recarrega a agenda existente, inclusive para
+datas passadas. A luz verde gira no sentido horário somente na borda da janela
+aberta; a preferência de movimento reduzido diminui a velocidade do traço, mantendo a circulação solicitada.
+
+Os seletores de mês/ano do painel usam listas abaixo dos botões, com chevron
+para baixo, altura limitada e rolagem interna. O posicionamento não inverte para
+cima; a seleção continua apenas mudando o mês exibido até escolher um dia.
+
+A borda luminosa do calendário usa um segmento SVG no perímetro arredondado,
+com deslocamento de traço no sentido horário. Não depende de animação de
+propriedade CSS registrada; desacelera em movimento reduzido e não intercepta cliques.
