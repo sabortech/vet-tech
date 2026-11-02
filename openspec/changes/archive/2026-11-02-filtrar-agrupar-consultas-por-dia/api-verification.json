@@ -1,0 +1,90 @@
+{
+  "workspace": 167758,
+  "checks": [
+    {
+      "check": "contract_three_Hoje_1",
+      "passed": true
+    },
+    {
+      "check": "contract_three_Hoje_2",
+      "passed": true
+    },
+    {
+      "check": "filter_Hoje",
+      "passed": true
+    },
+    {
+      "check": "total_Hoje",
+      "passed": true
+    },
+    {
+      "check": "contract_three_Próximas_1",
+      "passed": true
+    },
+    {
+      "check": "contract_three_Próximas_2",
+      "passed": true
+    },
+    {
+      "check": "filter_Próximas",
+      "passed": true
+    },
+    {
+      "check": "total_Próximas",
+      "passed": true
+    },
+    {
+      "check": "contract_three_Concluídas_1",
+      "passed": true
+    },
+    {
+      "check": "filter_Concluídas",
+      "passed": true
+    },
+    {
+      "check": "total_Concluídas",
+      "passed": true
+    },
+    {
+      "check": "contract_three_Canceladas_1",
+      "passed": true
+    },
+    {
+      "check": "filter_Canceladas",
+      "passed": true
+    },
+    {
+      "check": "total_Canceladas",
+      "passed": true
+    },
+    {
+      "check": "search_and_state_combined",
+      "passed": true
+    },
+    {
+      "check": "conflicting_state_does_not_override_tab",
+      "passed": true
+    },
+    {
+      "check": "cross_profile_denied",
+      "passed": true
+    },
+    {
+      "check": "revoked_history_has_no_photo_0",
+      "passed": true
+    },
+    {
+      "check": "revoked_agenda_has_no_photo_0",
+      "passed": true
+    },
+    {
+      "check": "audit_exists_0",
+      "passed": true
+    },
+    {
+      "check": "synthetic_fixtures_removed",
+      "passed": true
+    }
+  ],
+  "cleaned": true
+}

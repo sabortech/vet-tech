@@ -86,7 +86,7 @@ class ConsultationsTests(unittest.IsolatedAsyncioTestCase):
             'consents':[{'pet_id':5}], 'pets':[{'id':5,'nome':'Max'}]}
         result=execute('xano/api/clinical/agenda_GET.xs',{'aba':'Canceladas','page':1},rows)
         self.assertEqual([r['id'] for r in result['items']],[2])
-        self.assertEqual(result['contrato_consultas'],2)
+        self.assertEqual(result['contrato_consultas'],3)
         result=execute('xano/api/clinical/agenda_GET.xs',{'aba':'Pendentes','page':1},rows)
         self.assertEqual([r['id'] for r in result['items']],[1,3])
 

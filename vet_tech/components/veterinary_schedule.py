@@ -260,6 +260,14 @@ def consultation_patient_summary():
     )
 
 
+def consultation_day_group(group):
+    return rx.box(
+        rx.heading(group["label"], size="3", as_="h3", class_name="consultations-day-divider"),
+        rx.foreach(group["items"], consultation_card),
+        class_name="consultations-day-group", key=group["date"],
+    )
+
+
 def consultations_content():
     return rx.box(
         rx.box(
@@ -284,7 +292,7 @@ def consultations_content():
                     rx.cond(State.clinic_message == "", rx.cond(State.upcoming_rows.length() == 0,
                         rx.box(rx.icon("calendar-heart", size=32), rx.text("Nenhuma consulta encontrada", weight="bold"),
                             rx.text("Experimente outro período ou nome de pet.", class_name="consultations-muted"), class_name="consultations-empty"),
-                        rx.foreach(State.upcoming_rows, consultation_card)))),
+                        rx.foreach(State.consultation_day_groups, consultation_day_group)))),
                 class_name="consultations-list", aria_busy=State.clinic_loading),
             consultation_patient_summary(), class_name="consultations-columns"),
         class_name="consultations-page",
