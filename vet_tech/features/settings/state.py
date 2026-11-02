@@ -93,6 +93,12 @@ class SettingsState(rx.State):
         self.loaded = True
         self._loaded_at = time.monotonic()
 
+    def _sync_professional_identity(self, auth):
+        if self.account_profile == "veterinario":
+            auth.identity_crmv, auth.identity_crmv_uf = self.crmv, self.crmv_uf.upper()
+            auth.identity_professional_loaded = True
+            auth.identity_professional_loading = auth.identity_professional_error = False
+
     @rx.event
     async def enter(self):
         auth = await self.get_state(AuthState)
@@ -148,6 +154,7 @@ class SettingsState(rx.State):
                         self.message = str(error)
                 else:
                     self._apply(result)
+                    self._sync_professional_identity(auth)
             except XanoRequestError as caught:
                 self.message = str(caught)
             finally:
@@ -202,6 +209,7 @@ class SettingsState(rx.State):
             result = await xano_request("PATCH", AUTH_API_GROUP, context[1] + "/account", auth_token=token, json_payload=draft)
             if self._current(auth, context):
                 self._apply(result)
+                self._sync_professional_identity(auth)
                 auth.identity_name = self.nome
                 self.message = "Dados atualizados com sucesso."
                 self.message_ok = True

@@ -149,7 +149,7 @@ no endpoint autenticado existente; o card mostra Concluída, deixa de oferecer
 Começar/Retomar e não aparece entre as pendências de Consultas. Falha, conflito
 ou resposta de sessão/consulta antiga não declaram conclusão nem redirecionam.
 
-Cards de Horários e Consultas compartilham acabamento verde e estado textual.
+Cards de Horários e Consultas compartilham paleta por estado e identificação textual.
 A agenda do dia e a moldura da foto/fallback possuem contorno SVG com luz verde
 circulando no sentido horário, sem movimentar conteúdo ou interceptar cliques.
 Movimento reduzido desacelera a circulação. O consentimento continua determinando
@@ -158,3 +158,96 @@ quais dados e ações podem aparecer no card, conforme o backend.
 O atendimento e seus painéis (histórico, calendário clínico, confirmação de descarte e toast) acompanham `data-vt-theme` da preferência existente, inclusive durante a edição e com portais abertos. A troca não recarrega dados nem altera o rascunho; tokens locais `--vet-*` mantêm superfícies, campos, texto e estados de foco legíveis nos dois temas.
 
 Histórico nos cards de Horários e Consultas reutiliza `attendance_history_dialog` do atendimento, com pet e acionador próprios. Erro e nova tentativa pertencem ao modal (`prior_history_message`), mantendo a agenda visível e o rascunho inalterado. Fechar devolve foco ao botão do card. Botões recebem cantos arredondados globalmente; controles de seleção mantêm suas formas próprias.
+
+### Consultas com resumo do paciente
+
+Consultas apresenta lista horizontal e seleção pelo nome/foto, resumo lateral
+(no celular, abaixo da lista), filtros e a decoração `babyturtle.png`. Menu e
+assistente flutuante preservam a composição existente. O resumo é uma leitura
+explícita do endpoint autenticado e auditado de histórico. Atualizar, filtrar,
+paginar e sair limpam a seleção; respostas antigas não podem substituir outro pet.
+
+Alergias vêm de nomes de doenças/diagnósticos que identificam alergia, incluindo
+estado registrado; não existe campo dedicado no modelo atual. Ausência mostra
+“Alergias não informadas”, sem declarar que o pet não possui alergias. Peso mantém
+a unidade original não especificada no contrato. O motivo do agendamento é
+identificado como motivo, e não como observação do tutor.
+
+O contrato aditivo de `xano/api/clinical/agenda_GET.xs` aceita `aba` (Pendentes,
+Hoje, Próximas, Concluídas, Canceladas), `busca` (nome do pet) e `estado` (agendada,
+em_atendimento, finalizada, cancelada). Aplica filtros antes da página de 25 itens e
+retorna `contrato_consultas: 2` (versão 1 permanece aceita para filtros anteriores). Hoje considera America/Sao_Paulo; Próximas
+considera dias após hoje. Sem parâmetros, preserva agenda diária e pendentes.
+Busca não considera nomes sem consentimento ativo. Canceladas lista registros com status `cancelada`, excluídos das abas ativas e sem
+ações de iniciar/retomar; não introduz operação de cancelamento nem de confirmação.
+O campo de busca tem contorno pill e o filtro de estado inclui ícone de ajustes.
+
+**Publicação:** o arquivo da agenda precisa ser publicado no Xano para ativar
+os filtros globais. No contrato remoto antigo, Pendentes funciona e filtros novos
+mostram aviso explícito em vez de apresentar resultados incorretos. Esta alteração
+local não publica o endpoint nem modifica dados reais. Não requer migração de tabelas.
+
+Os cards da seção Consultas reutilizam o SVG perimetral do calendário para
+identificar o estado: vermelho em `agendada`, amarelo em `em_atendimento` e
+verde em `finalizada`. O segmento percorre o perímetro no sentido horário em
+6 segundos, com halo da mesma cor aplicado ao traço por `drop-shadow`.
+Movimento reduzido desacelera para 12 segundos. O LED não intercepta cliques;
+status textual, seleção e ações continuam disponíveis. Canceladas e estados
+não reconhecidos permanecem sem LED. Esta apresentação não altera APIs. O LED da foto em Horários acompanha a cor
+do estado; agenda do dia, calendário e assistente mantêm seus LEDs verdes.
+
+O card Resumo do paciente compartilha o mesmo LED, cor e halo da consulta
+selecionada. O status acompanha os dados confirmados na leitura autorizada e
+usa a mesma proteção de sessão/geração. Durante carregamento, em falha, sem
+seleção ou para consulta cancelada, o resumo fica sem LED. A cor refere-se à
+consulta selecionada, não a outras consultas do mesmo pet.
+
+A paleta contextual também se aplica a ações, contorno de Ver prontuário,
+ícones, nomes, badges, foco, avatar sem foto e fundos suaves dos cards/resumo.
+Agendada usa vermelho, em atendimento usa amarelo e finalizada usa verde;
+no tema claro, destaques amarelos de texto usam ocre para leitura. Botões
+amarelos têm texto escuro. Canceladas, estados desconhecidos e resumo sem
+seleção usam neutro. O fallback do avatar é uma patinha vetorial da mesma
+paleta, ocultada quando a foto carrega; foto real e babyturtle preservam cores.
+Menu, toolbar global e assistente continuam com a identidade existente.
+
+Resumo confirmado e card selecionado usam a mesma mistura de fundo (88% da
+superfície do tema e 12% da cor do estado) e a mesma borda de destaque, evitando
+tons diferentes entre a lista e o painel do paciente.
+
+Os cards de Horários reutilizam os tokens de cor de Consultas: vermelho para
+agendada, amarelo para em atendimento e verde para finalizada. A paleta inclui
+borda lateral, nome, ícones, badge, botões, foco e avatar/fallback. O LED circular
+da foto segue a mesma cor e halo, preservando sentido horário, 5s por volta e
+16s com movimento reduzido. Histórico, início/retomada e consentimento mantêm
+seus fluxos existentes.
+
+A faixa lateral dos cards em atendimento em Horários usa amarelo claro #fde047;
+textos e ícones mantêm o tom de contraste da paleta contextual.
+
+### Paleta e LED do formulário Atendimento
+A página deriva sua classe de `clinical_status` e reutiliza a paleta dos cards:
+amarelo em atendimento, vermelho agendada e verde finalizada. Campos, botões,
+ícones, superfícies e foco seguem o status, com texto neutro e contraste.
+Histórico, calendário e seletores abertos nessa página compartilham os tokens
+contextuais por CSS, preservando a aparência desses painéis fora do atendimento.
+Um SVG decorativo contorna todo o painel de vidro, acompanhando sua altura ao
+adicionar registros. O segmento e o halo circulam no sentido horário em 6s;
+movimento reduzido desacelera para 12s sem interromper o percurso. O SVG não
+intercepta cliques. Wallpaper, mascote, estado clínico e regras de gravação são
+preservados. Sem estado reconhecido, não há LED.
+
+### Perfil do paciente no histórico anterior
+
+O início do histórico compartilhado apresenta foto circular, nome, sexo,
+nascimento, peso informado e contagens reais das cinco categorias publicadas.
+O perfil adapta sua grade ao celular e mantém o tema contextual, mascote,
+rolagem interna, erro/nova tentativa, foco e rascunho existentes.
+
+Após leitura autorizada e auditada do histórico, o estado sanitiza a foto do
+pet. Se o contrato remoto ainda não a fornece, pode reutilizar a foto autorizada
+do mesmo pet já carregada na agenda da sessão. Falha ou resposta antiga não
+restauram retratos anteriores. Sem foto válida ou em erro de imagem, há patinha.
+A fonte Xano `Clinical/assert_access` agora inclui `foto` em sua projeção após
+validar consentimento. Essa atualização precisa ser publicada para a foto estar
+disponível também em acessos diretos sem cache da agenda; não exige migração.

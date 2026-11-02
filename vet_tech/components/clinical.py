@@ -186,7 +186,7 @@ def appointment_card(row):
 
 
 def veterinary_content():
-    from vet_tech.components.veterinary_schedule import schedule_content
+    from vet_tech.components.veterinary_schedule import schedule_content, consultations_content
     return rx.vstack(
         rx.hstack(rx.vstack(rx.heading(State.vet_section, size="7"),
                             rx.text(rx.cond(State.vet_section == "Horários", "Sua agenda do dia", "Próximas consultas e atendimentos pendentes"), color="var(--vt-muted)"),
@@ -195,10 +195,7 @@ def veterinary_content():
                   width="100%", align="center", wrap="wrap"),
         rx.cond(State.clinic_message != "", rx.text(State.clinic_message, role="status")),
         rx.cond(State.vet_section == "Horários", schedule_content(),
-            rx.vstack(
-                rx.cond(State.clinic_loading, rx.hstack(rx.spinner(), rx.text("Carregando consultas…")),
-                    rx.cond((State.upcoming_rows.length() == 0) & (State.clinic_message == ""), rx.text("Nenhum atendimento pendente."))),
-                rx.foreach(State.upcoming_rows, lambda row: appointment_card(row)), align="stretch", width="100%", spacing="4")),
+            consultations_content()),
         rx.hstack(rx.button("Anterior", on_click=State.agenda_page_by(-1), variant="ghost", disabled=(State.agenda_page <= 1) | State.clinic_loading),
                   rx.text("Página ", State.agenda_page, size="2", color="var(--vt-muted)"),
                   rx.button("Próxima", on_click=State.agenda_page_by(1), variant="ghost", disabled=(State.agenda_page * 25 >= State.agenda_total) | State.clinic_loading),
@@ -344,6 +341,32 @@ def attendance_records(group, label, icon, empty):
     )
 
 
+def history_patient_profile(sections):
+    from vet_tech.components.veterinary_schedule import consultation_avatar
+    info = State.prior_pet_info
+    return rx.box(
+        rx.box(consultation_avatar(info.get("foto", ""), "7"), class_name="history-profile-portrait",
+               role="img", aria_label="Foto de " + info.get("nome", "pet")),
+        rx.box(
+            rx.hstack(rx.icon("paw-print", size=14), rx.text("Perfil do pet"), spacing="2", align="center", class_name="history-profile-eyebrow"),
+            rx.heading(info.get("nome", "Pet"), size="6", class_name="history-profile-name"),
+            rx.text("Uma história de cuidado, em cada registro.", class_name="history-profile-description"),
+            class_name="history-profile-identity"),
+        rx.box(*[
+            rx.box(rx.text(State.prior_history.get(group, []).length(), class_name="history-profile-count"),
+                   rx.text(label, class_name="history-profile-stat-label"), class_name="history-profile-stat")
+            for group, label, _ in sections], class_name="history-profile-stats", role="group", aria_label="Registros publicados por categoria"),
+        rx.box(*[
+            rx.box(rx.icon(icon, size=16),
+                   rx.vstack(rx.text(label, class_name="history-profile-fact-label"),
+                             rx.text(info.get(key, "Não informado"), class_name="history-profile-fact-value"),
+                             spacing="1", align="start"), class_name="history-profile-fact")
+            for icon, label, key in (("venus-and-mars", "Sexo", "sexo"), ("calendar-heart", "Nascimento", "nascimento"), ("weight", "Peso informado", "peso"))],
+            class_name="history-profile-facts"),
+        class_name="attendance-history-pet history-profile", role="group", aria_label="Perfil de " + info.get("nome", "pet"),
+    )
+
+
 def attendance_history_dialog(pet_id=None, button_label="Consultar histórico anterior",
                               trigger_id="attendance-history-trigger", button_class="attendance-button attendance-history-button",
                               variant="outline", size="2", back_label="Voltar ao atendimento"):
@@ -371,8 +394,7 @@ def attendance_history_dialog(pet_id=None, button_label="Consultar histórico an
             rx.box(
                 rx.cond(State.prior_history.length() > 0,
                     rx.vstack(
-                        rx.hstack(rx.icon("paw-print", size=22), pet_basic_info(State.prior_pet_info),
-                                  spacing="3", align="center", class_name="attendance-history-pet"),
+                        history_patient_profile(sections),
                         *[rx.box(
                             rx.hstack(rx.icon(icon, size=19), rx.heading(label, size="4"),
                                       rx.badge(State.prior_history.get(group, []).length()),
@@ -434,7 +456,9 @@ def attendance_patient():
 
 
 def attendance_content():
+    from vet_tech.components.veterinary_schedule import consultation_status_led
     return rx.box(rx.el.link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"), rx.vstack(
+        consultation_status_led(State.clinical_status, radius="23", class_name="vet-date-led consultations-status-led attendance-form-led"),
         rx.flex(
             rx.hstack(attendance_icon("stethoscope", True), rx.heading("Atendimento", size="7"), align="center", spacing="3"),
             rx.button(rx.icon("arrow-left", size=17), "Voltar às consultas",
@@ -499,4 +523,4 @@ def attendance_content():
             rx.hstack(rx.alert_dialog.cancel(rx.button("Continuar editando", on_click=State.set_clinical_confirm_leave(False))),
                       rx.alert_dialog.action(rx.button("Descartar e voltar", on_click=State.leave_attendance(True))), wrap="wrap")),
             open=State.clinical_confirm_leave),
-        align="stretch", spacing="5", class_name="attendance-glass"), class_name="attendance-page")
+        align="stretch", spacing="5", class_name="attendance-glass"), class_name="attendance-page attendance-page--" + State.clinical_status)

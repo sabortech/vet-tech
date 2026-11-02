@@ -36,6 +36,7 @@ function "Clinical/assert_access" {
         "data_nasc"
         "peso_atual"
         "raca_id"
+        "foto"
       ]
     } as $authorized_pet
 

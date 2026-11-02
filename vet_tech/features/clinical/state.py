@@ -2,6 +2,7 @@
 import asyncio
 import calendar
 import json
+import unicodedata
 from time import monotonic
 from copy import deepcopy
 from datetime import date, datetime, timedelta
@@ -86,6 +87,25 @@ def pet_summary(row: dict) -> dict[str, str]:
             "peso": str(row["peso_atual"]) if row.get("peso_atual") is not None else "Não informado"}
 
 
+def consultation_summary(pet: dict, history: dict) -> dict[str, str]:
+    """Only explicit named clinical records are presented as allergy records."""
+    result = pet_summary(pet)
+    allergies = []
+    for row in history.get("doencas", []) + history.get("diagnosticos", []):
+        name = str(row.get("nome") or "").strip()
+        normalized = "".join(char for char in unicodedata.normalize("NFD", name.casefold()) if not unicodedata.combining(char))
+        if "alerg" in normalized and not any(negation in normalized for negation in ("nao alerg", "sem alerg")):
+            label = name + (" · " + str(row["estado"]).replace("_", " ") if row.get("estado") else "")
+            if label not in allergies:
+                allergies.append(label)
+    result["alergias"] = "; ".join(allergies) or "Alergias não informadas"
+    vaccines = sorted(history.get("vacinas", []), key=lambda row: str(row.get("data_aplicacao") or ""), reverse=True)
+    consultations = sorted(history.get("consultas", []), key=lambda row: str(row.get("data_atendimento") or row.get("data") or ""), reverse=True)
+    result["ultima_vacina"] = (str(vaccines[0].get("vacina") or "Vacina") + " · " + display_date(vaccines[0].get("data_aplicacao"))) if vaccines else "Não informada"
+    result["ultima_consulta"] = display_date(consultations[0].get("data_atendimento") or consultations[0].get("data")) if consultations else "Não informada"
+    return result
+
+
 def attendance_saved_toast(finalized: bool):
     return rx.toast.success(
         "Consulta finalizada com sucesso!" if finalized else "Rascunho salvo com sucesso!",
@@ -148,6 +168,14 @@ class ClinicalMixin(rx.State, mixin=True):
     agenda_calendar_month: str = ""
     agenda_rows: list[dict[str, str]] = []
     upcoming_rows: list[dict[str, str]] = []
+    consultation_tab: str = "Pendentes"
+    consultation_search: str = ""
+    consultation_status: str = "Todos os estados"
+    consultation_selected: str = ""
+    consultation_info: dict[str, str] = {}
+    consultation_summary_loading: bool = False
+    consultation_summary_error: str = ""
+    _consultation_generation: int = 0
     agenda_page: int = 1
     agenda_total: int = 0
     clinic_message: str = ""
@@ -397,6 +425,10 @@ class ClinicalMixin(rx.State, mixin=True):
         self._booking_sent = {}
         self._booking_uncertain = False
         self._booking_operation = ""
+        self._clear_consultation_summary()
+        self.consultation_tab = "Pendentes"
+        self.consultation_search = ""
+        self.consultation_status = "Todos os estados"
         self.agenda_rows = self.upcoming_rows = []
         self.agenda_calendar_open = False
         self.agenda_calendar_month = ""
@@ -426,6 +458,7 @@ class ClinicalMixin(rx.State, mixin=True):
         else:
             self.clinic_message = str(error)
             if error.status_code in (403, 404):
+                self._clear_consultation_summary()
                 self._clear_clinical_calendar()
                 self._prior_generation += 1
                 self.clinical_agenda_day = ""
@@ -843,6 +876,57 @@ class ClinicalMixin(rx.State, mixin=True):
         async for event in self.load_agenda():
             yield event
 
+    def _clear_consultation_summary(self):
+        self._consultation_generation += 1
+        self.consultation_selected = ""
+        self.consultation_info = {}
+        self.consultation_summary_loading = False
+        self.consultation_summary_error = ""
+
+    @rx.event
+    async def filter_consultations(self, field: str, value: str):
+        if self.profile != "veterinario":
+            return
+        if field == "tab" and value in ("Pendentes", "Hoje", "Próximas", "Concluídas", "Canceladas"):
+            self.consultation_tab = value
+            self.consultation_status = "Todos os estados"
+        elif field == "search":
+            self.consultation_search = value[:100]
+        elif field == "status" and value in ("Todos os estados", "Agendada", "Em atendimento", "Concluída", "Cancelada"):
+            self.consultation_status = value
+        else:
+            return
+        self.agenda_page = 1
+        async for event in self.load_agenda():
+            yield event
+
+    @rx.event
+    async def select_consultation(self, value: str):
+        if self.profile != "veterinario" or self.vet_section != "Consultas":
+            return
+        row = next((row for row in self.upcoming_rows if row["id"] == value and row["autorizado"] == "sim"), None)
+        if not row:
+            return
+        self._clear_consultation_summary()
+        self.consultation_selected = value
+        self.consultation_summary_loading = True
+        generation, session, token = self._consultation_generation, self._session_generation, self._auth_token
+        yield
+        try:
+            data = await xano_request("GET", GROUP, f"veterinario/pets/{int(row['pet_id'])}/historico", auth_token=token)
+            if generation == self._consultation_generation and self._clinical_current(session, token):
+                self.consultation_info = consultation_summary(data["pet"], data["historico"])
+                self.consultation_info.update(foto=agenda_photo(row.get("pet_foto")), motivo=row.get("motivo", ""), pet_id=row["pet_id"], status=row.get("status", ""))
+        except (ValueError, XanoRequestError) as error:
+            if generation == self._consultation_generation and self._clinical_current(session, token):
+                self.consultation_info = {}
+                self.consultation_summary_error = "Não foi possível carregar o resumo. Atualize a lista ou selecione o paciente novamente."
+                if isinstance(error, XanoRequestError):
+                    self._clinic_error(error)
+        finally:
+            if generation == self._consultation_generation and self._clinical_current(session, token):
+                self.consultation_summary_loading = False
+
     @rx.event
     async def load_agenda(self):
         if self.profile != "veterinario":
@@ -851,8 +935,10 @@ class ClinicalMixin(rx.State, mixin=True):
             self.agenda_day = today()
         self._clinic_generation += 1
         generation, session, token = self._clinic_generation, self._session_generation, self._auth_token
+        self._clear_consultation_summary()
         self.clinic_loading = True
         self.clinic_message = ""
+        self.agenda_total = 0
         self.agenda_rows = []
         self.upcoming_rows = []
         self._prior_generation += 1
@@ -864,15 +950,27 @@ class ClinicalMixin(rx.State, mixin=True):
             params = {"page": self.agenda_page}
             if self.vet_section == "Horários":
                 params["dia"] = self.agenda_day or today()
+            else:
+                params.update(aba=self.consultation_tab, busca=self.consultation_search,
+                              estado={"Agendada": "agendada", "Em atendimento": "em_atendimento", "Concluída": "finalizada", "Cancelada": "cancelada"}.get(self.consultation_status, ""))
             data = await xano_request("GET", GROUP, "veterinario/agenda?" + urlencode(params), auth_token=token)
             if generation == self._clinic_generation and self._clinical_current(session, token):
+                if self.vet_section == "Consultas" and (
+                    data.get("contrato_consultas") not in (1, 2) or
+                    ((self.consultation_tab == "Canceladas" or self.consultation_status == "Cancelada") and data.get("contrato_consultas") != 2)
+                ) and (
+                    self.consultation_tab != "Pendentes" or self.consultation_search or self.consultation_status != "Todos os estados"
+                ):
+                    self.agenda_total = 0
+                    self.clinic_message = "Os filtros de consultas precisam da atualização da API Xano. A lista de pendentes continua disponível."
+                    return
                 rows = cards(data["items"])
                 for row in rows:
                     instant = datetime.fromtimestamp(int(row["agendada_para"]) / 1000, TZ)
                     row["hora"] = instant.strftime("%H:%M")
                     row["hora_grupo"] = str(instant.hour)
                     row["pet_foto"] = agenda_photo(row.get("pet_foto")) if row["autorizado"] == "sim" else ""
-                    row["status_label"] = {"agendada": "Agendada", "em_atendimento": "Em atendimento", "finalizada": "Concluída"}.get(row["status"], "Não informado")
+                    row["status_label"] = {"agendada": "Agendada", "em_atendimento": "Em atendimento", "finalizada": "Concluída", "cancelada": "Cancelada"}.get(row["status"], "Não informado")
                     row["top"] = str(max(0, (instant.hour * 60 + instant.minute - 480) * 1.5)) + "px"
                 if self.vet_section == "Horários":
                     self.agenda_rows = rows
@@ -1117,6 +1215,12 @@ class ClinicalMixin(rx.State, mixin=True):
             data = await xano_request("GET", GROUP, f"veterinario/pets/{int(pet_id)}/historico", auth_token=token)
             if generation == self._prior_generation and self._clinical_current(session, token):
                 self.prior_pet_info = pet_summary(data["pet"])
+                photo = agenda_photo(data["pet"].get("foto"))
+                if not photo:
+                    photo = next((agenda_photo(row.get("pet_foto")) for row in self.agenda_rows + self.upcoming_rows
+                                  if str(row.get("pet_id", "")) == str(pet_id) and row.get("autorizado") == "sim"
+                                  and agenda_photo(row.get("pet_foto"))), "")
+                self.prior_pet_info["foto"] = photo
                 self.prior_history = {key: cards(rows) for key, rows in data["historico"].items()}
         except (ValueError, XanoRequestError) as error:
             if generation == self._prior_generation and self._clinical_current(session, token):

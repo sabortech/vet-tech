@@ -143,3 +143,15 @@ A navegação de retorno usa `/?secao=horarios` e `/?secao=consultas`, com inten
 aplicada na entrada da agenda e destinos validados no guard de configurações.
 Os campos profissionais permanecem somente leitura; o backend permite apenas
 nome/telefone e valida a senha atual antes de alterá-la.
+
+### Identidade profissional na sidebar médica
+
+`veterinary_actions` apresenta avatar de iniciais, rótulo Veterinário(a), nome e
+CRMV/UF da própria conta. O estado autenticado mantém somente os metadados
+necessários e os carrega em background pelo endpoint `veterinario/account` já
+existente, uma vez por sessão confirmada. A leitura de Configurações reutiliza
+os valores recebidos para sincronizar o card; o nome continua vindo de
+`identity_name`. Falha, ausência e carregamento são explícitos, com nova tentativa
+local. Token/perfil/identidade/geração protegem a resposta, e logout limpa os
+metadados. Não há consulta de registro externo nem selo de validação profissional.
+A apresentação mantém avatar/saída no menu compacto e card completo no drawer.

@@ -88,6 +88,11 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
+    identity_crmv: str = ""
+    identity_crmv_uf: str = ""
+    identity_professional_loaded: bool = False
+    identity_professional_loading: bool = False
+    identity_professional_error: bool = False
     signup_profile: str = "tutor"
     registration_species: list[dict[str, str]] = []
     registration_specialties: list[dict[str, str]] = []
@@ -150,6 +155,57 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         self.pet_detail_message = ""
         self.is_loading_pet = False
 
+    @rx.var
+    def veterinarian_initials(self) -> str:
+        parts = self.identity_name.split()
+        if parts and parts[0].rstrip(".").casefold() in ("dr", "dra", "drª", "drº"):
+            parts = parts[1:]
+        return (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper() if parts else ""
+
+    @rx.var
+    def veterinarian_registration(self) -> str:
+        if self.identity_professional_loading:
+            return "Carregando registro…"
+        if self.identity_professional_error:
+            return "Registro indisponível"
+        if not self.identity_crmv and not self.identity_crmv_uf:
+            return "CRMV não informado"
+        return f"CRMV {self.identity_crmv or 'não informado'} / {self.identity_crmv_uf or 'UF não informada'}"
+
+    def _professional_identity_context(self):
+        return (self._auth_token, self.profile, self.identity_id, self._session_generation)
+
+    @rx.event(background=True)
+    async def load_professional_identity(self):
+        async with self:
+            if (not self.is_authenticated or self.profile != "veterinario" or not self._auth_token
+                    or self.identity_professional_loaded or self.identity_professional_loading):
+                return
+            context = self._professional_identity_context()
+            self.identity_professional_loading = True
+            self.identity_professional_error = False
+        result, error = None, None
+        try:
+            result = await xano_request("GET", AUTH_API_GROUP, "veterinario/account", auth_token=context[0])
+        except XanoRequestError as caught:
+            error = caught
+        async with self:
+            if context != self._professional_identity_context() or not self.is_authenticated:
+                return
+            self.identity_professional_loading = False
+            if error is not None:
+                if error.session_invalid:
+                    self._expire_session()
+                else:
+                    self.identity_professional_error = True
+                return
+            if not isinstance(result, dict):
+                self.identity_professional_error = True
+                return
+            self.identity_crmv = str(result.get("crmv") or "").strip()
+            self.identity_crmv_uf = str(result.get("crmv_uf") or "").strip().upper()
+            self.identity_professional_loaded = True
+
     def _clear_session(self):
         self._reset_support_chat()
         self._clear_dashboard_session()
@@ -159,6 +215,8 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         self.profile = ""
         self.identity_id = ""
         self.identity_name = ""
+        self.identity_crmv = self.identity_crmv_uf = ""
+        self.identity_professional_loaded = self.identity_professional_loading = self.identity_professional_error = False
         self.active_section = "Início"
         self.sidebar_expanded = True
         self.pet_modal_open = False
