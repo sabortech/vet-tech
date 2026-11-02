@@ -1429,12 +1429,7 @@ html[data-vt-theme="dark"] :is(.attendance-page, .attendance-history-dialog, .at
 .attendance-date-dialog .attendance-date-clear { background: transparent; color: var(--vet-muted); margin-top: 14px; }
 
 /* Physician cards and their clockwise perimeter lights. */
-.vet-schedule-card.vet-schedule-card--em_atendimento { border-color: #bfd5b5; border-left-color: #689554; background: var(--vt-surface); background: linear-gradient(120deg, color-mix(in srgb, var(--vt-green) 10%, var(--vt-surface)), var(--vt-surface) 70%); box-shadow: 0 4px 16px rgb(71 123 59 / 12%); }
-.vet-schedule-card.vet-schedule-card--finalizada { border-left-color: #3d803d; }
 .vet-schedule-card .vet-schedule-status { display: inline-flex; align-items: center; gap: 5px; background: #e7efe2; color: #356438; border: 1px solid #c7dbbd; }
-.vet-schedule-card.vet-schedule-card--em_atendimento .vet-schedule-status { background: #477b3b; color: white; border-color: #477b3b; }
-.vet-schedule-card.vet-schedule-card--finalizada .vet-schedule-status { background: #e4f3de; color: #2e6533; border-color: #b7d8aa; }
-.vet-schedule-card .vet-schedule-pet-name { color: var(--vt-green); }
 .vet-schedule-avatar-frame { position: relative; width: 52px; height: 52px; padding: 4px; border: 1px solid #c6dcbc; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--vt-icon-bg); }
 .vet-schedule-avatar-frame .rt-AvatarRoot { width: 42px; height: 42px; border-radius: 50%; color: #477b3b; }
 .vet-schedule-avatar-frame .rt-AvatarImage { object-fit: cover; }
@@ -1462,4 +1457,191 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 /* Global command shape, including portals and inline-styled buttons. */
 :is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
   border-radius: var(--vt-radius-pill, 999px) !important;
+}
+
+/* Consultas: lista e resumo do paciente. Usa os tokens do tema existente. */
+.consultations-page { width:100%; min-width:0; color:var(--vt-text); }
+.consultations-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:14px; border:1px solid var(--vt-border); background:var(--vt-surface); border-radius:18px; box-shadow:0 3px 12px #182a1808; margin-bottom:22px; }
+.consultations-tabs { display:flex; gap:4px; flex:1; flex-wrap:wrap; }
+.consultations-tab { background:transparent; color:var(--vt-text); padding:10px 16px; border:0; cursor:pointer; font-weight:750; font-family:inherit; white-space:nowrap; }
+.consultations-tab.is-active { background:#5d804c; color:white; box-shadow:0 3px 8px #42672b20; }
+.consultations-search { width:240px; flex-grow:1; max-width:340px; }
+.consultations-filter { min-width:165px; }
+.consultations-columns { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:start; }
+.consultations-list { min-width:0; }
+.consultations-card { display:grid; grid-template-columns:minmax(180px,1fr) minmax(150px,.75fr) 170px; gap:16px; align-items:center; border:1px solid var(--vt-border); background:var(--vt-surface); border-radius:17px; padding:18px; margin-bottom:12px; box-shadow:0 2px 4px #1429130c; transition:background .16s,border-color .16s; }
+.consultations-card.is-selected, .consultations-summary:is(.consultations-summary--agendada, .consultations-summary--em_atendimento, .consultations-summary--finalizada) { background:color-mix(in srgb, var(--vt-surface) 88%, var(--consultation-tint)); border-color:var(--consultation-accent); }
+.consultations-patient-button { display:flex; gap:14px; align-items:center; min-width:0; text-align:left; background:none; color:inherit; border:0; padding:0; font-family:inherit; cursor:pointer; border-radius:10px!important; }
+.consultations-patient-button:disabled { cursor:default; }
+.consultations-patient-button .rt-AvatarRoot { flex-shrink:0; }
+.consultations-pet-name { font-size:20px; font-weight:800; line-height:1.3; overflow-wrap:anywhere; }
+.consultations-muted { color:var(--vt-muted); font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.consultations-card-details { display:flex; flex-direction:column; gap:12px; font-size:13px; }
+.consultations-status { align-self:flex-start; background:color-mix(in srgb, var(--vt-surface) 80%, var(--consultation-tint)); color:var(--consultation-accent); font-weight:700; padding:3px 11px; border-radius:99px; }
+.consultations-start { background:var(--consultation-action)!important; color:var(--consultation-on-action)!important; font-weight:700; }
+.consultations-history { border-color:var(--consultation-accent)!important; color:var(--consultation-accent)!important; box-shadow:inset 0 0 0 1px var(--consultation-accent)!important; width:100%; }
+.consultations-summary { background:var(--vt-surface); border:1px solid var(--vt-border); border-radius:17px; padding:20px; box-shadow:0 2px 4px #1429130c; min-width:0; }
+.consultations-summary-title { padding-bottom:16px; border-bottom:1px solid var(--vt-border); }
+.consultations-facts { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:20px; }
+.consultations-fact { padding:12px; background:color-mix(in srgb, var(--vt-surface) 90%, var(--consultation-tint)); border-radius:12px; font-size:12px; min-width:0; }
+.consultations-fact-value { margin-top:6px; line-height:1.5; overflow-wrap:anywhere; }
+.consultations-source { font-size:11px; color:var(--vt-muted); margin-top:10px; line-height:1.5; }
+.consultations-summary-footer { display:flex; align-items:center; gap:12px; border-top:1px solid var(--vt-border); margin-top:24px; padding-top:18px; }
+.consultations-baby-turtle { width:78px; height:90px; object-fit:contain; flex-shrink:0; }
+.consultations-summary-empty, .consultations-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:30px 12px; }
+.consultations-empty { background:var(--vt-surface); border:1px dashed var(--vt-border); border-radius:17px; }
+.consultations-page button:focus-visible { outline:3px solid #87a873; outline-offset:4px; }
+@media(max-width:1250px) { .consultations-columns { grid-template-columns:minmax(0,1fr) 270px; gap:14px; } .consultations-card { grid-template-columns:minmax(0,1fr) 160px; gap:12px; } .consultations-card-details { grid-column:1; padding-left:0; } .consultations-card-actions { grid-column:2; grid-row:1 / span 2; } }
+@media(max-width:950px) { .consultations-columns { grid-template-columns:1fr; } .consultations-summary { width:100%; } .consultations-facts { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:540px) { .consultations-toolbar { padding:10px; gap:10px; } .consultations-tabs { width:100%; flex-basis:100%; gap:2px; } .consultations-tab { font-size:12px; padding:9px 11px; flex:1; } .consultations-search { width:100%; max-width:none; } .consultations-filter { width:100%; } .consultations-card { grid-template-columns:1fr; padding:16px; } .consultations-card-actions { grid-column:1; grid-row:auto; } .consultations-card-details { grid-column:1; } .consultations-facts { grid-template-columns:1fr 1fr; } }
+.consultations-card-actions .rt-Button { height:auto; min-height:36px; padding:8px 12px; font-size:13px; line-height:1.35; white-space:normal; text-align:center; }
+.consultations-baby-turtle { width:96px; height:108px; }
+/* Controles de consulta com contorno único e cantos pill. */
+.consultations-toolbar .consultations-search { border-radius:999px!important; min-height:40px; }
+.consultations-toolbar .consultations-search input { border-radius:999px; }
+.consultations-filter-control { min-height:40px; padding:0 10px 0 14px; border:1px solid var(--vt-border); border-radius:999px; background:var(--vt-surface); gap:6px; }
+.consultations-filter-icon { color:var(--vt-muted); flex-shrink:0; pointer-events:none; }
+.consultations-filter-control .consultations-filter { min-width:0; border:0; box-shadow:none; background:transparent; border-radius:999px; }
+@media(max-width:540px) { .consultations-filter-control { width:100%; } .consultations-filter-control .consultations-filter { flex:1; } .consultations-tab { flex:0 0 auto; } }
+
+/* O halo acompanha o segmento SVG, com cor derivada do estado da consulta. */
+.consultations-card, .consultations-summary { position:relative; overflow:visible; }
+.consultations-card--agendada, .consultations-summary--agendada, .vet-schedule-card--agendada, .attendance-page--agendada, html:has(.attendance-page--agendada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu) { --consultation-led-color:#ff5252; }
+.consultations-card--em_atendimento, .consultations-summary--em_atendimento, .vet-schedule-card--em_atendimento, .attendance-page--em_atendimento, html:has(.attendance-page--em_atendimento) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu) { --consultation-led-color:#facc15; }
+.consultations-card--finalizada, .consultations-summary--finalizada, .vet-schedule-card--finalizada, .attendance-page--finalizada, html:has(.attendance-page--finalizada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu) { --consultation-led-color:#79ed4d; }
+.consultations-status-led .vet-date-led-track {
+  stroke:var(--consultation-led-color); stroke-width:2; stroke-dasharray:10 90;
+  filter:drop-shadow(0 0 2px var(--consultation-led-color)) drop-shadow(0 0 6px color-mix(in srgb, var(--consultation-led-color) 65%, transparent)) drop-shadow(0 0 10px color-mix(in srgb, var(--consultation-led-color) 35%, transparent));
+}
+
+/* A mesma paleta contextual acompanha LED, ações e detalhes do paciente. */
+:is(.consultations-card, .consultations-summary, .vet-schedule-card) {
+  --consultation-accent:#475569; --consultation-action:#475569; --consultation-on-action:#fff;
+  --consultation-tint:var(--consultation-led-color, #64748b);
+  border-color:color-mix(in srgb, var(--consultation-accent) 45%, var(--vt-border));
+  background:color-mix(in srgb, var(--vt-surface) 97%, var(--consultation-tint));
+}
+:is(.consultations-card--agendada, .consultations-summary--agendada, .vet-schedule-card--agendada, .attendance-page--agendada, html:has(.attendance-page--agendada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#b42318; --consultation-action:#b42318; }
+:is(.consultations-card--em_atendimento, .consultations-summary--em_atendimento, .vet-schedule-card--em_atendimento, .attendance-page--em_atendimento, html:has(.attendance-page--em_atendimento) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#805000; --consultation-action:#facc15; --consultation-on-action:#302500; }
+:is(.consultations-card--finalizada, .consultations-summary--finalizada, .vet-schedule-card--finalizada, .attendance-page--finalizada, html:has(.attendance-page--finalizada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#276426; --consultation-action:#2f7133; }
+:root[data-vt-theme="dark"] :is(.consultations-card, .consultations-summary, .vet-schedule-card) { --consultation-accent:#cbd5e1; }
+:root[data-vt-theme="dark"] :is(.consultations-card--agendada, .consultations-summary--agendada, .vet-schedule-card--agendada, .attendance-page--agendada, html:has(.attendance-page--agendada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#ff8a80; }
+:root[data-vt-theme="dark"] :is(.consultations-card--em_atendimento, .consultations-summary--em_atendimento, .vet-schedule-card--em_atendimento, .attendance-page--em_atendimento, html:has(.attendance-page--em_atendimento) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#facc15; }
+:root[data-vt-theme="dark"] :is(.consultations-card--finalizada, .consultations-summary--finalizada, .vet-schedule-card--finalizada, .attendance-page--finalizada, html:has(.attendance-page--finalizada) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --consultation-accent:#9ced75; }
+:is(.consultations-card, .consultations-summary, .vet-schedule-card) :is(.consultations-pet-name, .consultations-summary-title, .consultations-fact > .rt-Flex) { color:var(--consultation-accent); }
+:is(.consultations-card, .consultations-summary, .vet-schedule-card) svg:not(.vet-date-led) { color:var(--consultation-accent); }
+.consultations-summary-title, .consultations-summary-footer { border-color:color-mix(in srgb, var(--consultation-accent) 35%, var(--vt-border)); }
+:is(.consultations-card, .consultations-summary, .vet-schedule-card) :is(.rt-AvatarRoot, .rt-AvatarFallback) { background:color-mix(in srgb, var(--vt-surface) 85%, var(--consultation-tint)); color:var(--consultation-accent); }
+.consultations-history:hover { background:color-mix(in srgb, var(--vt-surface) 86%, var(--consultation-tint)); }
+:is(.consultations-card, .consultations-summary, .vet-schedule-card) button:focus-visible { outline:3px solid var(--consultation-accent); outline-offset:4px; box-shadow:0 0 0 2px var(--consultation-accent)!important; }
+.consultations-avatar { position:relative; display:inline-flex; flex-shrink:0; }
+.consultations-avatar-paw { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); pointer-events:none; }
+.consultations-avatar:has(img) .consultations-avatar-paw { display:none; }
+
+/* Horários usa os mesmos tokens de situação de Consultas. */
+.vet-schedule-card { border-left-color:var(--consultation-accent); }
+.vet-schedule-card.vet-schedule-card--em_atendimento { border-left-color:#fde047; }
+.vet-schedule-card .vet-schedule-pet-name { color:var(--consultation-accent); }
+.vet-schedule-card .vet-schedule-status { background:color-mix(in srgb, var(--vt-surface) 80%, var(--consultation-tint)); color:var(--consultation-accent); border-color:var(--consultation-accent); }
+.vet-schedule-card .vet-schedule-avatar-frame { border-color:var(--consultation-accent); background:color-mix(in srgb, var(--vt-surface) 85%, var(--consultation-tint)); }
+.vet-schedule-card .vet-schedule-avatar-fallback { background:transparent; color:var(--consultation-accent); }
+.vet-schedule-card .vet-schedule-start-button { background:var(--consultation-action); color:var(--consultation-on-action); box-shadow:none; }
+.vet-schedule-card .vet-schedule-history-button { background:color-mix(in srgb, var(--vt-surface) 90%, var(--consultation-tint)); color:var(--consultation-accent); box-shadow:inset 0 0 0 1px var(--consultation-accent); }
+.vet-schedule-card button:hover { filter:brightness(.96); }
+.vet-schedule-card .vet-schedule-avatar-led .vet-date-led-track {
+  stroke:var(--consultation-led-color, var(--consultation-accent));
+  filter:drop-shadow(0 0 2px var(--consultation-led-color, var(--consultation-accent))) drop-shadow(0 0 6px color-mix(in srgb, var(--consultation-led-color, var(--consultation-accent)) 65%, transparent)) drop-shadow(0 0 10px color-mix(in srgb, var(--consultation-led-color, var(--consultation-accent)) 35%, transparent));
+}
+
+:root { --attendance-base-surface:var(--vt-surface); --attendance-base-text:var(--vt-text); --attendance-base-border:var(--vt-border); }
+/* Atendimento herda a paleta do status, inclusive em painéis renderizados em portal. */
+:where(.attendance-page, html:has(.attendance-page) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) {
+  --consultation-accent:#475569; --consultation-action:#475569; --consultation-on-action:#fff;
+}
+html[data-vt-theme] :is(.attendance-page, html:has(.attendance-page) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) {
+  --vt-led-color:var(--consultation-led-color, #64748b);
+  --vt-led-glow:drop-shadow(0 0 2px var(--vt-led-color)) drop-shadow(0 0 6px color-mix(in srgb, var(--vt-led-color) 65%, transparent));
+  --vet-primary:var(--consultation-accent); --vet-hover:color-mix(in srgb, var(--consultation-accent) 90%, black);
+  --vet-text:var(--attendance-base-text); --vet-primary-text:#fff;
+  --vet-soft:color-mix(in srgb, var(--attendance-base-surface) 88%, var(--consultation-led-color, #64748b));
+  --vet-icon:color-mix(in srgb, var(--attendance-base-surface) 80%, var(--consultation-led-color, #64748b));
+  --vet-border:color-mix(in srgb, var(--attendance-base-border) 55%, var(--consultation-accent));
+  --vet-surface:var(--attendance-base-surface); --vet-control:var(--attendance-base-surface);
+  --vet-panel:color-mix(in srgb, var(--attendance-base-surface) 95%, var(--consultation-led-color, #64748b));
+  --vet-chip:color-mix(in srgb, var(--attendance-base-surface) 94%, var(--consultation-led-color, #64748b));
+  --vet-glass:var(--vet-soft); --vet-glass-blur:color-mix(in srgb, var(--vet-soft) 88%, transparent);
+  --vet-glass-border:var(--vet-border);
+  --vet-header-start:var(--vet-soft); --vet-header-end:var(--vet-icon);
+}
+html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(.attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu)) { --vet-primary-text:#142218; }
+.attendance-page .attendance-glass { position:relative; overflow:visible; }
+.attendance-page :is(.attendance-header .rt-Heading, .attendance-section-title, .attendance-patient .rt-Heading, label) { color:var(--consultation-accent); }
+.attendance-page svg:not(.vet-date-led) { color:var(--consultation-accent); }
+.attendance-page .attendance-button.rt-variant-solid { background:var(--consultation-action); color:var(--consultation-on-action); }
+.attendance-page .attendance-button.rt-variant-solid svg { color:inherit; }
+.attendance-page .attendance-button.rt-variant-solid:hover:not(:disabled) { background:color-mix(in srgb, var(--consultation-action) 92%, black); }
+.attendance-page .attendance-button.rt-variant-outline { color:var(--consultation-accent); box-shadow:inset 0 0 0 1px var(--consultation-accent); }
+.attendance-page :is(.rt-TextFieldRoot,.rt-TextAreaRoot):focus-within { border-color:var(--consultation-accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--consultation-accent) 25%, transparent); }
+.attendance-page button:focus-visible { outline-color:var(--consultation-accent); }
+@media (prefers-reduced-motion:reduce) {
+  .attendance-page .attendance-form-led .vet-date-led-track { animation:vet-date-border-orbit 12s linear infinite!important; }
+}
+
+/* Identidade profissional compartilhada nas páginas médicas. */
+.vet-schedule-identity { position:relative; overflow:hidden; padding:18px 14px 14px; border:1px solid color-mix(in srgb, var(--vt-green) 24%, var(--vt-border)); border-radius:20px; background:linear-gradient(145deg, var(--vt-surface) 45%, color-mix(in srgb, var(--vt-surface) 88%, var(--vt-green))); color:var(--vt-text); box-shadow:0 8px 24px #18351e16; }
+.vet-profile-watermark { position:absolute; right:14px; bottom:44px; transform:rotate(-18deg); color:var(--vt-green); opacity:.06; pointer-events:none; }
+.vet-profile-header { position:relative; min-width:0; }
+.vet-profile-avatar { position:relative; display:flex; align-items:center; justify-content:center; width:46px; height:46px; flex-shrink:0; border-radius:16px; background:var(--vt-green); color:var(--vt-primary-text); font-size:18px; font-weight:800; letter-spacing:.03em; box-shadow:0 4px 12px #17391f20; }
+.vet-profile-avatar-detail { position:absolute; right:-5px; bottom:-4px; display:flex; align-items:center; justify-content:center; width:22px; height:22px; border:2px solid var(--vt-surface); border-radius:50%; background:var(--vt-icon-bg); color:var(--vt-green); }
+.vet-profile-details { min-width:0; flex:1; }
+.vet-profile-eyebrow { color:var(--vt-muted); font-size:9px; font-weight:800; letter-spacing:.12em; }
+.vet-profile-name { color:var(--vt-text); font-size:15px; line-height:1.35; font-weight:800; overflow-wrap:anywhere; white-space:normal; }
+.vet-profile-registration { position:relative; width:100%; min-width:0; padding:11px 10px; border:1px solid color-mix(in srgb, var(--vt-green) 16%, var(--vt-border)); border-radius:12px; background:color-mix(in srgb, var(--vt-surface) 94%, var(--vt-green)); white-space:normal; }
+.vet-profile-registration svg { color:var(--vt-green); flex-shrink:0; }
+.vet-profile-registration-label { color:var(--vt-muted); font-size:10px; line-height:1.3; }
+.vet-profile-registration-value { color:var(--vt-text); font-size:12px; font-weight:800; line-height:1.4; overflow-wrap:anywhere; }
+.vet-profile-retry { background:transparent; color:var(--vt-green); border:0; padding:5px 0 0; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+.vet-schedule-identity .vet-schedule-logout { position:relative; border:0; min-height:38px; background:var(--vt-icon-bg); color:var(--vt-text); font-size:13px; font-weight:700; }
+.vet-schedule-identity .vet-schedule-logout:hover { background:color-mix(in srgb, var(--vt-icon-bg) 82%, var(--vt-green)); color:var(--vt-text); }
+.vet-schedule-identity button:focus-visible { outline:3px solid var(--vt-focus); outline-offset:2px; }
+.sidebar--collapsed .vet-schedule-identity { overflow:visible; border:0; box-shadow:none; background:transparent; padding:8px 0; align-items:center; }
+.sidebar--collapsed .vet-profile-header { justify-content:center; }
+.sidebar--collapsed :is(.vet-profile-details, .vet-profile-registration, .vet-profile-watermark) { display:none; }
+.sidebar--collapsed .vet-profile-avatar { width:40px; height:40px; border-radius:14px; font-size:16px; background:var(--vt-sidebar-hover); color:var(--vt-sidebar-brand); }
+.sidebar--collapsed .vet-schedule-identity .vet-schedule-logout { background:var(--vt-sidebar-hover); color:var(--vt-sidebar-brand); width:40px; min-height:40px; padding:0; }
+
+/* Perfil do paciente no topo do histórico compartilhado. */
+.attendance-history-pet.history-profile { display:grid; grid-template-columns:128px minmax(0,1fr); gap:20px 26px; padding:26px; background:var(--vet-surface); border:1px solid var(--vet-border); border-radius:22px; }
+.history-profile-portrait { grid-row:1 / span 3; align-self:center; justify-self:center; padding:6px; border:2px solid var(--vet-primary); border-radius:50%; background:var(--vet-panel); box-shadow:0 0 0 5px var(--vet-soft); }
+.history-profile-portrait .rt-AvatarRoot { width:104px; height:104px; border-radius:50%; background:var(--vet-icon); color:var(--vet-primary); }
+.history-profile-portrait .consultations-avatar-paw { width:36px; height:36px; color:var(--vet-primary); }
+.history-profile-identity { min-width:0; }
+.history-profile-eyebrow { color:var(--vet-primary); font-size:9px; font-weight:800; letter-spacing:.12em; }
+.history-profile-name { color:var(--vet-text); font-size:28px; font-weight:800; line-height:1.25; overflow-wrap:anywhere; margin:6px 0; }
+.history-profile-description { color:var(--vet-muted); font-size:12px; line-height:1.5; }
+.history-profile-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; padding:14px 0; border-top:1px solid var(--vet-border); border-bottom:1px solid var(--vet-border); }
+.history-profile-stat { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; }
+.history-profile-count { font-size:23px; font-weight:800; line-height:1.2; color:var(--vet-primary); }
+.history-profile-stat-label { color:var(--vet-muted); font-size:11px; line-height:1.35; overflow-wrap:anywhere; text-align:center; }
+.history-profile-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.history-profile-fact { display:flex; gap:8px; align-items:center; min-width:0; }
+.history-profile-fact > svg { color:var(--vet-primary); flex-shrink:0; }
+.history-profile-fact-label { color:var(--vet-muted); font-size:10px; line-height:1.3; }
+.history-profile-fact-value { color:var(--vet-text); font-size:13px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
+@media(max-width:640px) {
+  .attendance-history-pet.history-profile { grid-template-columns:1fr; gap:20px; padding:24px 16px; }
+  .history-profile-portrait { grid-row:auto; }
+  .history-profile-portrait .rt-AvatarRoot { width:94px; height:94px; }
+  .history-profile-identity { text-align:center; }
+  .history-profile-eyebrow { justify-content:center; }
+  .history-profile-name { font-size:25px; }
+  .history-profile-stats { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 8px; }
+  .history-profile-facts { grid-template-columns:1fr; gap:12px; }
+  .history-profile-fact { padding:10px 12px; border-radius:12px; background:var(--vet-panel); }
+}
+.attendance-history-dialog .rt-Button.rt-variant-outline { color:var(--vet-primary); border-color:var(--vet-primary); box-shadow:inset 0 0 0 1px var(--vet-primary); }
+.attendance-history-dialog button:focus-visible { outline-color:var(--vet-primary); }
+@media(max-width:560px) {
+  .attendance-history-dialog .attendance-history-turtle { right:12px; width:60px; height:44px; }
+  .attendance-history-dialog .attendance-history-turtle img { width:100px; height:100px; left:-20px; top:-35px; }
 }

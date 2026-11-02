@@ -8,8 +8,11 @@ from vet_tech.features.auth.state import State
 from vet_tech.pages.profile import veterinarian_area
 from vet_tech.components.sidebar import layout_com_menu
 import vet_tech.features.clinical.state as clinical
+import vet_tech.features.auth.state as auth_module
 
 async def fake_request(method, group, path, **kwargs):
+    if path == 'veterinario/account':
+        return {'crmv':'12345','crmv_uf':'SP'}
     if '/historico' in path:
         return {'pet': {'nome': 'Pet sintético'}, 'historico': {'consultas': []}}
     day = path.split('dia=')[-1].split('&')[0] if 'dia=' in path else '2030-01-11'
@@ -20,9 +23,9 @@ async def fake_request(method, group, path, **kwargs):
         raise XanoRequestError('Falha simulada ao carregar agenda.', status_code=500)
     if 'page=2' in path:
         return {'items': [], 'total': 26}
-    photo = 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop'
+    photo = os.environ.get('VET_TECH_PREVIEW_PHOTO') or 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&h=100&fit=crop'
     return {'items': [dict(id=i,pet_id=5,pet_nome=name,motivo=reason,status=status,autorizado=allowed,
-                          pet_foto=photo if i==1 else 'https://example.invalid/missing.jpg' if i==2 else '',
+                          pet_foto=photo if i==1 else (os.environ.get('VET_TECH_PREVIEW_MISSING_PHOTO') or 'https://example.invalid/missing.jpg') if i==2 else '',
                           agendada_para=int(datetime.fromisoformat(day+'T'+time+':00-03:00').timestamp()*1000))
         for i, (name,time,reason,status,allowed) in enumerate([
             ('Max', '08:30', 'Consulta de rotina', 'agendada', True),
@@ -33,6 +36,7 @@ async def fake_request(method, group, path, **kwargs):
             ('Nome longo para verificar o comportamento responsivo do cartão', '19:30', 'Acompanhamento de rotina com informações adicionais do agendamento', 'agendada', True),
         ],1)], 'total': 26}
 clinical.xano_request = fake_request
+auth_module.xano_request = fake_request
 class Preview(rx.State):
     @rx.event
     async def setup(self):

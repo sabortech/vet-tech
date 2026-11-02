@@ -39,8 +39,8 @@ with sync_playwright() as p:
     expect(revoked.locator('img')).to_have_count(0)
     expect(revoked.get_by_role('button')).to_have_count(0)
     active = page.locator('[data-appointment-id="44"]')
-    assert active.evaluate('(e)=>getComputedStyle(e).borderLeftColor') == 'rgb(104, 149, 84)'
-    assert active.locator('.vet-schedule-status').evaluate('(e)=>getComputedStyle(e).backgroundColor') == 'rgb(71, 123, 59)'
+    assert active.evaluate('(e)=>getComputedStyle(e).borderLeftColor') == 'rgb(253, 224, 71)'
+    assert active.locator('.vet-schedule-status').evaluate('(e)=>getComputedStyle(e).color') == 'rgb(128, 80, 0)'
     tracks = page.locator('.vet-schedule-timeline-led .vet-date-led-track, .vet-schedule-avatar-led .vet-date-led-track')
     expect(tracks).to_have_count(4)
     for track in tracks.all():
@@ -51,12 +51,11 @@ with sync_playwright() as p:
         assert start != end, (start, end)
         assert track.evaluate('(e)=>getComputedStyle(e.parentElement).pointerEvents') == 'none'
     page.screenshot(path=str(args.output/'completed-desktop.png'), animations='disabled')
-    # Verify the list uses the same green cards and excludes confirmed completions.
+    # Verify the list uses the consultation cards and excludes confirmed completions.
     page.goto(args.url+'/?secao=consultas')
     expect(page.get_by_role('heading', name='Consultas', exact=True)).to_be_visible()
-    expect(page.locator('[data-appointment-id="44"]')).to_be_visible()
-    expect(page.locator('[data-appointment-id="43"]')).to_have_count(0)
-    expect(page.locator('.vet-schedule-avatar-led')).to_have_count(2)
+    expect(page.locator('[data-consultation-id="44"]')).to_be_visible()
+    expect(page.locator('[data-consultation-id="43"]')).to_have_count(0)
     page.screenshot(path=str(args.output/'consultations-desktop.png'), animations='disabled')
     page.goto(args.url+'/?secao=horarios')
     expect(page.locator('[data-appointment-id="43"]')).to_be_visible()
@@ -69,5 +68,5 @@ with sync_playwright() as p:
         assert track.evaluate('(e)=>getComputedStyle(e).animationDuration') == '16s'
     assert not errors, errors
     browser.close()
-(args.output/'results.md').write_text('Prévia isolada com HTTP sintético: toast inferior esquerdo após rascunho; finalização redireciona para Horários no dia agendado (03/11) distinto do atendimento (02/11); recarga mostra Concluída sem Retomar/Começar; concluída ausente das pendências; cards verdes nas duas seções; foto, fallback e consentimento revogado; LED SVG em movimento na agenda e nas molduras, sem interceptar cliques; movimento reduzido desacelera; desktop 1440px e mobile 390px sem overflow. Nenhuma exceção JavaScript. Backend remoto não exercitado.\n')
-print('PASS: notificações, finalização, agenda atualizada, cards verdes e LEDs')
+(args.output/'results.md').write_text('Prévia isolada com HTTP sintético: toast inferior esquerdo após rascunho; finalização redireciona para Horários no dia agendado (03/11) distinto do atendimento (02/11); recarga mostra Concluída sem Retomar/Começar; concluída ausente das pendências; cards por status nas duas seções; foto, fallback e consentimento revogado; LED SVG em movimento na agenda e nas molduras, sem interceptar cliques; movimento reduzido desacelera; desktop 1440px e mobile 390px sem overflow. Nenhuma exceção JavaScript. Backend remoto não exercitado.\n')
+print('PASS: notificações, finalização, agenda atualizada, cards por status e LEDs')

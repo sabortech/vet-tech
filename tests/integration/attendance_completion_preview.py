@@ -56,7 +56,7 @@ class Preview(rx.State):
         state.clinical_pet_id = '1'
         state.clinical_pet_name = 'Jessy'
         state.clinical_pet_info = {'nome':'Jessy', 'sexo':'Feminino', 'nascimento':'31/01/2026', 'peso':'10'}
-        state.clinical_status = 'em_atendimento'
+        state.clinical_status = state.router.url.query_parameters.get('status', 'em_atendimento')
         state.clinical_version = 1
         state.clinical_agenda_day = '2026-11-03'
         state.clinical_date = '2026-11-02'

@@ -15,7 +15,8 @@ results = []
 
 
 def rgb(value):
-    return [int(v)/255 for v in re.findall(r'[\d.]+', value)[:3]]
+    channels = [float(v) for v in re.findall(r'[\d.]+', value)[:3]]
+    return channels if value.startswith('color(srgb ') else [v/255 for v in channels]
 
 
 def contrast(foreground, background):
@@ -37,7 +38,8 @@ with sync_playwright() as p:
         page.goto(args.url+'/atendimento/43')
         page.get_by_role('heading', name='Jessy', exact=True).wait_for()
         expect(page.locator('html')).to_have_attribute('data-vt-theme', initial)
-        expected = {'light':'rgb(26, 54, 41)', 'dark':'rgb(238, 243, 239)'}
+        expected = {'light':'rgb(24, 43, 33)', 'dark':'rgb(238, 243, 239)'}
+        toast_expected = {'light':'rgb(26, 54, 41)', 'dark':'rgb(238, 243, 239)'}
         def switch(theme):
             page.evaluate("""theme=>{localStorage.setItem('vet_tech_theme',theme);window.dispatchEvent(new StorageEvent('storage',{key:'vet_tech_theme',newValue:theme}))}""", theme)
             expect(page.locator('html')).to_have_attribute('data-vt-theme', theme)
@@ -88,10 +90,10 @@ with sync_playwright() as p:
         page.get_by_role('button', name='Salvar rascunho', exact=True).click()
         toast = page.locator('.attendance-saved-toast')
         expect(toast).to_be_visible()
-        expect(toast).to_have_css('color', expected[initial])
+        expect(toast).to_have_css('color', toast_expected[initial])
         readable(toast, 'toast')
         switch(other)
-        expect(toast).to_have_css('color', expected[other])
+        expect(toast).to_have_css('color', toast_expected[other])
         switch(initial)
         page.screenshot(path=str(args.output/f'{initial}-toast.png'), animations='disabled')
         page.locator('#clinic-obs').fill('Alteração local')

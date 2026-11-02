@@ -45,7 +45,7 @@ with sync_playwright() as p:
     expect(dialog).to_be_hidden()
     expect(second).to_be_focused()
     page.goto(args.url+'/?secao=consultas')
-    page.locator('[data-appointment-id="44"]').get_by_role('button',name='Histórico',exact=True).click()
+    page.locator('[data-consultation-id="44"]').get_by_role('button',name='Ver prontuário',exact=True).click()
     expect(dialog.get_by_text('Avaliação anterior de Nina',exact=True)).to_be_visible()
     dialog.get_by_role('button',name='Voltar às consultas',exact=True).click()
     def rounded():
