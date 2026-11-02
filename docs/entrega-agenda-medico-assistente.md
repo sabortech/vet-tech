@@ -30,7 +30,8 @@ O contrato de foto de `veterinario/agenda` foi publicado no workspace 167758 em
 CLI autenticado `vettech`. As respostas preservam a foto em data URI base64 ou
 `null`. O resumo, atendimento e histórico usam a foto atual; patinha indica foto
 nula/vazia, enquanto erro de imagem existente tem indicador próprio. A releitura
-do workspace confirmou as duas alterações. Essa publicação pontual não inclui
-os filtros ampliados de Consultas existentes somente na fonte local.
+do workspace confirmou as duas alterações. Os filtros ampliados foram
+publicados posteriormente pela change `filtrar-agrupar-consultas-por-dia`,
+com contrato 3 e Próximas incluindo hoje e os quatro dias seguintes.
 
 As permissões clínicas continuam no backend; dados do pet são retornados apenas com consentimento ativo. Não há migração de tabelas ou nova integração de IA nesta entrega.

@@ -1650,3 +1650,9 @@ html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(
 .attendance-patient-portrait { flex-shrink:0; border-radius:50%; overflow:hidden; border:2px solid var(--consultation-accent, var(--vet-primary)); }
 .attendance-patient-portrait .rt-AvatarImage { object-fit:cover; }
 .attendance-patient-portrait .consultations-avatar-paw { color:var(--consultation-accent, var(--vet-primary)); }
+
+/* Divisórias da lista usam datas locais e os mesmos tokens nos dois temas. */
+.consultations-day-group { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.consultations-day-group + .consultations-day-group { margin-top:20px; }
+.consultations-day-divider { display:flex; align-items:center; gap:12px; margin:4px 0 8px; color:var(--vet-text, var(--vt-text)); overflow-wrap:anywhere; }
+.consultations-day-divider::before, .consultations-day-divider::after { content:""; height:1px; flex:1; background:var(--vet-border, var(--vt-border)); }

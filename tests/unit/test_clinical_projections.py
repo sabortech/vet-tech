@@ -5,14 +5,14 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-RUNNER = "let s='';process.stdin.setEncoding('utf8');process.stdin.on('data',x=>s+=x);process.stdin.on('end',()=>{const d=JSON.parse(s);process.stdout.write(JSON.stringify(new Function('$input','$var',d.code)(d.input,d.vars)));});"
+RUNNER = "let s='';process.stdin.setEncoding('utf8');process.stdin.on('data',x=>s+=x);process.stdin.on('end',()=>{const d=JSON.parse(s);if(d.now!==undefined)Date.now=()=>d.now;process.stdout.write(JSON.stringify(new Function('$input','$var',d.code)(d.input,d.vars)));});"
 
 
-def execute(path, inputs, variables):
+def execute(path, inputs, variables, now=None):
     source = (ROOT / path).read_text(encoding="utf-8")
     code = json.JSONDecoder().raw_decode(source.split("code = ", 1)[1])[0]
     result = subprocess.run(["node", "-e", RUNNER], input=json.dumps({"code": code,
-        "input": inputs, "vars": variables}), text=True, encoding="utf-8", capture_output=True, check=True)
+        "input": inputs, "vars": variables, **({"now": now} if now is not None else {})}), text=True, encoding="utf-8", capture_output=True, check=True)
     return json.loads(result.stdout)
 
 

@@ -173,19 +173,24 @@ estado registrado; não existe campo dedicado no modelo atual. Ausência mostra
 a unidade original não especificada no contrato. O motivo do agendamento é
 identificado como motivo, e não como observação do tutor.
 
-O contrato aditivo de `xano/api/clinical/agenda_GET.xs` aceita `aba` (Pendentes,
-Hoje, Próximas, Concluídas, Canceladas), `busca` (nome do pet) e `estado` (agendada,
-em_atendimento, finalizada, cancelada). Aplica filtros antes da página de 25 itens e
-retorna `contrato_consultas: 2` (versão 1 permanece aceita para filtros anteriores). Hoje considera America/Sao_Paulo; Próximas
-considera dias após hoje. Sem parâmetros, preserva agenda diária e pendentes.
-Busca não considera nomes sem consentimento ativo. Canceladas lista registros com status `cancelada`, excluídos das abas ativas e sem
-ações de iniciar/retomar; não introduz operação de cancelamento nem de confirmação.
-O campo de busca tem contorno pill e o filtro de estado inclui ícone de ajustes.
+O endpoint `xano/api/clinical/agenda_GET.xs` recebe `aba`, `busca` por nome do pet
+e `estado`, aplica as restrições antes da página de 25 itens e retorna o total
+filtrado. O contrato 3 define Próximas como hoje e os quatro dias seguintes,
+no fuso America/Sao_Paulo. Hoje mostra só o dia atual. Pendentes, Hoje e Próximas
+incluem somente agendadas/em atendimento; Concluídas mostra finalizadas e
+Canceladas mostra canceladas, sem limite de cinco dias. Horários mantém o modo
+por `dia`, independente das abas. Busca não usa nomes sem consentimento ativo.
 
-**Publicação:** o arquivo da agenda precisa ser publicado no Xano para ativar
-os filtros globais. No contrato remoto antigo, Pendentes funciona e filtros novos
-mostram aviso explícito em vez de apresentar resultados incorretos. Esta alteração
-local não publica o endpoint nem modifica dados reais. Não requer migração de tabelas.
+A lista agrupa a página carregada pelo dia local do agendamento, em ordem
+crescente de dia/hora. As divisórias são Hoje — DD/MM/AAAA, Amanhã — DD/MM/AAAA
+e somente DD/MM/AAAA nos demais dias, inclusive em Próximas. Não há grupos
+vazios; se um dia continuar em outra página, a divisória reaparece ali. Cinco
+dias não significa cinco consultas: a paginação continua disponível.
+
+Próximas exige contrato 3; os demais filtros continuam com suas versões
+compatíveis. Contrato antigo mostra aviso em vez de apresentar resultado falso.
+A publicação remota e os testes ficam registrados na change
+`filtrar-agrupar-consultas-por-dia`; não há migração nem operação de cancelamento.
 
 Os cards da seção Consultas reutilizam o SVG perimetral do calendário para
 identificar o estado: vermelho em `agendada`, amarelo em `em_atendimento` e
@@ -259,8 +264,8 @@ Em 02/11/2026, o workspace autenticado 167758 foi consultado via perfil CLI
 ou registros existentes. O histórico e o rascunho reutilizam a função autorizada;
 a agenda consulta fotos somente de pets com consentimento ativo e preserva `null`.
 A publicação foi pontual e preservou o contrato de filtros remoto anterior;
-os filtros ampliados de Consultas versionados localmente continuam dependendo
-de uma publicação própria, fora desta correção.
+os filtros ampliados foram publicados posteriormente pela change
+`filtrar-agrupar-consultas-por-dia`, com contrato 3 e janela de cinco dias.
 
 ### Datas de vacinas e exames ao finalizar
 
@@ -272,3 +277,18 @@ alteração dessas regras.
 - Exame solicitado: solicitação obrigatória até hoje; realização e resultado ficam vazios.
 - Exame realizado: solicitação e realização obrigatórias até hoje, com realização igual ou posterior à solicitação; resultado obrigatório.
 - O rascunho permite registros adicionais incompletos; a validação completa acontece ao finalizar.
+
+### População manual para conferir os filtros
+
+Em 02/11/2026, foram criadas a pedido do usuário cinco consultas agendadas de
+TESTE FILTROS para Jessy, uma por dia de 02 a 06/11 às 08h. Foram mantidas para
+conferência e exclusão posterior pelo usuário. O script
+`scripts/populate_consultation_preview.py` usa o perfil Xano autenticado, verifica
+consentimento e horários livres e registra um manifesto privado em `.venv` para
+não duplicar consultas ao repetir `--apply`. Não cria autorização nem registros
+clínicos de atendimento. A operação de população é separada do push do endpoint.
+
+Após o usuário concluir os testes e solicitar a limpeza, as cinco consultas
+TESTE FILTROS da Jessy foram removidas, com identificação pelo manifesto e
+releitura confirmando a exclusão. Não havia registros clínicos vinculados.
+Os demais registros e o consentimento foram preservados.

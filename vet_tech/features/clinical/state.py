@@ -6,7 +6,7 @@ import unicodedata
 from time import monotonic
 from copy import deepcopy
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import Any, TypedDict
 from urllib.parse import urlencode
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -91,6 +91,31 @@ def cards(rows: list[dict]) -> list[dict[str, str]]:
         item["origem_legivel"] = "Consulta " + str(row["consulta_id"]) if row.get("consulta_id") else "Registro anterior sem consulta vinculada"
         result.append(item)
     return result
+
+
+class ConsultationDay(TypedDict):
+    date: str
+    label: str
+    items: list[dict[str, str]]
+
+
+def consultation_days(rows: list[dict[str, str]], current_day: str) -> list[ConsultationDay]:
+    """Group the loaded page by the local scheduled day without changing its records."""
+    current = date.fromisoformat(current_day)
+    tomorrow = (current + timedelta(days=1)).isoformat()
+    grouped: dict[str, ConsultationDay] = {}
+    for row in sorted(rows, key=lambda item: (float(item.get("agendada_para") or 0), item.get("id", ""))):
+        scheduled = instant_datetime(row.get("agendada_para"))
+        day = scheduled.date().isoformat() if scheduled else ""
+        if day not in grouped:
+            label = date_label(day) or "Data não informada"
+            if day == current_day:
+                label = "Hoje — " + label
+            elif day == tomorrow:
+                label = "Amanhã — " + label
+            grouped[day] = {"date": day, "label": label, "items": []}
+        grouped[day]["items"].append(row)
+    return list(grouped.values())
 
 
 def pet_summary(row: dict) -> dict[str, str]:
@@ -188,6 +213,11 @@ class ClinicalMixin(rx.State, mixin=True):
     consultation_summary_loading: bool = False
     consultation_summary_error: str = ""
     _consultation_generation: int = 0
+
+    @rx.var(cache=False)
+    def consultation_day_groups(self) -> list[ConsultationDay]:
+        return consultation_days(self.upcoming_rows, today())
+
     agenda_page: int = 1
     agenda_total: int = 0
     clinic_message: str = ""
@@ -969,8 +999,9 @@ class ClinicalMixin(rx.State, mixin=True):
             data = await xano_request("GET", GROUP, "veterinario/agenda?" + urlencode(params), auth_token=token)
             if generation == self._clinic_generation and self._clinical_current(session, token):
                 if self.vet_section == "Consultas" and (
-                    data.get("contrato_consultas") not in (1, 2) or
-                    ((self.consultation_tab == "Canceladas" or self.consultation_status == "Cancelada") and data.get("contrato_consultas") != 2)
+                    data.get("contrato_consultas") not in (1, 2, 3) or
+                    (self.consultation_tab == "Próximas" and data.get("contrato_consultas") != 3) or
+                    ((self.consultation_tab == "Canceladas" or self.consultation_status == "Cancelada") and data.get("contrato_consultas") not in (2, 3))
                 ) and (
                     self.consultation_tab != "Pendentes" or self.consultation_search or self.consultation_status != "Todos os estados"
                 ):
