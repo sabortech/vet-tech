@@ -138,3 +138,23 @@ cima; a seleção continua apenas mudando o mês exibido até escolher um dia.
 A borda luminosa do calendário usa um segmento SVG no perímetro arredondado,
 com deslocamento de traço no sentido horário. Não depende de animação de
 propriedade CSS registrada; desacelera em movimento reduzido e não intercepta cliques.
+
+### Retorno após concluir atendimento
+
+Salvar rascunho confirma a gravação em notificação no canto inferior esquerdo e
+mantém o formulário aberto. Finalizar com sucesso (inclusive após reconciliação
+por resposta perdida) abre Horários no dia de `agendada_para` em America/Sao_Paulo,
+independentemente da data clínica editada. A entrada da agenda revalida os dados
+no endpoint autenticado existente; o card mostra Concluída, deixa de oferecer
+Começar/Retomar e não aparece entre as pendências de Consultas. Falha, conflito
+ou resposta de sessão/consulta antiga não declaram conclusão nem redirecionam.
+
+Cards de Horários e Consultas compartilham acabamento verde e estado textual.
+A agenda do dia e a moldura da foto/fallback possuem contorno SVG com luz verde
+circulando no sentido horário, sem movimentar conteúdo ou interceptar cliques.
+Movimento reduzido desacelera a circulação. O consentimento continua determinando
+quais dados e ações podem aparecer no card, conforme o backend.
+
+O atendimento e seus painéis (histórico, calendário clínico, confirmação de descarte e toast) acompanham `data-vt-theme` da preferência existente, inclusive durante a edição e com portais abertos. A troca não recarrega dados nem altera o rascunho; tokens locais `--vet-*` mantêm superfícies, campos, texto e estados de foco legíveis nos dois temas.
+
+Histórico nos cards de Horários e Consultas reutiliza `attendance_history_dialog` do atendimento, com pet e acionador próprios. Erro e nova tentativa pertencem ao modal (`prior_history_message`), mantendo a agenda visível e o rascunho inalterado. Fechar devolve foco ao botão do card. Botões recebem cantos arredondados globalmente; controles de seleção mantêm suas formas próprias.

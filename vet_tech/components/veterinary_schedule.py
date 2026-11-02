@@ -3,7 +3,7 @@ import reflex as rx
 
 from vet_tech.features.auth.state import State
 from vet_tech.features.navigation.state import NavigationState
-from vet_tech.features.clinical.state import MONTHS
+from vet_tech.components.date_input import calendar_panel, perimeter_led
 
 
 def veterinary_navigation(in_settings=False):
@@ -39,12 +39,21 @@ def veterinary_actions(in_settings=False):
     )
 
 
-def schedule_card(row):
+def schedule_card(row, show_date=False):
+    from vet_tech.components.clinical import attendance_history_dialog
     return rx.box(
         rx.hstack(
-            rx.avatar(src=row.get("pet_foto", ""), fallback="🐾", size="4", radius="full",
-                      custom_attrs={"aria-label": rx.cond(row["autorizado"] == "sim", "Foto de " + row["pet_nome"], "Acesso revogado")}),
+            rx.box(
+                rx.cond(row.get("pet_foto", "") != "",
+                    rx.avatar(src=row.get("pet_foto", ""), fallback="🐾", size="4", radius="full",
+                              custom_attrs={"aria-label": "Foto de " + row["pet_nome"]}),
+                    rx.center(rx.icon("paw-print", size=22), class_name="vet-schedule-avatar-fallback",
+                              role="img", aria_label=rx.cond(row["autorizado"] == "sim", "Pet sem foto", "Acesso revogado"))),
+                perimeter_led("vet-date-led vet-schedule-avatar-led", "50%"),
+                class_name="vet-schedule-avatar-frame",
+            ),
             rx.vstack(
+                *([rx.text(row.get("quando", ""), size="1", class_name="vet-schedule-reason")] if show_date else []),
                 rx.text(rx.cond(row["autorizado"] == "sim", row["pet_nome"], "Acesso revogado"), weight="bold", class_name="vet-schedule-pet-name"),
                 rx.text(rx.cond(row["autorizado"] == "sim", row.get("motivo", "") , "Autorização revogada pelo tutor."), size="2", class_name="vet-schedule-reason"),
                 rx.hstack(rx.icon("clock-3", size=13), rx.text(row["hora"], size="2"), align="center", spacing="1"),
@@ -53,10 +62,14 @@ def schedule_card(row):
             align="start", spacing="3", width="100%",
         ),
         rx.hstack(
-            rx.box(row["status_label"], class_name="vet-schedule-status"),
+            rx.box(rx.icon(rx.match(row["status"], ("finalizada", "circle-check"),
+                                      ("em_atendimento", "stethoscope"), "calendar-clock"), size=12),
+                   row["status_label"], class_name="vet-schedule-status"),
             rx.cond(row["autorizado"] == "sim",
                 rx.hstack(
-                    rx.button("Histórico", on_click=State.open_prior_history(row.get("pet_id", "")), variant="ghost", size="1", disabled=State.clinic_busy),
+                    attendance_history_dialog(pet_id=row.get("pet_id", ""), button_label="Histórico",
+                        trigger_id="agenda-history-" + row["id"], button_class="vet-schedule-history-button",
+                        variant="soft", size="1", back_label="Voltar às consultas" if show_date else "Voltar à agenda"),
                     rx.cond(row["status"] != "finalizada",
                         rx.button(rx.cond(row["status"] == "em_atendimento", "Retomar", "Começar consulta"),
                                   on_click=State.start_consultation(row["id"]), disabled=State.clinic_busy, size="1", variant="soft")),
@@ -84,70 +97,20 @@ def summary(icon, label, value):
                             align="start", spacing="1"), class_name="vet-schedule-stat")
 
 
-def calendar_select(options, value, on_change, label, kind):
-    return rx.select.root(
-        rx.select.trigger(
-            rx.hstack(rx.text(value), rx.icon("chevron-down", size=17, class_name="vet-date-select-chevron"),
-                      align="center", justify="between", width="100%", spacing="2"),
-            aria_label=label, class_name="vet-date-select-trigger vet-date-select-trigger--" + kind,
-        ),
-        rx.select.content(
-            rx.select.group(rx.foreach(options, lambda option: rx.select.item(option, value=option, class_name="vet-date-select-option"))),
-            position="popper", side="bottom", side_offset=8, align="start",
-            custom_attrs={"avoidCollisions": False}, class_name="vet-date-select-menu",
-        ), value=value, on_change=on_change,
-    )
-
-
 def date_picker():
     return rx.dialog.root(
         rx.dialog.trigger(rx.el.button(
             rx.icon("calendar-days", size=21), class_name="vet-date-calendar-button",
             title="Escolher data", aria_label="Escolher data", disabled=State.clinic_loading,
         )),
-        rx.dialog.content(
-            rx.el.svg(
-                rx.el.svg.rect(x="1.5", y="1.5", rx="24.5", ry="24.5",
-                               custom_attrs={"pathLength": 100}, class_name="vet-date-led-track"),
-                class_name="vet-date-led", aria_hidden="true", focusable="false",
-            ),
-            rx.box(
-                rx.box(
-                    rx.box(rx.icon("sparkles", size=16), rx.text("Sua agenda, com carinho"), class_name="vet-date-eyebrow"),
-                    rx.dialog.title("Um dia de cada vez", class_name="vet-date-title"),
-                    rx.dialog.description("Escolha uma data para acompanhar seus atendimentos.", class_name="vet-date-description"),
-                    rx.image(src="/espreitando.png", alt="", class_name="vet-date-turtle", aria_hidden="true"),
-                    rx.box(rx.icon("calendar-check", size=18), rx.text("Na agenda: ", State.agenda_short_date), class_name="vet-date-current"),
-                    class_name="vet-date-welcome",
-                ),
-                rx.box(
-                    rx.hstack(rx.text("Escolher data", weight="bold", size="4"), rx.spacer(),
-                        rx.dialog.close(rx.el.button(rx.icon("x", size=19), class_name="vet-date-close", aria_label="Fechar calendário")),
-                        align="center", margin_bottom="24px"),
-                    rx.hstack(
-                        rx.el.button(rx.icon("chevron-left", size=20), on_click=State.agenda_calendar_shift(-1), aria_label="Mês anterior", class_name="vet-date-month-arrow"),
-                        calendar_select([name.capitalize() for name in MONTHS], State.agenda_calendar_month_name,
-                                        State.agenda_calendar_choose_month, "Mês do calendário", "month"),
-                        calendar_select(State.agenda_calendar_years, State.agenda_calendar_year,
-                                        State.agenda_calendar_choose_year, "Ano do calendário", "year"),
-                        rx.el.button(rx.icon("chevron-right", size=20), on_click=State.agenda_calendar_shift(1), aria_label="Próximo mês", class_name="vet-date-month-arrow"),
-                        align="center", justify="between", spacing="2", class_name="vet-date-month-controls",
-                    ),
-                    rx.box(*[rx.text(name) for name in ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")], class_name="vet-date-weekdays"),
-                    rx.box(rx.foreach(State.agenda_calendar_days, lambda day: rx.el.button(
-                        day["label"], on_click=State.agenda_choose_day(day["date"]), disabled=day["date"] == "",
-                        aria_label=day["date"], aria_pressed=day["selected"] == "sim",
-                        class_name=rx.cond(day["selected"] == "sim", "vet-date-day is-selected",
-                                           rx.cond(day["today"] == "sim", "vet-date-day is-today", "vet-date-day")),
-                    )), class_name="vet-date-days", role="group", aria_label="Dias do mês"),
-                    rx.hstack(rx.box(class_name="vet-date-today-dot"), rx.text("Hoje", size="2"),
-                              rx.spacer(), rx.text("Selecione um dia para abrir a agenda", size="1"),
-                              class_name="vet-date-legend", align="center", wrap="wrap", spacing="2"),
-                    rx.dialog.close(rx.el.button("Voltar à agenda", class_name="vet-date-back")),
-                    class_name="vet-date-month-panel",
-                ), class_name="vet-date-layout",
-            ),
-            class_name="vet-date-dialog", width="min(780px, calc(100vw - 32px))", max_width="780px",
+        calendar_panel(
+            title="Um dia de cada vez", description="Escolha uma data para acompanhar seus atendimentos.",
+            current_prefix="Na agenda: ", current_label=State.agenda_short_date,
+            month_name=State.agenda_calendar_month_name, year=State.agenda_calendar_year,
+            years=State.agenda_calendar_years, days=State.agenda_calendar_days,
+            previous_month=State.agenda_calendar_shift(-1), next_month=State.agenda_calendar_shift(1),
+            choose_month=State.agenda_calendar_choose_month, choose_year=State.agenda_calendar_choose_year,
+            choose_day=State.agenda_choose_day, legend="Selecione um dia para abrir a agenda", back_label="Voltar à agenda",
         ), open=State.agenda_calendar_open, on_open_change=State.agenda_calendar_set_open,
     )
 
@@ -186,7 +149,8 @@ def schedule_content():
                     rx.box(rx.icon("calendar-heart", size=36), rx.heading("Seu dia está tranquilo", size="4"),
                            rx.text("Nenhuma consulta agendada para esta data.", color="var(--vt-muted)"),
                            class_name="vet-schedule-empty", role="status")),
-                rx.box(rx.hstack(rx.text("Agenda do dia", weight="bold"), rx.spacer(),
+                rx.box(perimeter_led("vet-date-led vet-schedule-timeline-led", "15"),
+                       rx.hstack(rx.text("Agenda do dia", weight="bold"), rx.spacer(),
                                   rx.text("Horário de Brasília", size="2", color="var(--vt-muted)"),
                                   class_name="vet-schedule-timeline-header", wrap="wrap"),
                        rx.foreach(State.agenda_hours, schedule_hour),

@@ -118,8 +118,10 @@ sistema. Painel, histórico, mensagens, ações e campo acompanham a preferênci
 clara/escura antes da abertura e enquanto a janela está aberta, em todos os
 perfis e páginas. Não há preferência separada do chat nem alteração no transporte.
 
-A janela aberta do chat tem traço verde luminoso no perímetro, circulando de
-forma linear no sentido horário (6s por volta; 12s em movimento reduzido).
+A janela aberta do chat tem traço verde luminoso com halo em percurso de oito:
+alterna a volta do cabeçalho/banner com a volta das mensagens/rodapé, passando
+pela divisória inferior do banner. O ciclo é linear (6s; 12s em movimento reduzido).
+Um ResizeObserver mantém o caminho SVG alinhado ao tamanho real do painel e banner.
 O SVG decorativo é único por janela, não recebe foco ou cliques e acompanha os
 cantos arredondados do painel em desktop e celular. Ao fechar/minimizar, a animação para.
 O efeito é global e independente de autenticação ou perfil.

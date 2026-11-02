@@ -1,0 +1,22 @@
+[
+  {
+    "split": 293,
+    "total": 2976.090576171875,
+    "divider": 111,
+    "upper": 158,
+    "lower": 231,
+    "invalid": 0,
+    "width": 378,
+    "height": 758
+  },
+  {
+    "split": 277,
+    "total": 2800.090576171875,
+    "divider": 112,
+    "upper": 160,
+    "lower": 228,
+    "invalid": 0,
+    "width": 364,
+    "height": 698
+  }
+]

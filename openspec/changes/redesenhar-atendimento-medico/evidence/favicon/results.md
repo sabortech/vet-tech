@@ -1,0 +1,1 @@
+Documento global compilado contém favicon SVG versionado; confirmado no navegador nas rotas /, /login, /cadastro, /configuracoes, /dashboard, /prontuario, /atendimento/43. SVG e PNG servidos com sucesso. Ícone renderizado em 16, 32 e 64px sobre fundos claro/escuro. Compilação completa aprovada.

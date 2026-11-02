@@ -1,0 +1,1 @@
+Notificações de rascunho/finalização: 5 testes novos aprovados, cobrindo sucesso normal, reconciliação sem repetição da escrita, falha, conflito e resposta de consulta/sessão antiga. Os 13 testes de estado clínico existentes passaram. Eventos reais de toast gerados para as duas variantes; compilação completa Reflex e validação OpenSpec aprovadas. Backend remoto não exercitado.

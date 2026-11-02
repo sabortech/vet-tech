@@ -1,0 +1,2 @@
+CSS atualizado conferido em prévia sintética: três camadas de drop-shadow verdes no segmento SVG em movimento do calendário, agenda do dia, foto/fallback e chat. Calendário/chat permitem halo externo e mantêm rolagem interna; sem overflow horizontal em 390px. Movimento reduzido mantém circulação desacelerada. Screenshots desktop/mobile; nenhuma exceção JavaScript; nenhuma chamada a backend real.
+Compilação completa Reflex e validação OpenSpec aprovadas; assets publicados localmente atualizados.

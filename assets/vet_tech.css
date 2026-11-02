@@ -1,4 +1,6 @@
 :root {
+  --vt-led-color: #79ed4d;
+  --vt-led-glow: drop-shadow(0 0 3px #79ed4de6) drop-shadow(0 0 9px #79ed4d99) drop-shadow(0 0 18px #79ed4d55);
   --vt-page-bg: #f4f5f7;
   --vt-surface: #ffffff;
   --vt-text: #182b21;
@@ -1094,13 +1096,13 @@ input.settings-input { padding: 0 16px; }
 .vet-date-dialog {
   position: relative; padding: 0 !important; border: 3px solid var(--vt-border); border-radius: 26px !important;
   background: var(--vt-surface) !important;
-  box-shadow: 0 0 22px rgb(104 180 78 / 24%), 0 24px 90px rgb(0 0 0 / 25%) !important;
-  color: var(--vt-text); overflow: hidden;
-  max-height: calc(100dvh - 40px); overflow-y: auto;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 25%) !important;
+  color: var(--vt-text); overflow: visible;
+  max-height: calc(100dvh - 40px);
 }
 .vet-date-led { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.vet-date-led-track { width: calc(100% - 3px); height: calc(100% - 3px); fill: none; stroke: #79ed4d; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 14 86; filter: drop-shadow(0 0 4px #65da38); animation: vet-date-border-orbit 6s linear infinite; }
-.vet-date-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.vet-date-led-track { width: calc(100% - 3px); height: calc(100% - 3px); fill: none; stroke: var(--vt-led-color); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 14 86; filter: var(--vt-led-glow); animation: vet-date-border-orbit 6s linear infinite; }
+.vet-date-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); max-height: calc(100dvh - 46px); overflow-y: auto; border-radius: 23px; }
 .vet-date-welcome { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 30px 24px 24px; background: var(--vt-icon-bg); border-right: 1px solid var(--vt-border); }
 .vet-date-eyebrow { display: flex; gap: 6px; align-items: center; color: var(--vt-green); font-size: 11px; font-weight: 700; }
 .vet-date-title { margin: 18px 0 10px !important; font-size: 27px !important; line-height: 1.15 !important; letter-spacing: -.5px; color: var(--vt-text); }
@@ -1156,4 +1158,308 @@ input.settings-input { padding: 0 16px; }
 @media (max-width: 600px) {
   .vet-date-select-trigger.rt-SelectTrigger { min-height: 40px; padding-inline: 10px; font-size: 13px; }
   .vet-date-select-trigger--year { min-width: 82px; }
+}
+
+/* Reusable physician palette. Applied only by physician presentation classes. */
+:root {
+  --vet-primary: #689554;
+  --vet-hover: #628E50;
+  --vet-text: #1A3629;
+  --vet-soft: #E7EFE2;
+  --vet-icon: #CDDFC8;
+  --vet-background: #F4F5F7;
+  --vet-radius-card: 24px;
+  --vet-radius-control: 12px;
+  --vet-radius-pill: 999px;
+  --vet-shadow: 0 12px 40px rgba(26, 54, 41, 0.18);
+  --vet-transition: 180ms ease;
+}
+
+
+/* Attendance owns themed surfaces; the existing document preference owns the choice. */
+:is(.attendance-page, .attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu, .attendance-saved-toast) {
+  --vet-primary: #477b3b; --vet-hover: #39652c; --vet-primary-text: #fff;
+  --vet-text: #1a3629; --vet-muted: #52634f; --vet-soft: #e7efe2; --vet-icon: #cddfc8;
+  --vet-surface: #fff; --vet-panel: #f7faf4; --vet-control: #fff; --vet-border: #c3d5bb;
+  --vet-chip: rgba(255,255,255,.6); --vet-glass: rgba(255,255,255,.9);
+  --vet-glass-blur: rgba(255,255,255,.76); --vet-glass-border: rgba(255,255,255,.55);
+  --vet-wallpaper-overlay: rgba(104,149,84,.18); --vet-header-start: #e8f1df; --vet-header-end: #d7e9cb;
+  --vet-toast-bg: #eff8e9; --vet-color-scheme: light;
+}
+html[data-vt-theme="dark"] :is(.attendance-page, .attendance-history-dialog, .attendance-date-dialog, .attendance-date-select-menu, .attendance-saved-toast) {
+  --vet-primary: #9ac482; --vet-hover: #acd695; --vet-primary-text: #142218;
+  --vet-text: #eef3ef; --vet-muted: #b4c0b7; --vet-soft: #293b2d; --vet-icon: #344b38;
+  --vet-surface: #202b24; --vet-panel: #19221c; --vet-control: #17241c; --vet-border: #526b58;
+  --vet-chip: #344538; --vet-glass: #19251f; --vet-glass-blur: rgba(21,33,26,.94);
+  --vet-glass-border: #455d4c; --vet-wallpaper-overlay: rgba(4,13,8,.78);
+  --vet-header-start: #283e2e; --vet-header-end: #1e3024; --vet-toast-bg: #243b2a; --vet-color-scheme: dark;
+  --vet-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+
+.attendance-page {
+  isolation: isolate;
+  position: relative;
+  min-height: 100dvh;
+  padding: 40px 24px 100px;
+  color: var(--vet-text);
+  font-family: var(--vt-font);
+  color-scheme: var(--vet-color-scheme);
+  --vt-muted: var(--vet-muted);
+  --accent-9: var(--vet-primary);
+  --accent-10: var(--vet-hover);
+  --accent-11: var(--vet-text);
+  --accent-a9: var(--vet-primary);
+  --accent-a11: var(--vet-text);
+  --accent-contrast: var(--vet-primary-text);
+  --gray-12: var(--vet-text);
+  --gray-a12: var(--vet-text);
+}
+.attendance-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(var(--vet-wallpaper-overlay), var(--vet-wallpaper-overlay)),
+              url('/mascote/clinicturtle.jpeg') center / cover no-repeat;
+  pointer-events: none;
+}
+.attendance-page .attendance-glass {
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px;
+  border: 1px solid var(--vet-glass-border);
+  border-radius: var(--vet-radius-card);
+  background: var(--vet-glass);
+  box-shadow: var(--vet-shadow);
+}
+@supports (backdrop-filter: blur(14px)) {
+  .attendance-page .attendance-glass {
+    background: var(--vet-glass-blur);
+    backdrop-filter: blur(14px) saturate(120%);
+  }
+}
+.attendance-page :is(h1,h2,h3,h4,h5,p,label) { color: var(--vet-text); }
+.attendance-page .rt-Heading { font-family: inherit; font-weight: 800; }
+.attendance-header { width: 100%; }
+.attendance-header h2 { font-size: 28px; letter-spacing: -.6px; }
+.attendance-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--vet-icon);
+  color: var(--vet-text);
+}
+.attendance-icon--large { width: 56px; height: 56px; }
+.attendance-patient {
+  padding: 22px;
+  border-radius: var(--vet-radius-card);
+  background: var(--vet-soft);
+}
+.attendance-chip {
+  padding: 6px 10px;
+  border-radius: var(--vet-radius-pill);
+  background: var(--vet-chip);
+  font-size: 12px;
+  white-space: normal;
+}
+.attendance-status, .attendance-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  color: var(--vet-text);
+  background: var(--vet-icon);
+  border-radius: var(--vet-radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+}
+.attendance-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vet-primary);
+  animation: attendance-pulse 2s ease-in-out infinite;
+}
+@keyframes attendance-pulse { 50% { box-shadow: 0 0 0 4px rgba(104,149,84,.17); } }
+.attendance-confirmation { font-size: 12px; color: var(--vt-muted); }
+.attendance-confirmation p { color: inherit; }
+.attendance-notice:has(p:empty):not(:has([role='status']:not(:empty))) { display: none; }
+.attendance-page .attendance-section-title { margin-bottom: 18px; font-size: 22px; font-weight: 800; line-height: 1.3; }
+.attendance-fields, .attendance-records { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; width: 100%; }
+.attendance-field { min-width: 0; }
+.attendance-field--full { grid-column: 1 / -1; }
+.attendance-page label { display: block; font-family: var(--vt-font); font-size: 18px; font-weight: 800; line-height: 1.4; color: var(--vet-text); }
+.attendance-page :is(.rt-TextFieldRoot,.rt-TextAreaRoot,.rt-SelectTrigger) {
+  width: 100%;
+  min-height: 44px;
+  background: var(--vet-control);
+  border: 1px solid var(--vet-border);
+  border-radius: var(--vet-radius-control);
+  box-shadow: none;
+  color: var(--vet-text);
+  transition: border-color var(--vet-transition), box-shadow var(--vet-transition);
+}
+.attendance-page :is(input,textarea,.rt-TextAreaRoot,.rt-TextFieldRoot,.rt-SelectTrigger) { color: var(--vet-text); font-family: var(--vt-font); }
+.attendance-page :is(input,textarea)::placeholder { color: var(--vet-muted); }
+.attendance-page .rt-TextAreaRoot { min-height: 100px; }
+.attendance-page .rt-TextAreaInput { min-height: 100px; resize: vertical; }
+.attendance-page :is(.rt-TextFieldRoot,.rt-TextAreaRoot):focus-within {
+  border-color: var(--vet-primary);
+  box-shadow: 0 0 0 3px rgba(104,149,84,.25);
+  outline: none;
+}
+.attendance-page button:focus-visible { outline: 3px solid var(--vet-text); outline-offset: 3px; }
+.attendance-page .attendance-button {
+  min-height: 42px;
+  height: auto;
+  padding: 10px 16px;
+  border-radius: var(--vet-radius-control);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: normal;
+  transition: transform var(--vet-transition), box-shadow var(--vet-transition), background var(--vet-transition);
+}
+.attendance-page .attendance-button.rt-variant-solid { color: var(--vet-primary-text); background: var(--vet-primary); }
+.attendance-page .attendance-button.rt-variant-outline {
+  color: var(--vet-text);
+  background: transparent;
+  border: 1px solid var(--vet-primary);
+  box-shadow: none;
+}
+.attendance-page .attendance-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(26,54,41,.12);
+}
+.attendance-page .attendance-button.rt-variant-solid:hover:not(:disabled) { background: var(--vet-hover); }
+.attendance-page .attendance-button.rt-variant-outline:hover:not(:disabled) { background: var(--vet-soft); }
+.attendance-page .attendance-button:disabled { cursor: default; opacity: .55; }
+.attendance-history-button { margin-left: auto; }
+.attendance-record-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--vet-border);
+  border-radius: var(--vet-radius-card);
+  background: var(--vet-surface);
+  transition: transform var(--vet-transition), box-shadow var(--vet-transition);
+}
+.attendance-record-card:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(26,54,41,.07); }
+.attendance-record-card .rt-Heading { font-size: 20px; font-weight: 800; line-height: 1.3; }
+.attendance-page .attendance-button--add { padding: 8px 10px; min-height: 36px; font-size: 12px; }
+.attendance-page .attendance-empty { color: var(--vt-muted); font-size: 14px; padding: 6px 0; }
+.attendance-page .rt-Card { background: var(--vet-control); color: var(--vet-text); border-radius: var(--vet-radius-control); }
+.attendance-page .attendance-glass .attendance-catalog { width: 100%; border-radius: var(--vet-radius-control); background: var(--vet-soft); color: var(--vet-text); }
+.attendance-catalog :is(h3,button) { color: var(--vet-text); }
+.attendance-page .attendance-catalog .AccordionItem, .attendance-page .attendance-catalog .AccordionTrigger { background: transparent; box-shadow: none; }
+.attendance-catalog button[data-state] { background: transparent; font-weight: 700; }
+.attendance-catalog button[data-state]:hover { background: var(--vet-icon); }
+.attendance-page .attendance-catalog [data-state] > svg { color: var(--vet-text); transition: transform var(--vet-transition); }
+.attendance-actions { width: 100%; border-top: 1px solid var(--vet-border); padding-top: 24px; margin-top: 4px; }
+@media (max-width: 640px) {
+  .attendance-page { padding: 16px 10px 120px; }
+  .attendance-page .attendance-glass { padding: 20px 16px; }
+  .attendance-fields, .attendance-records { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .attendance-header { align-items: flex-start; }
+  .attendance-header .attendance-button { width: 100%; }
+  .attendance-patient { padding: 16px; }
+  .attendance-history-button { width: 100%; margin-left: 0; }
+  .attendance-record-card { padding: 16px; }
+  .attendance-actions { flex-direction: column; }
+  .attendance-actions button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .attendance-page *, .attendance-page *::before { animation: none !important; transition: none !important; }
+}
+
+/* Attendance history follows the document preference through local portal tokens. */
+.attendance-history-dialog {
+  padding: 0; overflow: hidden; border-radius: 24px; border: 1px solid var(--vet-border);
+  background: var(--vet-panel); color: var(--vet-text); font-family: 'Nunito', sans-serif; color-scheme: var(--vet-color-scheme);
+  box-shadow: 0 30px 100px #16332350; display: flex; flex-direction: column; max-height: 88dvh;
+  --gray-12: var(--vet-text); --gray-a12: var(--vet-text); --vt-muted: var(--vet-muted);
+  --vt-surface: var(--vet-panel); --vt-text: var(--vet-text);
+  --accent-9: var(--vet-primary); --accent-10: var(--vet-hover); --accent-11: var(--vet-primary); --accent-a11: var(--vet-primary);
+  --accent-contrast: var(--vet-primary-text); --color-panel-solid: var(--vet-surface); --color-surface: var(--vet-surface);
+}
+.attendance-history-header { position: relative; padding: 30px 175px 28px 30px; background: linear-gradient(120deg,var(--vet-header-start),var(--vet-header-end)); border-bottom: 1px solid var(--vet-border); }
+.attendance-history-eyebrow { color: var(--vet-primary); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.attendance-history-title { font-size: clamp(24px,4vw,32px); letter-spacing: -.04em; margin: 10px 0 8px; color: var(--vet-text); }
+.attendance-history-description { color: var(--vet-muted); margin: 0; font-size: 14px; line-height: 1.6; max-width: 460px; }
+.attendance-history-dialog .attendance-history-turtle { position: absolute; z-index: 1; right: 56px; bottom: 0; width: 132px; height: 89px; overflow: hidden; pointer-events: none; }
+.attendance-history-dialog .attendance-history-turtle img { position: absolute; width: 208px; max-width: none; height: 208px; left: -38px; top: -72px; object-fit: contain; }
+.attendance-history-close { position: absolute; top: 14px; right: 14px; color: var(--vet-primary); margin: 0; }
+.attendance-history-body { padding: 36px 30px 24px; overflow-y: auto; overscroll-behavior: contain; min-height: 0; overflow-wrap: anywhere; }
+.attendance-history-pet { padding: 18px; background: var(--vet-soft); border: 1px solid var(--vet-border); border-radius: 16px; }
+.attendance-history-pet > svg { flex-shrink: 0; color: var(--vet-primary); }
+.attendance-history-section { padding: 18px; background: var(--vet-surface); border: 1px solid var(--vet-border); border-radius: 16px; }
+.attendance-history-section-title { margin-bottom: 14px; color: var(--vet-primary); }
+.attendance-history-section-title .rt-Badge { margin-left: auto; background: var(--vet-soft); color: var(--vet-primary); }
+.attendance-history-empty { color: var(--vet-muted); font-size: 13px; padding: 8px 0; }
+.attendance-history-consultation { border-left: 3px solid var(--vet-primary); padding: 4px 0 4px 16px; margin: 12px 0; white-space: pre-wrap; }
+.attendance-history-section .rt-Card { background: var(--vet-panel); box-shadow: none; border: 1px solid var(--vet-border); margin-top: 10px; color: var(--vet-text); white-space: pre-wrap; }
+.attendance-history-feedback { padding: 40px 10px; text-align: center; gap: 16px; }
+.attendance-history-footer { padding: 18px 30px; background: var(--vet-surface); border-top: 1px solid var(--vet-border); flex-shrink: 0; }
+.attendance-history-footer > .rt-Text { font-size: 12px; color: var(--vet-muted); }
+.attendance-history-dialog button:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+@media (max-width: 560px) {
+  .attendance-history-dialog { border-radius: 20px; max-height: 92dvh; }
+  .attendance-history-header { padding: 26px 85px 22px 20px; }
+  .attendance-history-dialog .attendance-history-turtle { right: 28px; bottom: 0; width: 80px; height: 56px; }
+  .attendance-history-dialog .attendance-history-turtle img { width: 132px; height: 132px; left: -26px; top: -46px; }
+  .attendance-history-eyebrow { font-size: 9px; letter-spacing: .06em; }
+  .attendance-history-body { padding: 28px 16px 16px; }
+  .attendance-history-section { padding: 14px; }
+  .attendance-history-footer { padding: 16px; }
+  .attendance-history-footer button { width: 100%; }
+}
+
+/* The clinical date controls share the agenda calendar and its SVG LED. */
+.attendance-date-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 10px 14px; border: 1px solid var(--vet-border); border-radius: 12px; background: var(--vet-surface); color: var(--vet-text); font: inherit; text-align: left; cursor: pointer; }
+.attendance-date-trigger > svg { flex-shrink: 0; color: var(--vet-primary); }
+.attendance-date-trigger:hover { border-color: var(--vet-primary); background: var(--vet-panel); }
+.attendance-date-trigger:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+.attendance-date-trigger:disabled { opacity: .6; cursor: default; }
+:is(.attendance-date-dialog, .attendance-date-select-menu) { font-family: 'Nunito', sans-serif; color-scheme: var(--vet-color-scheme);
+  --vt-surface: var(--vet-surface); --vt-text: var(--vet-text); --vt-muted: var(--vet-muted); --vt-green: var(--vet-primary);
+  --vt-primary-text: var(--vet-primary-text); --vt-border: var(--vet-border); --vt-icon-bg: var(--vet-soft); --vt-field-bg: var(--vet-control); --vt-focus: var(--vet-primary);
+}
+.attendance-date-dialog .vet-date-current { flex-wrap: wrap; }
+.attendance-date-dialog .attendance-date-clear { background: transparent; color: var(--vet-muted); margin-top: 14px; }
+
+/* Physician cards and their clockwise perimeter lights. */
+.vet-schedule-card.vet-schedule-card--em_atendimento { border-color: #bfd5b5; border-left-color: #689554; background: var(--vt-surface); background: linear-gradient(120deg, color-mix(in srgb, var(--vt-green) 10%, var(--vt-surface)), var(--vt-surface) 70%); box-shadow: 0 4px 16px rgb(71 123 59 / 12%); }
+.vet-schedule-card.vet-schedule-card--finalizada { border-left-color: #3d803d; }
+.vet-schedule-card .vet-schedule-status { display: inline-flex; align-items: center; gap: 5px; background: #e7efe2; color: #356438; border: 1px solid #c7dbbd; }
+.vet-schedule-card.vet-schedule-card--em_atendimento .vet-schedule-status { background: #477b3b; color: white; border-color: #477b3b; }
+.vet-schedule-card.vet-schedule-card--finalizada .vet-schedule-status { background: #e4f3de; color: #2e6533; border-color: #b7d8aa; }
+.vet-schedule-card .vet-schedule-pet-name { color: var(--vt-green); }
+.vet-schedule-avatar-frame { position: relative; width: 52px; height: 52px; padding: 4px; border: 1px solid #c6dcbc; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--vt-icon-bg); }
+.vet-schedule-avatar-frame .rt-AvatarRoot { width: 42px; height: 42px; border-radius: 50%; color: #477b3b; }
+.vet-schedule-avatar-frame .rt-AvatarImage { object-fit: cover; }
+.vet-schedule-avatar-led .vet-date-led-track { --vt-led-glow: drop-shadow(0 0 2px #79ed4de6) drop-shadow(0 0 6px #79ed4d99) drop-shadow(0 0 10px #79ed4d55); stroke-width: 2; stroke-dasharray: 22 78; animation-duration: 5s; }
+.vet-schedule-timeline { position: relative; isolation: isolate; }
+.vet-schedule-timeline-led { z-index: 1; }
+.vet-schedule-timeline-led .vet-date-led-track { stroke-width: 2; stroke-dasharray: 10 90; animation-duration: 8s; }
+@media (prefers-reduced-motion: reduce) {
+  .vet-schedule-avatar-led .vet-date-led-track { animation-duration: 16s; }
+  .vet-schedule-timeline-led .vet-date-led-track { animation-duration: 20s; }
+}
+
+.vet-schedule-avatar-fallback { width: 42px; height: 42px; border-radius: 50%; background: var(--vt-icon-bg); color: #477b3b; }
+
+.attendance-saved-toast { color-scheme: var(--vet-color-scheme); }
+html [data-sonner-toast].attendance-saved-toast [data-description] { color: var(--vet-muted); }
+html [data-sonner-toast].attendance-saved-toast [data-close-button] { background: var(--vet-surface); border-color: var(--vet-border); color: var(--vet-text); }
+html [data-sonner-toast].attendance-saved-toast [data-icon] { color: var(--vet-primary); }
+
+/* Month/year lists are portals too: scope their selected/hover colors to attendance. */
+html .attendance-date-select-menu .vet-date-select-option[data-state="checked"] { background: var(--vet-soft); color: var(--vet-primary); }
+html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { background: var(--vet-primary); color: var(--vet-primary-text); }
+.attendance-page .rt-SelectTrigger[data-placeholder] { color: var(--vet-muted); }
+
+/* Global command shape, including portals and inline-styled buttons. */
+:is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
+  border-radius: var(--vt-radius-pill, 999px) !important;
 }

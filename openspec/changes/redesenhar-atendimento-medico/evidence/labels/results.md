@@ -1,0 +1,1 @@
+Rótulos principais, registros dos quatro grupos e catálogo conferidos: 18px, peso 800, linha 25.2px e fonte Nunito. Doença associado ao seletor por label/id. Desktop 1440px e mobile 390px, claro/escuro sem overflow. Compilação Reflex completa aprovada.
