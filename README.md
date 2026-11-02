@@ -243,6 +243,10 @@ cp .env.example .env
 bash scripts/run-local.sh
 ```
 
+O endereço padrão é http://localhost:3000/, com frontend e backend na mesma
+porta. Para usar outra porta, execute `VET_TECH_PORT=3001 bash scripts/run-local.sh`.
+Use esse launcher para carregar o `.env` e iniciar ambos os serviços; uma tela
+aberta sem conexão de eventos com o backend não consegue processar login.
 Consulte no log o endereço e a porta usados pela aplicação.
 
 ### Configuração do backend (Xano)
