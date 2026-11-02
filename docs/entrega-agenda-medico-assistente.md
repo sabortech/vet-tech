@@ -25,6 +25,12 @@ Testes unitários com `python -m unittest discover -s tests/unit -q` (Node no PA
 
 Os três novos endpoints de configurações do médico foram publicados e verificados com contas sintéticas: `GET/PATCH veterinario/account` e `POST veterinario/password`.
 
-O contrato aditivo de foto em `xano/api/clinical/agenda_GET.xs` está versionado, mas ainda precisa de publicação no Xano para retornar `pet_foto`. A interface mantém imagem neutra quando o campo não existe. O merge do GitHub não publica endpoints Xano automaticamente.
+O contrato de foto de `veterinario/agenda` foi publicado no workspace 167758 em
+02/11/2026, junto da projeção `foto` de `Clinical/assert_access`, usando o perfil
+CLI autenticado `vettech`. As respostas preservam a foto em data URI base64 ou
+`null`. O resumo, atendimento e histórico usam a foto atual; patinha indica foto
+nula/vazia, enquanto erro de imagem existente tem indicador próprio. A releitura
+do workspace confirmou as duas alterações. Essa publicação pontual não inclui
+os filtros ampliados de Consultas existentes somente na fonte local.
 
 As permissões clínicas continuam no backend; dados do pet são retornados apenas com consentimento ativo. Não há migração de tabelas ou nova integração de IA nesta entrega.

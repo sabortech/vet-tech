@@ -345,7 +345,7 @@ def history_patient_profile(sections):
     from vet_tech.components.veterinary_schedule import consultation_avatar
     info = State.prior_pet_info
     return rx.box(
-        rx.box(consultation_avatar(info.get("foto", ""), "7"), class_name="history-profile-portrait",
+        rx.box(consultation_avatar(info.get("foto", ""), "7", info.get("foto_ausente", "nao") == "sim"), class_name="history-profile-portrait",
                role="img", aria_label="Foto de " + info.get("nome", "pet")),
         rx.box(
             rx.hstack(rx.icon("paw-print", size=14), rx.text("Perfil do pet"), spacing="2", align="center", class_name="history-profile-eyebrow"),
@@ -426,10 +426,12 @@ def attendance_history_dialog(pet_id=None, button_label="Consultar histórico an
 
 
 def attendance_patient():
+    from vet_tech.components.veterinary_schedule import consultation_avatar
     info = State.clinical_pet_info
     return rx.box(
         rx.flex(
-            attendance_icon("paw-print", True),
+            rx.box(consultation_avatar(info.get("foto", ""), "7", info.get("foto_ausente", "nao") == "sim"),
+                   class_name="attendance-patient-portrait", role="img", aria_label="Foto de " + State.clinical_pet_name),
             rx.vstack(
                 rx.flex(
                     rx.heading(State.clinical_pet_name, size="6"),
