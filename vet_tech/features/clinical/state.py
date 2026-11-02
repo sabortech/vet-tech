@@ -55,6 +55,18 @@ def agenda_photo(value) -> str:
     return value if value.startswith(("https://", "http://", "data:image/jpeg;base64,", "data:image/png;base64,", "data:image/webp;base64,")) else ""
 
 
+def patient_photo(pet: dict, pet_id: str = "", agenda: list[dict] | None = None) -> dict[str, str]:
+    """Call only after a successful authorized read; explicit null overrides cache."""
+    if "foto" in pet:
+        value = pet["foto"]
+        return {"foto": agenda_photo(value), "foto_ausente": "sim" if value is None or value == "" else "nao"}
+    for row in agenda or []:
+        if str(row.get("pet_id", "")) == str(pet_id) and row.get("autorizado") == "sim" and row.get("pet_foto"):
+            return {"foto": agenda_photo(row["pet_foto"]), "foto_ausente": "nao"}
+    # Missing contract is not evidence that the database has no image.
+    return {"foto": "", "foto_ausente": "nao"}
+
+
 def today() -> str:
     return datetime.now(TZ).date().isoformat()
 
@@ -82,7 +94,7 @@ def cards(rows: list[dict]) -> list[dict[str, str]]:
 
 
 def pet_summary(row: dict) -> dict[str, str]:
-    return {"nome": str(row.get("nome") or "Pet"), "sexo": str(row.get("sexo") or "Não informado"),
+    return {**patient_photo(row), "nome": str(row.get("nome") or "Pet"), "sexo": str(row.get("sexo") or "Não informado"),
             "nascimento": display_date(row.get("data_nasc")),
             "peso": str(row["peso_atual"]) if row.get("peso_atual") is not None else "Não informado"}
 
@@ -916,7 +928,8 @@ class ClinicalMixin(rx.State, mixin=True):
             data = await xano_request("GET", GROUP, f"veterinario/pets/{int(row['pet_id'])}/historico", auth_token=token)
             if generation == self._consultation_generation and self._clinical_current(session, token):
                 self.consultation_info = consultation_summary(data["pet"], data["historico"])
-                self.consultation_info.update(foto=agenda_photo(row.get("pet_foto")), motivo=row.get("motivo", ""), pet_id=row["pet_id"], status=row.get("status", ""))
+                self.consultation_info.update(patient_photo(data["pet"], row["pet_id"], self.agenda_rows + self.upcoming_rows))
+                self.consultation_info.update(motivo=row.get("motivo", ""), pet_id=row["pet_id"], status=row.get("status", ""))
         except (ValueError, XanoRequestError) as error:
             if generation == self._consultation_generation and self._clinical_current(session, token):
                 self.consultation_info = {}
@@ -965,11 +978,13 @@ class ClinicalMixin(rx.State, mixin=True):
                     self.clinic_message = "Os filtros de consultas precisam da atualização da API Xano. A lista de pendentes continua disponível."
                     return
                 rows = cards(data["items"])
-                for row in rows:
+                for row, source in zip(rows, data["items"]):
                     instant = datetime.fromtimestamp(int(row["agendada_para"]) / 1000, TZ)
                     row["hora"] = instant.strftime("%H:%M")
                     row["hora_grupo"] = str(instant.hour)
-                    row["pet_foto"] = agenda_photo(row.get("pet_foto")) if row["autorizado"] == "sim" else ""
+                    photo = patient_photo({"foto": source["pet_foto"]} if "pet_foto" in source else {}) if row["autorizado"] == "sim" else {"foto": "", "foto_ausente": "nao"}
+                    row["pet_foto"] = photo["foto"]
+                    row["foto_ausente"] = photo["foto_ausente"]
                     row["status_label"] = {"agendada": "Agendada", "em_atendimento": "Em atendimento", "finalizada": "Concluída", "cancelada": "Cancelada"}.get(row["status"], "Não informado")
                     row["top"] = str(max(0, (instant.hour * 60 + instant.minute - 480) * 1.5)) + "px"
                 if self.vet_section == "Horários":
@@ -1030,6 +1045,7 @@ class ClinicalMixin(rx.State, mixin=True):
             self.clinical_pet_id = str(row["pet_id"])
             self.clinical_pet_name = str(data["pet"]["nome"])
             self.clinical_pet_info = pet_summary(data["pet"])
+            self.clinical_pet_info.update(patient_photo(data["pet"], self.clinical_pet_id, self.agenda_rows + self.upcoming_rows))
             self.clinical_status = row["status"]
             self.clinical_version = int(row["versao"])
             draft = row.get("rascunho") or {}
@@ -1215,12 +1231,7 @@ class ClinicalMixin(rx.State, mixin=True):
             data = await xano_request("GET", GROUP, f"veterinario/pets/{int(pet_id)}/historico", auth_token=token)
             if generation == self._prior_generation and self._clinical_current(session, token):
                 self.prior_pet_info = pet_summary(data["pet"])
-                photo = agenda_photo(data["pet"].get("foto"))
-                if not photo:
-                    photo = next((agenda_photo(row.get("pet_foto")) for row in self.agenda_rows + self.upcoming_rows
-                                  if str(row.get("pet_id", "")) == str(pet_id) and row.get("autorizado") == "sim"
-                                  and agenda_photo(row.get("pet_foto"))), "")
-                self.prior_pet_info["foto"] = photo
+                self.prior_pet_info.update(patient_photo(data["pet"], pet_id, self.agenda_rows + self.upcoming_rows))
                 self.prior_history = {key: cards(rows) for key, rows in data["historico"].items()}
         except (ValueError, XanoRequestError) as error:
             if generation == self._prior_generation and self._clinical_current(session, token):

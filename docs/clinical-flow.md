@@ -244,10 +244,31 @@ nascimento, peso informado e contagens reais das cinco categorias publicadas.
 O perfil adapta sua grade ao celular e mantém o tema contextual, mascote,
 rolagem interna, erro/nova tentativa, foco e rascunho existentes.
 
-Após leitura autorizada e auditada do histórico, o estado sanitiza a foto do
-pet. Se o contrato remoto ainda não a fornece, pode reutilizar a foto autorizada
-do mesmo pet já carregada na agenda da sessão. Falha ou resposta antiga não
-restauram retratos anteriores. Sem foto válida ou em erro de imagem, há patinha.
-A fonte Xano `Clinical/assert_access` agora inclui `foto` em sua projeção após
-validar consentimento. Essa atualização precisa ser publicada para a foto estar
-disponível também em acessos diretos sem cache da agenda; não exige migração.
+Após leitura autorizada e auditada, resumo, atendimento e histórico exibem a foto
+cadastrada no pet, incluindo data URI base64 JPEG/PNG/WebP. A resposta clínica
+atual tem prioridade. Foto explicitamente `null` ou vazia mostra patinha, sem
+reutilizar foto antiga da agenda. Apenas contratos anteriores que omitem a chave
+`foto` podem reutilizar uma foto autorizada do mesmo pet na sessão atual.
+Contrato sem foto e sem cache não comprova ausência no banco; imagem existente
+inválida ou com erro mostra indicador de foto indisponível, sem patinha.
+Falha de autorização ou resposta antiga não restaura retratos anteriores.
+
+Em 02/11/2026, o workspace autenticado 167758 foi consultado via perfil CLI
+`vettech`: a agenda publicada omitia `pet_foto` e `Clinical/assert_access` omitia
+`foto`. As duas projeções foram publicadas e relidas, sem alterações em tabelas
+ou registros existentes. O histórico e o rascunho reutilizam a função autorizada;
+a agenda consulta fotos somente de pets com consentimento ativo e preserva `null`.
+A publicação foi pontual e preservou o contrato de filtros remoto anterior;
+os filtros ampliados de Consultas versionados localmente continuam dependendo
+de uma publicação própria, fora desta correção.
+
+### Datas de vacinas e exames ao finalizar
+
+A interface exibe `DD/MM/AAAA` e envia `AAAA-MM-DD` ao Xano. A investigação de
+02/11/2026 confirmou gravação de rascunho e finalização com datas ISO; não houve
+alteração dessas regras.
+
+- Vacina: aplicação não pode ser futura; próxima dose é opcional e não pode ser anterior à aplicação.
+- Exame solicitado: solicitação obrigatória até hoje; realização e resultado ficam vazios.
+- Exame realizado: solicitação e realização obrigatórias até hoje, com realização igual ou posterior à solicitação; resultado obrigatório.
+- O rascunho permite registros adicionais incompletos; a validação completa acontece ao finalizar.

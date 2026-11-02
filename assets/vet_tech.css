@@ -1645,3 +1645,8 @@ html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(
   .attendance-history-dialog .attendance-history-turtle { right:12px; width:60px; height:44px; }
   .attendance-history-dialog .attendance-history-turtle img { width:100px; height:100px; left:-20px; top:-35px; }
 }
+
+/* Retrato do paciente no atendimento usa o mesmo avatar do histórico e resumo. */
+.attendance-patient-portrait { flex-shrink:0; border-radius:50%; overflow:hidden; border:2px solid var(--consultation-accent, var(--vet-primary)); }
+.attendance-patient-portrait .rt-AvatarImage { object-fit:cover; }
+.attendance-patient-portrait .consultations-avatar-paw { color:var(--consultation-accent, var(--vet-primary)); }

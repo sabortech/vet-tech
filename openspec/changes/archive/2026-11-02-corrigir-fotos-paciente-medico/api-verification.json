@@ -1,0 +1,58 @@
+{
+  "workspace": 167758,
+  "checks": [
+    {
+      "check": "history_base64",
+      "passed": true
+    },
+    {
+      "check": "attendance_base64",
+      "passed": true
+    },
+    {
+      "check": "agenda_base64",
+      "passed": true
+    },
+    {
+      "check": "revoked_history_has_no_photo_0",
+      "passed": true
+    },
+    {
+      "check": "revoked_agenda_has_no_photo_0",
+      "passed": true
+    },
+    {
+      "check": "audit_exists_0",
+      "passed": true
+    },
+    {
+      "check": "history_null",
+      "passed": true
+    },
+    {
+      "check": "attendance_null",
+      "passed": true
+    },
+    {
+      "check": "agenda_null",
+      "passed": true
+    },
+    {
+      "check": "revoked_history_has_no_photo_1",
+      "passed": true
+    },
+    {
+      "check": "revoked_agenda_has_no_photo_1",
+      "passed": true
+    },
+    {
+      "check": "audit_exists_1",
+      "passed": true
+    },
+    {
+      "check": "synthetic_fixtures_removed",
+      "passed": true
+    }
+  ],
+  "cleaned": true
+}

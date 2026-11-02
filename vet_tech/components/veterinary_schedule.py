@@ -63,10 +63,11 @@ def schedule_card(row, show_date=False):
     return rx.box(
         rx.hstack(
             rx.box(
-                rx.cond(row.get("pet_foto", "") != "",
-                    rx.box(consultation_avatar(row.get("pet_foto", ""), "4"), role="img", aria_label="Foto de " + row["pet_nome"]),
-                    rx.center(rx.icon("paw-print", size=22), class_name="vet-schedule-avatar-fallback",
-                              role="img", aria_label=rx.cond(row["autorizado"] == "sim", "Pet sem foto", "Acesso revogado"))),
+                rx.cond(row["autorizado"] == "sim",
+                    rx.box(consultation_avatar(row.get("pet_foto", ""), "4", row.get("foto_ausente", "nao") == "sim"),
+                           role="img", aria_label="Foto de " + row["pet_nome"]),
+                    rx.center(rx.icon("lock-keyhole", size=22), class_name="vet-schedule-avatar-fallback",
+                              role="img", aria_label="Acesso revogado")),
                 perimeter_led("vet-date-led vet-schedule-avatar-led", "50%"),
                 class_name="vet-schedule-avatar-frame",
             ),
@@ -178,10 +179,13 @@ def schedule_content():
     )
 
 
-def consultation_avatar(src, size):
+def consultation_avatar(src, size, missing=None):
+    missing = (src == "") if missing is None else missing
     return rx.box(
         rx.avatar(src=src, fallback="", radius="full", size=size),
-        rx.icon("paw-print", size=26, aria_hidden=True, class_name="consultations-avatar-paw"),
+        rx.cond(missing,
+            rx.icon("paw-print", size=26, custom_attrs={"role": "img"}, aria_label="Pet sem foto", class_name="consultations-avatar-paw"),
+            rx.icon("image-off", size=26, custom_attrs={"role": "img"}, aria_label="Foto indisponível", class_name="consultations-avatar-paw")),
         class_name="consultations-avatar",
     )
 
@@ -197,7 +201,7 @@ def consultation_card(row):
     return rx.box(
         consultation_status_led(row["status"]),
         rx.el.button(
-            consultation_avatar(row.get("pet_foto", ""), "5"),
+            consultation_avatar(row.get("pet_foto", ""), "5", row.get("foto_ausente", "nao") == "sim"),
             rx.box(rx.text(rx.cond(allowed, row["pet_nome"], "Acesso revogado"), class_name="consultations-pet-name"),
                    rx.text(rx.cond(allowed, row.get("motivo", ""), "Autorização revogada pelo tutor."), class_name="consultations-muted")),
             on_click=State.select_consultation(row["id"]), disabled=~allowed,
@@ -233,7 +237,7 @@ def consultation_patient_summary():
             rx.hstack(rx.spinner(), rx.text("Carregando resumo…"), role="status", padding_y="24px"),
             rx.cond(State.consultation_summary_error != "", rx.text(State.consultation_summary_error, role="alert"),
                 rx.cond(info.get("nome", "") != "", rx.fragment(
-                    rx.hstack(consultation_avatar(info.get("foto", ""), "6"),
+                    rx.hstack(consultation_avatar(info.get("foto", ""), "6", info.get("foto_ausente", "nao") == "sim"),
                         rx.vstack(rx.text(info.get("nome", ""), class_name="consultations-pet-name"),
                                   rx.text("Nascimento: ", info.get("nascimento", ""), class_name="consultations-muted"), align="start", spacing="1"), spacing="3", align="center", margin_y="20px"),
                     rx.text(State.identity_name, weight="bold"),
