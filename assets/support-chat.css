@@ -1,4 +1,4 @@
-.vt-chat { --chat-green:var(--vt-green); position:fixed; inset:auto calc(24px + env(safe-area-inset-right,0px)) calc(180px + env(safe-area-inset-bottom,0px)) auto; margin:0; padding:0; width:380px; height:min(760px,calc(100dvh - 204px - env(safe-area-inset-bottom,0px))); max-width:calc(100vw - 48px);z-index:71; max-height:none; border:1px solid var(--vt-border); border-radius:24px; background:var(--vt-page-bg); color:var(--vt-text); font:400 14px/1.5 Nunito,sans-serif; box-shadow:0 20px 70px #10271d40; overflow:hidden; }
+.vt-chat { --chat-green:var(--vt-green); position:fixed; inset:auto calc(24px + env(safe-area-inset-right,0px)) calc(180px + env(safe-area-inset-bottom,0px)) auto; margin:0; padding:0; width:380px; height:min(760px,calc(100dvh - 204px - env(safe-area-inset-bottom,0px))); max-width:calc(100vw - 48px);z-index:71; max-height:none; border:1px solid var(--vt-border); border-radius:24px; background:var(--vt-page-bg); color:var(--vt-text); font:400 14px/1.5 Nunito,sans-serif; box-shadow:0 20px 70px #10271d40; overflow:visible; }
 .vt-chat[open] {display:flex;flex-direction:column;animation:vt-chat-in .24s ease-out;transform-origin:bottom right;}
 .vt-chat::backdrop {background:rgb(13 28 20 / 36%);}
  .vt-chat[open].is-closing {animation:vt-chat-out .2s ease-in forwards;pointer-events:none;}
@@ -67,9 +67,9 @@
 .vt-chat-control {width:27px;flex-shrink:0;}
 @media(max-width:400px){.vt-chat-header {padding-left:10px;padding-right:10px;gap:5px;}.vt-chat-heading h2 {font-size:14px;}.vt-chat-header>.vt-chat-avatar {width:34px;height:34px;}}
 
-/* Shared clockwise LED: visible only on the open chat window. */
+/* One glowing segment alternates the two loops of the open chat. */
 .vt-chat-led {position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;overflow:visible;}
-.vt-chat-led-track {width:calc(100% - 3px);height:calc(100% - 3px);rx:22.5px;ry:22.5px;fill:none;stroke:#79ed4d;stroke-width:3;stroke-linecap:round;stroke-dasharray:14 86;filter:drop-shadow(0 0 4px #65da38);}
+.vt-chat-led-track {fill:none;stroke:var(--vt-led-color,#79ed4d);stroke-width:3;stroke-linecap:round;stroke-dasharray:14 86;filter:var(--vt-led-glow,drop-shadow(0 0 3px #79ed4de6) drop-shadow(0 0 9px #79ed4d99) drop-shadow(0 0 18px #79ed4d55));}
 .vt-chat[open] .vt-chat-led-track {animation:vt-chat-border-orbit 6s linear infinite;}
 @keyframes vt-chat-border-orbit {from{stroke-dashoffset:0;}to{stroke-dashoffset:-100;}}
 
@@ -79,3 +79,7 @@
 .vt-chat-shade.is-visible {opacity:1;visibility:visible;pointer-events:auto;}
 html.vt-chat-open {overflow:hidden;}
 @media(prefers-reduced-motion:reduce){.vt-chat-shade{transition:none;}}
+
+/* Keep the mobile LED halo outside the frame while inner panels retain rounded corners. */
+.vt-chat-header {border-radius:23px 23px 0 0;}
+.vt-chat-footer,.vt-chat-history {border-radius:0 0 23px 23px;}

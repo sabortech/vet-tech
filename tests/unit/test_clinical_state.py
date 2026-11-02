@@ -23,6 +23,26 @@ async def consume(generator):
 
 
 class ClinicalStateTests(unittest.IsolatedAsyncioTestCase):
+    async def test_history_failure_and_retry_do_not_hide_agenda_or_change_attendance(self):
+        state = session("veterinario")
+        state.clinical_pet_id = "1"
+        state.clinical_diagnosis = "Draft remains"
+        state.agenda_rows = [{"id":"43", "pet_id":"2"}]
+        with patch(TARGET, new_callable=AsyncMock, side_effect=XanoRequestError("Synthetic history failure", status_code=500)) as request:
+            await State.open_prior_history.fn(state, "2")
+            self.assertEqual(request.call_args.args[2], "veterinario/pets/2/historico")
+        self.assertEqual(state.clinic_message, "")
+        self.assertEqual(state.prior_history_message, "Synthetic history failure")
+        self.assertEqual(state.agenda_rows, [{"id":"43", "pet_id":"2"}])
+        self.assertEqual(state.clinical_diagnosis, "Draft remains")
+        State.prepare_prior_history.fn(state)
+        with patch(TARGET, new_callable=AsyncMock, return_value={"pet":{"nome":"Nina"},"historico":{"consultas":[]}}) as request:
+            await State.open_prior_history.fn(state, "2")
+            self.assertEqual(request.call_args.args[2], "veterinario/pets/2/historico")
+        self.assertEqual(state.prior_pet_info["nome"], "Nina")
+        self.assertEqual(state.prior_history_message, "")
+        self.assertEqual(state.clinical_pet_id, "1")
+
     async def test_pending_history_cannot_restore_data_after_access_denial(self):
         state = session("veterinario")
         started, release = asyncio.Event(), asyncio.Event()

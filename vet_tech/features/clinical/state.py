@@ -1,6 +1,7 @@
 """Feature mixin: keeps one authenticated State and its session generation."""
 import asyncio
 import calendar
+import json
 from time import monotonic
 from copy import deepcopy
 from datetime import date, datetime, timedelta
@@ -13,7 +14,7 @@ import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
 from vet_tech.features.navigation.state import CLINICAL_SECTIONS
-from vet_tech.shared.dates import date_label, instant_label
+from vet_tech.shared.dates import date_label, instant_label, instant_datetime
 
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -27,6 +28,24 @@ def agenda_date(value: str) -> date:
         return date.fromisoformat(value)
     except ValueError:
         return date.fromisoformat(today())
+
+
+CLINICAL_DATE_FIELDS = {
+    "": {"data_atendimento": "Data do atendimento", "retorno_previsto": "Retorno (opcional)"},
+    "vacinas": {"data_aplicacao": "Data de aplicação", "data_prox_dose": "Próxima dose (opcional)"},
+    "medicamentos": {"data_inicio": "Início", "data_fim": "Fim"},
+    "doencas": {"data_diagnostico": "Data do diagnóstico"},
+    "exames": {"data_solicitacao": "Solicitação", "data_realizacao": "Realização"},
+}
+
+
+def calendar_days(month_value: str, active: str) -> list[dict[str, str]]:
+    year, month = map(int, (month_value or today()[:7]).split("-"))
+    days = [n for week in calendar.Calendar().monthdayscalendar(year, month) for n in week]
+    days += [0] * (42 - len(days))
+    return [{"label": str(n) if n else "", "date": f"{year:04d}-{month:02d}-{n:02d}" if n else "",
+             "selected": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == active else "nao",
+             "today": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == today() else "nao"} for n in days]
 
 
 def agenda_photo(value) -> str:
@@ -65,6 +84,15 @@ def pet_summary(row: dict) -> dict[str, str]:
     return {"nome": str(row.get("nome") or "Pet"), "sexo": str(row.get("sexo") or "Não informado"),
             "nascimento": display_date(row.get("data_nasc")),
             "peso": str(row["peso_atual"]) if row.get("peso_atual") is not None else "Não informado"}
+
+
+def attendance_saved_toast(finalized: bool):
+    return rx.toast.success(
+        "Consulta finalizada com sucesso!" if finalized else "Rascunho salvo com sucesso!",
+        description="Os registros estão disponíveis ao tutor." if finalized else "Você pode continuar o atendimento com tranquilidade.",
+        position="bottom-left", duration=5000, close_button=True, class_name="attendance-saved-toast",
+        style={"background": "var(--vet-toast-bg)", "color": "var(--vet-text)", "border": "1px solid var(--vet-border)", "border_radius": "14px"},
+    )
 
 
 class ClinicalMixin(rx.State, mixin=True):
@@ -151,13 +179,7 @@ class ClinicalMixin(rx.State, mixin=True):
 
     @rx.var
     def agenda_calendar_days(self) -> list[dict[str, str]]:
-        year, month = map(int, (self.agenda_calendar_month or today()[:7]).split("-"))
-        days = [n for week in calendar.Calendar().monthdayscalendar(year, month) for n in week]
-        days += [0] * (42 - len(days))
-        active = self.agenda_day or today()
-        return [{"label": str(n) if n else "", "date": f"{year:04d}-{month:02d}-{n:02d}" if n else "",
-                 "selected": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == active else "nao",
-                 "today": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == today() else "nao"} for n in days]
+        return calendar_days(self.agenda_calendar_month, self.agenda_day or today())
 
     @rx.var
     def agenda_week(self) -> list[dict[str, str]]:
@@ -206,6 +228,7 @@ class ClinicalMixin(rx.State, mixin=True):
     clinical_reason: str = ""
     clinical_diagnosis: str = ""
     clinical_notes: str = ""
+    clinical_agenda_day: str = ""
     clinical_date: str = ""
     clinical_return: str = ""
     clinical_lines: dict[str, list[dict[str, str]]] = {key: [] for key in GROUPS}
@@ -215,10 +238,124 @@ class ClinicalMixin(rx.State, mixin=True):
     disease_name: str = ""
     disease_description: str = ""
     prior_history: dict[str, list[dict[str, str]]] = {}
+    prior_history_message: str = ""
     _save_uncertain: bool = False
     _pending_version: int = -1
     _pending_payload: dict = {}
     _prior_generation: int = 0
+
+    clinical_calendar_open: bool = False
+    clinical_calendar_month: str = ""
+    clinical_calendar_group: str = ""
+    clinical_calendar_line: str = ""
+    clinical_calendar_field: str = ""
+
+    @rx.var
+    def clinical_calendar_value(self) -> str:
+        if not self.clinical_calendar_group:
+            return {"data_atendimento": self.clinical_date, "retorno_previsto": self.clinical_return}.get(self.clinical_calendar_field, "")
+        for row in self.clinical_lines.get(self.clinical_calendar_group, []):
+            if row["linha_id"] == self.clinical_calendar_line:
+                return row.get(self.clinical_calendar_field, "")
+        return ""
+
+    @rx.var
+    def clinical_calendar_label(self) -> str:
+        return CLINICAL_DATE_FIELDS.get(self.clinical_calendar_group, {}).get(self.clinical_calendar_field, "Escolher data")
+
+    @rx.var
+    def clinical_calendar_date_label(self) -> str:
+        return date_label(self.clinical_calendar_value) or "Nenhuma data selecionada"
+
+    @rx.var
+    def clinical_calendar_trigger_id(self) -> str:
+        return "clinic-" + (self.clinical_calendar_line + "-" if self.clinical_calendar_group else "") + self.clinical_calendar_field
+
+    @rx.var
+    def clinical_calendar_month_name(self) -> str:
+        return MONTHS[int((self.clinical_calendar_month or today()[:7])[5:7]) - 1].capitalize()
+
+    @rx.var
+    def clinical_calendar_year(self) -> str:
+        return (self.clinical_calendar_month or today()[:7])[:4]
+
+    @rx.var
+    def clinical_calendar_years(self) -> list[str]:
+        year = int(self.clinical_calendar_year)
+        return [str(y).zfill(4) for y in range(max(1, year - 10), min(9999, year + 10) + 1)]
+
+    @rx.var
+    def clinical_calendar_days(self) -> list[dict[str, str]]:
+        return calendar_days(self.clinical_calendar_month, self.clinical_calendar_value)
+
+    def _clinical_calendar_editable(self) -> bool:
+        if self.profile != "veterinario" or not self.clinical_id or self.clinical_status != "em_atendimento" or self.clinical_locked:
+            return False
+        group, field = self.clinical_calendar_group, self.clinical_calendar_field
+        if field not in CLINICAL_DATE_FIELDS.get(group, {}):
+            return False
+        return not group or any(row["linha_id"] == self.clinical_calendar_line for row in self.clinical_lines.get(group, []))
+
+    def _clear_clinical_calendar(self):
+        self.clinical_calendar_open = False
+        self.clinical_calendar_month = ""
+        self.clinical_calendar_group = self.clinical_calendar_line = self.clinical_calendar_field = ""
+
+    @rx.event
+    def clinical_calendar_restore_focus(self):
+        return rx.call_script("document.getElementById(" + json.dumps(self.clinical_calendar_trigger_id) + ")?.focus()")
+
+    @rx.event
+    def clinical_calendar_show(self, field: str, group: str = "", line: str = ""):
+        self.clinical_calendar_group, self.clinical_calendar_line, self.clinical_calendar_field = group, line, field
+        if not self._clinical_calendar_editable():
+            self._clear_clinical_calendar()
+            return
+        self.clinical_calendar_month = agenda_date(self.clinical_calendar_value).isoformat()[:7]
+        self.clinical_calendar_open = True
+
+    @rx.event
+    def clinical_calendar_set_open(self, value: bool):
+        # Only explicit field buttons may open the dialog.
+        if not value:
+            self.clinical_calendar_open = False
+
+    @rx.event
+    def clinical_calendar_shift(self, offset: int):
+        if not self.clinical_calendar_open or not self._clinical_calendar_editable():
+            return
+        year, month = map(int, (self.clinical_calendar_month or today()[:7]).split("-"))
+        serial = year * 12 + month - 1 + offset
+        if 12 <= serial < 120000:
+            self.clinical_calendar_month = f"{serial // 12:04d}-{serial % 12 + 1:02d}"
+
+    @rx.event
+    def clinical_calendar_choose_month(self, value: str):
+        names = [name.capitalize() for name in MONTHS]
+        if self.clinical_calendar_open and self._clinical_calendar_editable() and value in names:
+            self.clinical_calendar_month = f"{self.clinical_calendar_year}-{names.index(value) + 1:02d}"
+
+    @rx.event
+    def clinical_calendar_choose_year(self, value: str):
+        if self.clinical_calendar_open and self._clinical_calendar_editable() and value.isascii() and value.isdecimal() and 1 <= int(value) <= 9999:
+            self.clinical_calendar_month = f"{int(value):04d}-" + (self.clinical_calendar_month or today()[:7])[5:7]
+
+    @rx.event
+    def clinical_calendar_choose_day(self, value: str):
+        if not self.clinical_calendar_open or not self._clinical_calendar_editable():
+            return
+        if value:
+            try:
+                parsed = date.fromisoformat(value)
+                if parsed.isoformat() != value:
+                    return
+            except ValueError:
+                return
+        if self.clinical_calendar_group:
+            self.clinical_line_field(self.clinical_calendar_group, self.clinical_calendar_line, self.clinical_calendar_field, value)
+        else:
+            self.clinical_field(self.clinical_calendar_field, value)
+        self.clinical_calendar_open = False
 
     @rx.var
     def booking_locked(self) -> bool:
@@ -248,6 +385,7 @@ class ClinicalMixin(rx.State, mixin=True):
         self.clinic_message = ""
 
     def _clear_clinical_session(self):
+        self._clear_clinical_calendar()
         self._clear_clinical_pet()
         self._prior_generation += 1
         self._booking_generation += 1
@@ -265,9 +403,11 @@ class ClinicalMixin(rx.State, mixin=True):
         self.clinical_id = self.clinical_pet_id = self.clinical_pet_name = ""
         self.clinical_pet_info = self.prior_pet_info = {}
         self.clinical_status = self.clinical_reason = self.clinical_diagnosis = self.clinical_notes = ""
+        self.clinical_agenda_day = ""
         self.clinical_date = self.clinical_return = ""
         self.clinical_lines = {key: [] for key in GROUPS}
         self.prior_history = {}
+        self.prior_history_message = ""
         self.disease_options = []
         self.disease_name = self.disease_description = ""
         self.clinical_dirty = False
@@ -286,13 +426,16 @@ class ClinicalMixin(rx.State, mixin=True):
         else:
             self.clinic_message = str(error)
             if error.status_code in (403, 404):
+                self._clear_clinical_calendar()
                 self._prior_generation += 1
+                self.clinical_agenda_day = ""
                 self.clinical_id = self.clinical_pet_id = self.clinical_pet_name = ""
                 self.clinical_pet_info = self.prior_pet_info = {}
                 self.clinical_reason = self.clinical_status = ""
                 self.clinical_lines = {key: [] for key in GROUPS}
                 self.clinical_diagnosis = self.clinical_notes = ""
                 self.prior_history = {}
+                self.prior_history_message = ""
 
     @rx.var
     def booking_days(self) -> list[dict[str, str]]:
@@ -714,6 +857,7 @@ class ClinicalMixin(rx.State, mixin=True):
         self.upcoming_rows = []
         self._prior_generation += 1
         self.prior_history = {}
+        self.prior_history_message = ""
         self.prior_pet_info = {}
         yield
         try:
@@ -762,11 +906,13 @@ class ClinicalMixin(rx.State, mixin=True):
 
     @rx.event
     async def load_attendance(self):
+        self._clear_clinical_calendar()
         self._clinic_generation += 1
         generation, session, token = self._clinic_generation, self._session_generation, self._auth_token
         self.clinic_message = ""
         self.clinic_loading = True
         self.clinical_id = ""
+        self.clinical_agenda_day = ""
         self.clinical_pet_info = {}
         self.clinical_lines = {key: [] for key in GROUPS}
         if self.profile != "veterinario" or not token:
@@ -781,6 +927,8 @@ class ClinicalMixin(rx.State, mixin=True):
                 return
             row = data["consulta"]
             self.clinical_id = str(row["id"])
+            scheduled = instant_datetime(row.get("agendada_para"))
+            self.clinical_agenda_day = scheduled.date().isoformat() if scheduled else (self.agenda_day or today())
             self.clinical_pet_id = str(row["pet_id"])
             self.clinical_pet_name = str(data["pet"]["nome"])
             self.clinical_pet_info = pet_summary(data["pet"])
@@ -855,6 +1003,19 @@ class ClinicalMixin(rx.State, mixin=True):
                 "obs": self.clinical_notes, "data_atendimento": self.clinical_date,
                 "retorno_previsto": self.clinical_return, **deepcopy(self.clinical_lines)}
 
+    def _return_to_completed_agenda(self):
+        """Called only after the current consultation is confirmed finalized."""
+        self._clinic_generation += 1
+        self._clear_clinical_calendar()
+        self.vet_section = "Horários"
+        self.agenda_day = self.clinical_agenda_day or self.agenda_day or today()
+        self.agenda_page = 1
+        self.agenda_rows = [dict(row, status="finalizada", status_label="Concluída")
+                            if row.get("id") == self.clinical_id else row for row in self.agenda_rows]
+        self.upcoming_rows = [row for row in self.upcoming_rows if row.get("id") != self.clinical_id]
+        # Mounting the agenda calls enter_veterinary_agenda and revalidates via Xano.
+        return rx.redirect("/?secao=horarios")
+
     @rx.event
     async def save_attendance(self, finalize: bool = False):
         if self.clinic_busy or not self.clinical_id or self.profile != "veterinario":
@@ -874,6 +1035,7 @@ class ClinicalMixin(rx.State, mixin=True):
                     self.clinical_dirty = False
                     self._save_uncertain = False
                     self.clinic_message = "Consulta finalizada. Registros disponíveis ao tutor."
+                    yield [attendance_saved_toast(True), self._return_to_completed_agenda()]
                     return
                 if row["versao"] != self._pending_version:
                     if row.get("rascunho") == self._pending_payload:
@@ -881,6 +1043,7 @@ class ClinicalMixin(rx.State, mixin=True):
                         self.clinical_dirty = False
                         self._save_uncertain = False
                         self.clinic_message = "Rascunho salvo e confirmado."
+                        yield attendance_saved_toast(False)
                         return
                     self.clinic_message = "Houve outra alteração. Recarregue a consulta antes de continuar."
                     return
@@ -898,6 +1061,10 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.clinical_dirty = False
                 self._save_uncertain = False
                 self.clinic_message = "Consulta finalizada. Registros disponíveis ao tutor." if finalize else "Rascunho salvo."
+                if finalize:
+                    yield [attendance_saved_toast(True), self._return_to_completed_agenda()]
+                else:
+                    yield attendance_saved_toast(False)
         except XanoRequestError as error:
             if self._clinical_current(session, token) and value == self.clinical_id:
                 self._save_uncertain = error.status_code is None or error.status_code >= 500
@@ -928,10 +1095,22 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.clinic_busy = False
 
     @rx.event
+    def restore_prior_history_focus(self, trigger_id: str):
+        return rx.call_script("document.getElementById(" + json.dumps(trigger_id) + ")?.focus()")
+
+    @rx.event
+    def prepare_prior_history(self):
+        """Clear the previous presentation before opening the attendance dialog."""
+        self.prior_history = {}
+        self.prior_history_message = ""
+        self.prior_pet_info = {}
+
+    @rx.event
     async def open_prior_history(self, pet_id: str):
         self._prior_generation += 1
         generation = self._prior_generation
         self.prior_history = {}
+        self.prior_history_message = ""
         self.prior_pet_info = {}
         session, token = self._session_generation, self._auth_token
         try:
@@ -941,7 +1120,7 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.prior_history = {key: cards(rows) for key, rows in data["historico"].items()}
         except (ValueError, XanoRequestError) as error:
             if generation == self._prior_generation and self._clinical_current(session, token):
-                self.clinic_message = str(error)
+                self.prior_history_message = str(error)
 
     @rx.event
     def leave_attendance(self, discard: bool = False):
@@ -952,4 +1131,5 @@ class ClinicalMixin(rx.State, mixin=True):
             return
         self.clinical_confirm_leave = False
         self.clinical_dirty = False
+        self._clear_clinical_calendar()
         return rx.redirect("/")

@@ -1,6 +1,6 @@
 """Agenda, booking wizard and structured clinical forms."""
 import reflex as rx
-from vet_tech.components.date_input import date_hint
+from vet_tech.components.date_input import date_hint, calendar_panel
 
 from vet_tech.features.auth.state import State
 
@@ -34,9 +34,10 @@ def tutor_clinical_content(content: rx.Component) -> rx.Component:
     )
 
 
-def options(rows, value, change, placeholder):
+def options(rows, value, change, placeholder, control_id=None):
+    trigger_props = {"id": control_id} if control_id is not None else {}
     return rx.select.root(
-        rx.select.trigger(placeholder=placeholder, width="100%"),
+        rx.select.trigger(placeholder=placeholder, width="100%", **trigger_props),
         rx.select.content(rx.foreach(rows, lambda row: rx.select.item(row["nome"], value=row["id"]))),
         value=value, on_change=change, disabled=State.clinic_busy, width="100%",
     )
@@ -179,16 +180,9 @@ def tutor_consultations():
     )
 
 
-def appointment_card(row, actions=True):
-    return rx.card(rx.vstack(
-        rx.hstack(rx.text(row["quando"], weight="bold"), rx.badge(row["status"]), wrap="wrap"),
-        rx.text(row["pet_nome"]),
-        rx.cond(row["autorizado"] == "sim", rx.text(row.get("motivo", "")), rx.text("Acesso clínico revogado pelo tutor.")),
-        rx.cond(actions & (row["autorizado"] == "sim"), rx.hstack(
-            rx.button(rx.cond(row["status"] == "em_atendimento", "Retomar", "Começar consulta"),
-                      on_click=State.start_consultation(row["id"]), disabled=State.clinic_busy),
-            rx.button("Ver histórico", on_click=State.open_prior_history(row.get("pet_id", "")), variant="outline"),
-            wrap="wrap")), align="stretch", spacing="2"), width="100%")
+def appointment_card(row):
+    from vet_tech.components.veterinary_schedule import schedule_card
+    return schedule_card(row, show_date=True)
 
 
 def veterinary_content():
@@ -209,21 +203,8 @@ def veterinary_content():
                   rx.text("Página ", State.agenda_page, size="2", color="var(--vt-muted)"),
                   rx.button("Próxima", on_click=State.agenda_page_by(1), variant="ghost", disabled=(State.agenda_page * 25 >= State.agenda_total) | State.clinic_loading),
                   justify="center", align="center", wrap="wrap", width="100%"),
-        prior_history_panel(), align="stretch", spacing="5", width="100%",
+        align="stretch", spacing="5", width="100%",
     )
-
-
-def prior_history_panel():
-    return rx.cond(State.prior_history.length() > 0, rx.card(rx.vstack(
-        rx.heading("Histórico publicado do pet", size="4"),
-        pet_basic_info(State.prior_pet_info),
-        rx.foreach(State.prior_history.get("consultas", []), lambda row: rx.vstack(
-            rx.text(row["quando"], weight="bold"), rx.text(row.get("diagnostico", "")),
-            rx.text(row.get("obs", "")), align="start", padding_y="8px")),
-        *[rx.vstack(rx.heading(label, size="3"),
-            rx.foreach(State.prior_history.get(group, []), prior_renderer(group)), align="stretch", width="100%")
-          for group, label in (("vacinas", "Vacinas"), ("medicamentos", "Medicamentos"), ("doencas", "Doenças"), ("exames", "Exames"))],
-        align="stretch", spacing="3"), width="100%"))
 
 
 def prior_renderer(group):
@@ -262,22 +243,32 @@ def line_renderer(group):
 def clinical_line(row, group):
     special = []
     if group == "doencas":
-        special += [rx.text("Doença"), options(State.disease_options, row["doenca_id"],
-            lambda value: State.clinical_line_field(group, row["linha_id"], "doenca_id", value), "Escolha a doença")]
+        special += [rx.el.label("Doença", html_for="clinic-" + row["linha_id"] + "-doenca_id"),
+            options(State.disease_options, row["doenca_id"],
+                lambda value: State.clinical_line_field(group, row["linha_id"], "doenca_id", value),
+                "Escolha a doença", control_id="clinic-" + row["linha_id"] + "-doenca_id")]
     choices = {"doencas": ("estado", ["ativa", "em_tratamento", "curada", "controlada"]),
                "medicamentos": ("tipo", ["continuo", "vermifugo", "antipulgas", "outro"]),
                "exames": ("status", ["solicitado", "realizado"])}
     if group in choices:
         key, items = choices[group]
-        special += [rx.text(key.capitalize()), rx.select(items, placeholder="Selecione", value=row[key],
-            on_change=lambda value: State.clinical_line_field(group, row["linha_id"], key, value), disabled=State.clinic_busy)]
+        labels = {"em_tratamento": "Em tratamento", "continuo": "Contínuo", "vermifugo": "Vermífugo",
+                  "antipulgas": "Antipulgas", "ativa": "Ativa", "curada": "Curada", "controlada": "Controlada",
+                  "outro": "Outro", "solicitado": "Solicitado", "realizado": "Realizado"}
+        special += [rx.el.label("Status" if key == "status" else key.capitalize(), html_for="clinic-" + row["linha_id"] + "-" + key),
+            rx.select.root(
+                rx.select.trigger(id="clinic-" + row["linha_id"] + "-" + key, placeholder="Selecione"),
+                rx.select.content(*[rx.select.item(labels[item], value=item) for item in items]),
+                value=row[key], on_change=lambda value: State.clinical_line_field(group, row["linha_id"], key, value),
+                disabled=State.clinic_busy)]
     return rx.card(rx.vstack(
         *special,
-        *[rx.vstack(rx.text(label, as_="label"),
-             rx.input(type=kind, value=row[key], placeholder=label, aria_label=label,
-                      on_change=line_change(group, row, key),
-                      custom_attrs={"lang": "pt-BR"} if kind == "date" else {},
-                      disabled=State.clinic_busy, width="100%"),
+        *[rx.vstack(rx.el.label(label, html_for="clinic-" + row["linha_id"] + "-" + key),
+             (attendance_date_control(key, label, row[key], group, row["linha_id"])
+              if kind == "date" else rx.input(
+                  id="clinic-" + row["linha_id"] + "-" + key, type=kind, value=row[key],
+                  placeholder=label, aria_label=label, on_change=line_change(group, row, key),
+                  disabled=State.clinic_busy, width="100%")),
              *([date_hint(row[key])] if kind == "date" else []),
              align="stretch", width="100%", spacing="1")
           for key, label, kind in LINE_FIELDS[group]],
@@ -286,46 +277,226 @@ def clinical_line(row, group):
         align="stretch", spacing="3"), width="100%")
 
 
+def attendance_icon(name: str, large: bool = False):
+    return rx.center(rx.icon(name, size=26 if large else 20),
+                     class_name="attendance-icon attendance-icon--large" if large else "attendance-icon")
+
+
+def attendance_date_control(key, label, value, group="", line=""):
+    parts = value.split("-")
+    display = rx.cond((value != "") & (parts.length() == 3),
+                      parts[2] + "/" + parts[1] + "/" + parts[0], "Selecionar data")
+    control_id = "clinic-" + (line + "-" if group else "") + key
+    return rx.el.button(
+        rx.text(display), rx.icon("calendar-days", size=18), id=control_id, type="button",
+        on_click=State.clinical_calendar_show(key, group, line), disabled=State.clinical_locked,
+        aria_label=label, aria_haspopup="dialog", class_name="attendance-date-trigger",
+    )
+
+
+def attendance_calendar():
+    return rx.dialog.root(
+        calendar_panel(
+            title="Cada cuidado tem seu dia", description="Escolha a data deste registro com carinho.",
+            eyebrow=State.clinical_calendar_label, select_menu_class="attendance-date-select-menu",
+            current_prefix="Data atual: ", current_label=State.clinical_calendar_date_label,
+            month_name=State.clinical_calendar_month_name, year=State.clinical_calendar_year,
+            years=State.clinical_calendar_years, days=State.clinical_calendar_days,
+            previous_month=State.clinical_calendar_shift(-1), next_month=State.clinical_calendar_shift(1),
+            choose_month=State.clinical_calendar_choose_month, choose_year=State.clinical_calendar_choose_year,
+            choose_day=State.clinical_calendar_choose_day, legend="Selecione um dia para preencher o campo",
+            back_label="Voltar sem alterar", class_name="vet-date-dialog attendance-date-dialog",
+            extra_action=rx.el.button("Limpar data", on_click=State.clinical_calendar_choose_day(""),
+                                      class_name="vet-date-back attendance-date-clear", disabled=State.clinical_locked),
+            on_close_auto_focus=State.clinical_calendar_restore_focus,
+        ), open=State.clinical_calendar_open, on_open_change=State.clinical_calendar_set_open,
+    )
+
+
+def attendance_field(key, label, kind, value):
+    control = rx.text_area if key in ("diagnostico", "obs") else rx.input
+    props = {"type": kind} if control == rx.input else {"resize": "vertical"}
+    return rx.vstack(
+        rx.el.label(label, html_for="clinic-" + key),
+        (attendance_date_control(key, label, value) if kind == "date" else
+         control(id="clinic-" + key, value=value, on_change=header_change(key),
+                 disabled=State.clinic_busy, width="100%", **props)),
+        *([date_hint(value)] if kind == "date" else []),
+        align="stretch", spacing="2", class_name="attendance-field" + (" attendance-field--full" if kind != "date" else ""),
+    )
+
+
+def attendance_records(group, label, icon, empty):
+    return rx.vstack(
+        rx.flex(
+            attendance_icon(icon),
+            rx.heading(label, size="4"),
+            rx.badge(State.clinical_lines[group].length(), class_name="attendance-count"),
+            rx.spacer(),
+            rx.button(rx.icon("plus", size=16), "Adicionar", on_click=State.clinical_add_line(group),
+                      disabled=State.clinic_busy, class_name="attendance-button attendance-button--add"),
+            align="center", gap="10px", width="100%", wrap="wrap",
+        ),
+        rx.cond(State.clinical_lines[group].length() == 0,
+                rx.text(empty, class_name="attendance-empty")),
+        rx.foreach(State.clinical_lines[group], line_renderer(group)),
+        align="stretch", spacing="3", class_name="attendance-record-card",
+    )
+
+
+def attendance_history_dialog(pet_id=None, button_label="Consultar histórico anterior",
+                              trigger_id="attendance-history-trigger", button_class="attendance-button attendance-history-button",
+                              variant="outline", size="2", back_label="Voltar ao atendimento"):
+    pet_id = State.clinical_pet_id if pet_id is None else pet_id
+    sections = (("consultas", "Consultas", "stethoscope"), ("vacinas", "Vacinas", "syringe"),
+                ("medicamentos", "Medicamentos", "pill"), ("doencas", "Doenças", "heart-pulse"),
+                ("exames", "Exames", "microscope"))
+    return rx.dialog.root(
+        rx.dialog.trigger(rx.button(rx.icon("history", size=17), button_label,
+            on_click=[State.prepare_prior_history(), State.open_prior_history(pet_id)],
+            variant=variant, size=size, id=trigger_id, disabled=State.clinic_busy,
+            class_name=button_class)),
+        rx.dialog.content(
+            rx.box(
+                rx.hstack(rx.icon("folder-heart", size=20), rx.text("MEMÓRIAS DE CUIDADO"), spacing="2",
+                          class_name="attendance-history-eyebrow"),
+                rx.dialog.title("Histórico anterior", class_name="attendance-history-title"),
+                rx.dialog.description("Cada cuidado faz parte dessa história. Consulte os registros publicados do pet.",
+                                      class_name="attendance-history-description"),
+                rx.box(rx.image(src="/mascote_logo.png", alt="", aria_hidden=True),
+                       class_name="attendance-history-turtle", aria_hidden=True),
+                rx.dialog.close(rx.button(rx.icon("x", size=20), aria_label="Fechar histórico",
+                                           variant="ghost", class_name="attendance-history-close")),
+                class_name="attendance-history-header"),
+            rx.box(
+                rx.cond(State.prior_history.length() > 0,
+                    rx.vstack(
+                        rx.hstack(rx.icon("paw-print", size=22), pet_basic_info(State.prior_pet_info),
+                                  spacing="3", align="center", class_name="attendance-history-pet"),
+                        *[rx.box(
+                            rx.hstack(rx.icon(icon, size=19), rx.heading(label, size="4"),
+                                      rx.badge(State.prior_history.get(group, []).length()),
+                                      spacing="3", align="center", class_name="attendance-history-section-title"),
+                            rx.cond(State.prior_history.get(group, []).length() == 0,
+                                rx.text("Nenhum registro publicado nesta categoria.", class_name="attendance-history-empty"),
+                                rx.foreach(State.prior_history.get(group, []),
+                                    (lambda row: rx.box(rx.text(row.get("quando", ""), weight="bold"),
+                                        rx.text(row.get("diagnostico", "")), rx.text(row.get("obs", "")),
+                                        class_name="attendance-history-consultation"))
+                                    if group == "consultas" else prior_renderer(group))),
+                            class_name="attendance-history-section") for group, label, icon in sections],
+                        align="stretch", spacing="4", width="100%"),
+                    rx.cond(State.prior_history_message != "",
+                        rx.vstack(rx.icon("circle-alert", size=28), rx.text(State.prior_history_message, role="alert"),
+                            rx.button("Tentar novamente", on_click=[State.prepare_prior_history(),
+                                State.open_prior_history(pet_id)]),
+                            align="center", class_name="attendance-history-feedback"),
+                        rx.hstack(rx.spinner(), rx.text("Buscando a história deste pet…"), role="status",
+                                  justify="center", class_name="attendance-history-feedback"))),
+                class_name="attendance-history-body"),
+            rx.flex(rx.text("Um olhar para o passado, mais cuidado no presente."),
+                    rx.dialog.close(rx.button(back_label, variant="outline")),
+                    align="center", justify="between", wrap="wrap", gap="12px", class_name="attendance-history-footer"),
+            class_name="attendance-history-dialog", max_width="860px", width="calc(100vw - 32px)",
+            on_close_auto_focus=State.restore_prior_history_focus(trigger_id),
+        ),
+    )
+
+
+def attendance_patient():
+    info = State.clinical_pet_info
+    return rx.box(
+        rx.flex(
+            attendance_icon("paw-print", True),
+            rx.vstack(
+                rx.flex(
+                    rx.heading(State.clinical_pet_name, size="6"),
+                    rx.badge(rx.box(class_name="attendance-status-dot"),
+                             rx.match(State.clinical_status,
+                                      ("em_atendimento", "Em atendimento"),
+                                      ("finalizada", "Finalizada"), ("agendada", "Agendada"), "Status indisponível"),
+                             class_name="attendance-status"),
+                    align="center", gap="12px", wrap="wrap",
+                ),
+                rx.flex(*[
+                    rx.hstack(rx.icon(icon, size=15), rx.text(label, ": ", info.get(key, "Não informado")),
+                              *([rx.cond(info.get(key, "Não informado") != "Não informado", rx.text("kg"))] if key == "peso" else []),
+                              spacing="1", align="center", class_name="attendance-chip")
+                    for key, label, icon in (("sexo", "Sexo", "venus-and-mars"),
+                                             ("nascimento", "Nascimento", "calendar-days"),
+                                             ("peso", "Peso atual", "weight"))], gap="8px", wrap="wrap"),
+                spacing="3", align="stretch", flex="1", min_width="0",
+            ),
+            attendance_history_dialog(),
+            align="center", gap="18px", wrap="wrap",
+        ), class_name="attendance-patient",
+    )
+
+
 def attendance_content():
-    return rx.container(rx.vstack(
-        rx.hstack(rx.heading("Atendimento", size="7"), rx.spacer(),
-                  rx.button("Voltar às consultas", on_click=State.leave_attendance(False), variant="outline"), width="100%", wrap="wrap"),
-        notice(),
+    return rx.box(rx.el.link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"), rx.vstack(
+        rx.flex(
+            rx.hstack(attendance_icon("stethoscope", True), rx.heading("Atendimento", size="7"), align="center", spacing="3"),
+            rx.button(rx.icon("arrow-left", size=17), "Voltar às consultas",
+                      on_click=State.leave_attendance(False), variant="outline", class_name="attendance-button"),
+            justify="between", align="center", gap="16px", wrap="wrap", class_name="attendance-header",
+        ),
+        rx.box(notice(), class_name="attendance-notice"),
         rx.cond(State.clinical_id != "", rx.vstack(
-            rx.heading(State.clinical_pet_name, size="5"), rx.badge(State.clinical_status),
-            pet_basic_info(State.clinical_pet_info),
-            rx.button("Consultar histórico anterior", on_click=State.open_prior_history(State.clinical_pet_id), variant="outline"),
-            prior_history_panel(),
-            rx.text(rx.cond(State.clinical_dirty, "Há alterações não salvas", "Última versão confirmada"), role="status"),
+            attendance_patient(),
+            rx.hstack(rx.icon(rx.cond(State.clinical_dirty, "circle-dot", "circle-check"), size=15),
+                      rx.text(rx.cond(State.clinical_dirty, "Há alterações não salvas", "Última versão confirmada"), role="status"),
+                      spacing="2", align="center", class_name="attendance-confirmation"),
             rx.cond(State.clinical_status == "em_atendimento", rx.vstack(
-                *[rx.vstack(rx.el.label(label, html_for="clinic-"+key),
-                     rx.input(id="clinic-"+key, type=kind, value=value,
-                              on_change=header_change(key),
-                              custom_attrs={"lang": "pt-BR"} if kind == "date" else {},
-                              disabled=State.clinic_busy, width="100%"),
-                     *([date_hint(value)] if kind == "date" else []),
-                     align="stretch", width="100%")
-                  for key, label, kind, value in (("data_atendimento", "Data do atendimento", "date", State.clinical_date),
-                      ("motivo", "Motivo", "text", State.clinical_reason), ("diagnostico", "Diagnóstico", "text", State.clinical_diagnosis),
-                      ("obs", "Observações", "text", State.clinical_notes), ("retorno_previsto", "Retorno (opcional)", "date", State.clinical_return))],
-                *[rx.vstack(rx.hstack(rx.heading(label, size="4"), rx.spacer(),
-                       rx.button("Adicionar", on_click=State.clinical_add_line(group), disabled=State.clinic_busy), width="100%"),
-                       rx.foreach(State.clinical_lines[group], line_renderer(group)),
-                       align="stretch", spacing="3", width="100%")
-                  for group, label in (("vacinas", "Vacinas"), ("medicamentos", "Medicamentos"), ("doencas", "Doenças"), ("exames", "Exames"))],
-                rx.accordion.root(rx.accordion.item(header="Cadastrar doença no catálogo", content=rx.vstack(
-                    rx.input(placeholder="Nome da doença", value=State.disease_name, on_change=State.set_disease_name, aria_label="Nome da doença"),
-                    rx.text_area(placeholder="Descrição", value=State.disease_description, on_change=State.set_disease_description, aria_label="Descrição da doença"),
-                    rx.button("Cadastrar referência", on_click=State.create_disease, disabled=State.clinic_busy), align="stretch")), collapsible=True),
-                rx.hstack(rx.button("Salvar rascunho", on_click=State.save_attendance(False), disabled=State.clinic_busy, variant="outline"),
-                          rx.button("Terminar consulta", on_click=State.save_attendance(True), loading=State.clinic_busy), wrap="wrap"),
-                align="stretch", spacing="5", width="100%"),
+                rx.box(
+                    rx.heading("Dados do atendimento", size="5", class_name="attendance-section-title"),
+                    rx.grid(*[
+                        attendance_field(key, label, kind, value)
+                        for key, label, kind, value in (
+                            ("data_atendimento", "Data do atendimento", "date", State.clinical_date),
+                            ("retorno_previsto", "Retorno (opcional)", "date", State.clinical_return),
+                            ("motivo", "Motivo", "text", State.clinical_reason),
+                            ("diagnostico", "Diagnóstico", "text", State.clinical_diagnosis),
+                            ("obs", "Observações", "text", State.clinical_notes))],
+                        class_name="attendance-fields"), width="100%",
+                ),
+                rx.box(
+                    rx.heading("Registros clínicos", size="5", class_name="attendance-section-title"),
+                    rx.grid(*[
+                        attendance_records(group, label, icon, empty)
+                        for group, label, icon, empty in (
+                            ("vacinas", "Vacinas", "syringe", "Nenhuma vacina registrada"),
+                            ("medicamentos", "Medicamentos", "pill", "Nenhum medicamento registrado"),
+                            ("doencas", "Doenças", "heart-pulse", "Nenhuma doença registrada"),
+                            ("exames", "Exames", "microscope", "Nenhum exame registrado"))],
+                        class_name="attendance-records"), width="100%",
+                ),
+                rx.accordion.root(rx.accordion.item(
+                    header=rx.hstack(attendance_icon("plus"), rx.text("Cadastrar doença no catálogo"), spacing="3", align="center"),
+                    content=rx.vstack(
+                        rx.el.label("Nome da doença", html_for="attendance-disease-name"),
+                        rx.input(id="attendance-disease-name", placeholder="Nome da doença", value=State.disease_name,
+                                 on_change=State.set_disease_name, aria_label="Nome da doença"),
+                        rx.el.label("Descrição", html_for="attendance-disease-description"),
+                        rx.text_area(id="attendance-disease-description", placeholder="Descrição", value=State.disease_description,
+                                     on_change=State.set_disease_description, aria_label="Descrição da doença"),
+                        rx.button("Cadastrar referência", on_click=State.create_disease, disabled=State.clinic_busy,
+                                  class_name="attendance-button"), align="stretch", spacing="3")),
+                    collapsible=True, class_name="attendance-catalog"),
+                rx.flex(
+                    rx.button(rx.icon("save", size=18), "Salvar rascunho", on_click=State.save_attendance(False),
+                              disabled=State.clinic_busy, variant="outline", class_name="attendance-button"),
+                    rx.button(rx.icon("check", size=18), "Terminar consulta", on_click=State.save_attendance(True),
+                              loading=State.clinic_busy, class_name="attendance-button"),
+                    justify="between", gap="14px", class_name="attendance-actions",
+                ), align="stretch", spacing="6", width="100%"),
                 rx.text("Atendimento finalizado. Os registros publicados estão disponíveis ao tutor.")),
             align="stretch", width="100%", spacing="4")),
+        attendance_calendar(),
         rx.alert_dialog.root(rx.alert_dialog.content(
             rx.alert_dialog.title("Descartar alterações não salvas?"),
             rx.alert_dialog.description("A última versão salva permanece no banco. As alterações locais serão descartadas."),
             rx.hstack(rx.alert_dialog.cancel(rx.button("Continuar editando", on_click=State.set_clinical_confirm_leave(False))),
                       rx.alert_dialog.action(rx.button("Descartar e voltar", on_click=State.leave_attendance(True))), wrap="wrap")),
             open=State.clinical_confirm_leave),
-        align="stretch", spacing="5", padding_y="32px"), max_width="960px")
+        align="stretch", spacing="5", class_name="attendance-glass"), class_name="attendance-page")

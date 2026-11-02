@@ -48,6 +48,7 @@
     const b = node('button', cls); b.type = 'button'; b.setAttribute('aria-label', label); b.title = label; b.append(icon(name)); return b;
   }
   let dialog, log, input, submit, footer, historyView, historyButton, bannerVideo, shade;
+  let updateLedPath = () => {};
   let pending = false, lastQuestion = '', errorRow, responseTimer, generation = 0;
   let conversation = [], history = [], sessionKey = session().key;
   let conversationId = '', activeRequest = null;
@@ -179,9 +180,9 @@
     led.setAttribute('class', 'vt-chat-led');
     led.setAttribute('aria-hidden', 'true');
     led.setAttribute('focusable', 'false');
-    const track = document.createElementNS(svgNS, 'rect');
+    const track = document.createElementNS(svgNS, 'path');
     track.setAttribute('class', 'vt-chat-led-track');
-    track.setAttribute('x', '1.5'); track.setAttribute('y', '1.5');
+    track.setAttribute('stroke-linejoin', 'round');
     track.setAttribute('pathLength', '100');
     led.append(track);
     const head = node('header', 'vt-chat-header');
@@ -216,6 +217,26 @@
     form.append(input,submit); form.onsubmit=e=>{e.preventDefault();send(input.value);};
     foot.append(chips,form,node('p','vt-chat-notice','Sou um assistente do sistema, não substituo o veterinário.'));
     dialog.append(led,head,banner,historyView,log,foot); document.body.append(dialog);
+    // Two continuous loops share the banner divider: a rectangular figure eight.
+    // Local layout coordinates avoid the scale used by the opening animation.
+    updateLedPath = () => {
+      const width = dialog.clientWidth, height = dialog.clientHeight;
+      if (!dialog.open || width < 48 || height < 96) return;
+      const left = 1.5, right = width - 1.5, top = 1.5, bottom = height - 1.5;
+      const radius = Math.min(22.5, width / 4, height / 4);
+      const divider = Math.max(top + radius, Math.min(bottom - radius, banner.offsetTop + banner.offsetHeight));
+      track.setAttribute('d', [
+        `M ${left} ${divider} H ${right} V ${top + radius}`,
+        `Q ${right} ${top} ${right - radius} ${top} H ${left + radius}`,
+        `Q ${left} ${top} ${left} ${top + radius} V ${divider}`,
+        `H ${right} V ${bottom - radius}`,
+        `Q ${right} ${bottom} ${right - radius} ${bottom} H ${left + radius}`,
+        `Q ${left} ${bottom} ${left} ${bottom - radius} V ${divider} Z`,
+      ].join(' '));
+    };
+    const ledResize = new ResizeObserver(updateLedPath);
+    ledResize.observe(dialog); ledResize.observe(banner);
+
     dialog.addEventListener('click', e => { if (e.target === dialog) { const r=dialog.getBoundingClientRect(); if(e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom) close(); } });
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && dialog.open) {
@@ -265,6 +286,7 @@
     document.documentElement.classList.add('vt-chat-open');
     shade.classList.add('is-visible');
     dialog.show();
+    updateLedPath();
     bannerVideo.play().catch(() => { /* Browser autoplay policy may defer playback. */ });
     window.dispatchEvent(new CustomEvent('vettech:chat-state', {detail:{open:true}}));
     input.focus();

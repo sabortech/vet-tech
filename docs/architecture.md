@@ -63,7 +63,9 @@ atual seja reescrita antes de continuar o desenvolvimento.
 - `shared/dates.py` separa datas civis ISO de instantes Xano em milissegundos
   ou ISO com offset. Datas civis mantêm seu dia; instantes são apresentados no
   fuso America/Sao_Paulo. `components/date_input.py` confirma a data selecionada
-  em formato brasileiro sem alterar o valor ISO do calendário nativo.
+  em formato brasileiro e compartilha o painel de calendário com seletores de mês/ano
+  e LED SVG entre agenda e atendimento. Cada fluxo conserva seus eventos e estado;
+  os campos do atendimento continuam gravando valores ISO no rascunho existente.
 - Manter os artefatos do backend em XanoScript e continuar tratando Xano como
   backend. Esta organização não introduz outro framework ou serviço.
 
