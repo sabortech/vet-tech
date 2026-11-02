@@ -18,6 +18,21 @@ from vet_tech.shared.dates import date_label, instant_label
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
 GROUPS = ("vacinas", "medicamentos", "doencas", "exames")
+WEEKDAYS = ("Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo")
+MONTHS = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
+
+
+def agenda_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return date.fromisoformat(today())
+
+
+def agenda_photo(value) -> str:
+    # Match the existing pet photo contract; never render arbitrary URI schemes.
+    value = str(value or "")
+    return value if value.startswith(("https://", "http://", "data:image/jpeg;base64,", "data:image/png;base64,", "data:image/webp;base64,")) else ""
 
 
 def today() -> str:
@@ -99,8 +114,10 @@ class ClinicalMixin(rx.State, mixin=True):
     _booking_generation: int = 0
     _booking_sent: dict = {}
     _booking_uncertain: bool = False
-    vet_section: str = "Consultas"
+    vet_section: str = "Horários"
     agenda_day: str = ""
+    agenda_calendar_open: bool = False
+    agenda_calendar_month: str = ""
     agenda_rows: list[dict[str, str]] = []
     upcoming_rows: list[dict[str, str]] = []
     agenda_page: int = 1
@@ -108,6 +125,59 @@ class ClinicalMixin(rx.State, mixin=True):
     clinic_message: str = ""
     clinic_busy: bool = False
     clinic_loading: bool = False
+
+    @rx.var
+    def agenda_date_label(self) -> str:
+        day = agenda_date(self.agenda_day)
+        return f"{WEEKDAYS[day.weekday()]}, {day.day:02d} de {MONTHS[day.month - 1]} de {day.year}"
+
+    @rx.var
+    def agenda_short_date(self) -> str:
+        return agenda_date(self.agenda_day).strftime("%d/%m/%Y")
+
+    @rx.var
+    def agenda_calendar_month_name(self) -> str:
+        value = agenda_date((self.agenda_calendar_month or today()[:7]) + "-01")
+        return MONTHS[value.month - 1].capitalize()
+
+    @rx.var
+    def agenda_calendar_year(self) -> str:
+        return (self.agenda_calendar_month or today()[:7])[:4]
+
+    @rx.var
+    def agenda_calendar_years(self) -> list[str]:
+        year = int(self.agenda_calendar_year)
+        return [str(y).zfill(4) for y in range(max(1, year - 10), min(9999, year + 10) + 1)]
+
+    @rx.var
+    def agenda_calendar_days(self) -> list[dict[str, str]]:
+        year, month = map(int, (self.agenda_calendar_month or today()[:7]).split("-"))
+        days = [n for week in calendar.Calendar().monthdayscalendar(year, month) for n in week]
+        days += [0] * (42 - len(days))
+        active = self.agenda_day or today()
+        return [{"label": str(n) if n else "", "date": f"{year:04d}-{month:02d}-{n:02d}" if n else "",
+                 "selected": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == active else "nao",
+                 "today": "sim" if n and f"{year:04d}-{month:02d}-{n:02d}" == today() else "nao"} for n in days]
+
+    @rx.var
+    def agenda_week(self) -> list[dict[str, str]]:
+        day = agenda_date(self.agenda_day)
+        monday = day - timedelta(days=day.weekday())
+        return [{"date": (item := monday + timedelta(days=i)).isoformat(),
+                 "label": WEEKDAYS[i][:3], "day": f"{item.day:02d}"} for i in range(7)]
+
+    @rx.var
+    def agenda_hours(self) -> list[int]:
+        hours = [int(row["hora"][:2]) for row in self.agenda_rows if row.get("hora")]
+        return list(range(min([8, *hours]), max([17, *hours]) + 1))
+
+    @rx.var
+    def agenda_completed(self) -> int:
+        return sum(row.get("status") == "finalizada" for row in self.agenda_rows)
+
+    @rx.var
+    def agenda_in_progress(self) -> int:
+        return sum(row.get("status") == "em_atendimento" for row in self.agenda_rows)
     _clinic_generation: int = 0
     _tutor_history_pet: str = ""
     _tutor_loaded_at: float = 0.0
@@ -190,6 +260,8 @@ class ClinicalMixin(rx.State, mixin=True):
         self._booking_uncertain = False
         self._booking_operation = ""
         self.agenda_rows = self.upcoming_rows = []
+        self.agenda_calendar_open = False
+        self.agenda_calendar_month = ""
         self.clinical_id = self.clinical_pet_id = self.clinical_pet_name = ""
         self.clinical_pet_info = self.prior_pet_info = {}
         self.clinical_status = self.clinical_reason = self.clinical_diagnosis = self.clinical_notes = ""
@@ -201,7 +273,7 @@ class ClinicalMixin(rx.State, mixin=True):
         self.clinical_dirty = False
         self.clinical_confirm_leave = False
         self.clinic_busy = False
-        self.vet_section = "Consultas"
+        self.vet_section = "Horários"
         self._save_uncertain = False
         self._pending_payload = {}
 
@@ -552,6 +624,15 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.clinic_busy = False
 
     @rx.event
+    async def enter_veterinary_agenda(self):
+        if self.profile != "veterinario":
+            return
+        section = {"horarios": "Horários", "consultas": "Consultas"}.get(
+            self.router.url.query_parameters.get("secao", "horarios"), "Horários")
+        async for event in self.vet_navigate(section):
+            yield event
+
+    @rx.event
     async def vet_navigate(self, section: str):
         if section not in ("Horários", "Consultas") or self.profile != "veterinario":
             return
@@ -568,12 +649,47 @@ class ClinicalMixin(rx.State, mixin=True):
             yield event
 
     @rx.event
+    async def agenda_day_by(self, offset: int):
+        value = (agenda_date(self.agenda_day) + timedelta(days=offset)).isoformat()
+        async for event in self.agenda_choose_day(value):
+            yield event
+
+    @rx.event
+    def agenda_calendar_set_open(self, value: bool):
+        if self.profile != "veterinario":
+            return
+        if value:
+            self.agenda_calendar_month = (self.agenda_day or today())[:7]
+        self.agenda_calendar_open = value
+
+    @rx.event
+    def agenda_calendar_shift(self, offset: int):
+        if self.profile != "veterinario":
+            return
+        year, month = map(int, (self.agenda_calendar_month or today()[:7]).split("-"))
+        serial = year * 12 + month - 1 + offset
+        if 12 <= serial < 120000:
+            self.agenda_calendar_month = f"{serial // 12:04d}-{serial % 12 + 1:02d}"
+
+    @rx.event
+    def agenda_calendar_choose_month(self, value: str):
+        if self.profile == "veterinario" and value in [name.capitalize() for name in MONTHS]:
+            month = [name.capitalize() for name in MONTHS].index(value) + 1
+            self.agenda_calendar_month = f"{self.agenda_calendar_year}-{month:02d}"
+
+    @rx.event
+    def agenda_calendar_choose_year(self, value: str):
+        if self.profile == "veterinario" and value.isascii() and value.isdecimal() and 1 <= int(value) <= 9999:
+            self.agenda_calendar_month = f"{int(value):04d}-" + (self.agenda_calendar_month or today()[:7])[5:7]
+
+    @rx.event
     async def agenda_choose_day(self, value: str):
         try:
             date.fromisoformat(value)
         except ValueError:
             return
         self.agenda_day = value
+        self.agenda_calendar_open = False
         self.agenda_page = 1
         async for event in self.load_agenda():
             yield event
@@ -588,6 +704,8 @@ class ClinicalMixin(rx.State, mixin=True):
     async def load_agenda(self):
         if self.profile != "veterinario":
             return
+        if not self.agenda_day:
+            self.agenda_day = today()
         self._clinic_generation += 1
         generation, session, token = self._clinic_generation, self._session_generation, self._auth_token
         self.clinic_loading = True
@@ -608,6 +726,9 @@ class ClinicalMixin(rx.State, mixin=True):
                 for row in rows:
                     instant = datetime.fromtimestamp(int(row["agendada_para"]) / 1000, TZ)
                     row["hora"] = instant.strftime("%H:%M")
+                    row["hora_grupo"] = str(instant.hour)
+                    row["pet_foto"] = agenda_photo(row.get("pet_foto")) if row["autorizado"] == "sim" else ""
+                    row["status_label"] = {"agendada": "Agendada", "em_atendimento": "Em atendimento", "finalizada": "Concluída"}.get(row["status"], "Não informado")
                     row["top"] = str(max(0, (instant.hour * 60 + instant.minute - 480) * 1.5)) + "px"
                 if self.vet_section == "Horários":
                     self.agenda_rows = rows

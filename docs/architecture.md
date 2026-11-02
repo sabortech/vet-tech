@@ -129,3 +129,15 @@ global publica um formulário Reflex oculto, sem credenciais, e os assets mantê
 somente apresentação, animação e histórico visual. Nome, perfil, token e contexto
 de envio são derivados pelo servidor. Ver `docs/n8n-chat.md` para configuração e
 limites de publicação/validação.
+
+### Configurações compartilhadas por perfil
+
+`pages/configuracoes.py` compõe a mesma experiência para tutor e veterinário.
+`features/settings/state.py` mantém rascunho, cache e operações com contexto de
+token, perfil, identidade e geração da sessão. Contratos de conta/senha são
+separados por domínio no grupo Authentication; o médico não chama rotas do tutor.
+Seu menu reutiliza a sidebar e oferece Horários, Consultas e Configurações.
+A navegação de retorno usa `/?secao=horarios` e `/?secao=consultas`, com intenção
+aplicada na entrada da agenda e destinos validados no guard de configurações.
+Os campos profissionais permanecem somente leitura; o backend permite apenas
+nome/telefone e valida a senha atual antes de alterá-la.

@@ -74,3 +74,21 @@ e Configurações e verifica descarte real, continuação da edição e saída l
 Segurança/Preferências. Usa as mesmas fixtures sintéticas e variáveis de Chromium
 já descritas. A medição local inclui clique e aparecimento do título, não garante
 um SLA para redes ou dispositivos diferentes.
+
+## Configurações do veterinário
+
+A mesma rota `/configuracoes` e as mesmas abas atendem os dois perfis. Para
+veterinário, o menu mostra Horários, Consultas e Configurações. A conta apresenta
+nome/telefone editáveis, e-mail e CRMV/UF bloqueados; CPF e endereço continuam
+exclusivos do tutor. CRMV legado usa `cmv` como fallback somente de leitura.
+
+Contratos aditivos no grupo Authentication: `GET veterinario/account` retorna
+nome, telefone, e-mail, CRMV e UF; `PATCH veterinario/account` aceita somente
+nome/telefone; `POST veterinario/password` verifica senha atual contra o campo
+`senha`, exige confirmação e atualiza o hash. Todos usam `auth=veterinario` e
+`auth.id`, sem identidade escolhida pelo cliente. Nenhuma tabela é migrada.
+
+O estado compartilhado separa cache e respostas por token, perfil, identidade e
+geração da sessão. O guard de saída preserva o destino permitido de cada perfil;
+a leitura continua em background. Preferências de tema/menu usam os mecanismos
+existentes e não passam a conceder acesso ao prontuário.

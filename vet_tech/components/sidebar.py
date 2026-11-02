@@ -98,7 +98,7 @@ def _toggle_button(mobile: bool) -> rx.Component:
     )
 
 
-def _sidebar(pagina_ativa: str, actions: rx.Component | None = None) -> rx.Component:
+def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation: rx.Component | None = None) -> rx.Component:
     sidebar_class = rx.cond(
         NavigationState.drawer_open,
         "sidebar sidebar--mobile-open",
@@ -124,10 +124,10 @@ def _sidebar(pagina_ativa: str, actions: rx.Component | None = None) -> rx.Compo
             width="100%",
         ),
         rx.box(
-            *[
+            *([navigation] if navigation is not None else [
                 _menu_item(item_id, label, icon_name, pagina_ativa)
                 for item_id, label, icon_name in _NAV_ITEMS
-            ],
+            ]),
             class_name="sidebar-navigation",
             role="navigation",
             custom_attrs={"aria-label": "Navegação principal"},
@@ -138,9 +138,9 @@ def _sidebar(pagina_ativa: str, actions: rx.Component | None = None) -> rx.Compo
     )
 
 
-def layout_com_menu(conteudo: rx.Component, pagina_ativa: str, actions: rx.Component | None = None) -> rx.Component:
+def layout_com_menu(conteudo: rx.Component, pagina_ativa: str, actions: rx.Component | None = None, navigation: rx.Component | None = None) -> rx.Component:
     return rx.box(
-        _sidebar(pagina_ativa, actions),
+        _sidebar(pagina_ativa, actions, navigation),
         rx.button(
             on_click=NavigationState.close_drawer,
             id="vet-tech-drawer-escape-close",

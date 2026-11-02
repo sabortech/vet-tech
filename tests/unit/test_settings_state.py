@@ -17,8 +17,11 @@ class SettingsTests(unittest.IsolatedAsyncioTestCase):
         auth = AuthState(_reflex_internal_init=True)
         auth._auth_token = "session-a"
         auth.is_authenticated = True
+        auth.profile = "tutor"
         state = SettingsState(_reflex_internal_init=True)
         state._session = auth._auth_token
+        state.account_profile = "tutor"
+        state._context = state._context_for(auth)
         state._apply(ACCOUNT)
         return state, auth
 

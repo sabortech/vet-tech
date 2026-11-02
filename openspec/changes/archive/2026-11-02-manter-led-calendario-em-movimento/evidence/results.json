@@ -1,0 +1,34 @@
+[
+  {
+    "width": 1100,
+    "preference": "no-preference",
+    "duration": 6,
+    "frames": 27,
+    "clockwise": true,
+    "continuous_loop": true
+  },
+  {
+    "width": 1100,
+    "preference": "reduce",
+    "duration": 12,
+    "frames": 51,
+    "clockwise": true,
+    "continuous_loop": true
+  },
+  {
+    "width": 390,
+    "preference": "no-preference",
+    "duration": 6,
+    "frames": 27,
+    "clockwise": true,
+    "continuous_loop": true
+  },
+  {
+    "width": 390,
+    "preference": "reduce",
+    "duration": 12,
+    "frames": 51,
+    "clockwise": true,
+    "continuous_loop": true
+  }
+]

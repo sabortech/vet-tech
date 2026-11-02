@@ -110,3 +110,27 @@ que a produção do n8n está configurada: apenas que o erro voltou ao painel.
 
 Após alterações em produção, seguir a skill de gerenciamento de processos,
 identificar a porta no log e reiniciar o backend; não parar processos de navegador.
+
+## Aparência compartilhada
+
+O diálogo global do assistente usa os tokens --vt-* definidos pelo tema do
+sistema. Painel, histórico, mensagens, ações e campo acompanham a preferência
+clara/escura antes da abertura e enquanto a janela está aberta, em todos os
+perfis e páginas. Não há preferência separada do chat nem alteração no transporte.
+
+A janela aberta do chat tem traço verde luminoso no perímetro, circulando de
+forma linear no sentido horário (6s por volta; 12s em movimento reduzido).
+O SVG decorativo é único por janela, não recebe foco ou cliques e acompanha os
+cantos arredondados do painel em desktop e celular. Ao fechar/minimizar, a animação para.
+O efeito é global e independente de autenticação ou perfil.
+
+O painel abre acima da tartaruga, que continua visível e clicável. O restante da
+página escurece enquanto o chat está aberto; clicar no fundo, na mascote, nos
+controles ou pressionar Escape fecha o painel. Abertura e fechamento têm fade e
+leve deslocamento, desativados pela preferência de movimento reduzido.
+
+O banner `assets/gifturtle.mp4` permanece abaixo do cabeçalho e fora da rolagem
+das mensagens e do histórico. Ocupa toda a largura na proporção original 16:9,
+sem recorte; reproduz automaticamente, sem som e em loop. Fechar pausa o vídeo;
+reabrir retoma. A altura do chat é limitada pelo espaço acima da mascote para
+manter o painel e o campo de envio dentro da viewport.

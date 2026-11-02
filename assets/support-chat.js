@@ -47,7 +47,7 @@
   function button(label, name, cls) {
     const b = node('button', cls); b.type = 'button'; b.setAttribute('aria-label', label); b.title = label; b.append(icon(name)); return b;
   }
-  let dialog, log, input, submit, footer, historyView, historyButton;
+  let dialog, log, input, submit, footer, historyView, historyButton, bannerVideo, shade;
   let pending = false, lastQuestion = '', errorRow, responseTimer, generation = 0;
   let conversation = [], history = [], sessionKey = session().key;
   let conversationId = '', activeRequest = null;
@@ -158,10 +158,32 @@
     if (!clean || pending) return;
     lastQuestion = clean; message(clean, true); input.value = ''; respond(clean);
   }
-  function close() { dialog.close(); }
+  function close() {
+    if (!dialog?.open || dialog.classList.contains('is-closing')) return;
+    cancelResponse();
+    bannerVideo.pause();
+    dialog.classList.add('is-closing');
+    shade.classList.remove('is-visible');
+    const delay = matchMedia('(prefers-reduced-motion:reduce)').matches ? 0 : 200;
+    setTimeout(() => { dialog.close(); dialog.classList.remove('is-closing'); }, delay);
+  }
   function build() {
+    shade = node('div', 'vt-chat-shade');
+    shade.setAttribute('aria-hidden', 'true');
+    shade.onclick = close;
+    (document.getElementById('vettech-mascote')?.parentElement || document.body).append(shade);
     dialog = node('dialog', 'vt-chat'); dialog.id = 'vettech-support-chat';
     dialog.setAttribute('aria-labelledby', 'vt-chat-title');
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const led = document.createElementNS(svgNS, 'svg');
+    led.setAttribute('class', 'vt-chat-led');
+    led.setAttribute('aria-hidden', 'true');
+    led.setAttribute('focusable', 'false');
+    const track = document.createElementNS(svgNS, 'rect');
+    track.setAttribute('class', 'vt-chat-led-track');
+    track.setAttribute('x', '1.5'); track.setAttribute('y', '1.5');
+    track.setAttribute('pathLength', '100');
+    led.append(track);
     const head = node('header', 'vt-chat-header');
     const back = button('Voltar para a página', 'back', 'vt-chat-control vt-chat-back'); back.onclick = close;
     const title = node('div', 'vt-chat-heading');
@@ -173,6 +195,14 @@
     historyButton.setAttribute('aria-expanded', 'false');
     historyButton.onclick = () => historyView.hidden ? showHistory() : showConversation();
     head.append(back, avatar(), title, historyButton, minimize, dismiss);
+    const banner = node('div', 'vt-chat-banner');
+    bannerVideo = node('video', 'vt-chat-banner-video');
+    bannerVideo.muted = true; bannerVideo.defaultMuted = true;
+    bannerVideo.autoplay = true; bannerVideo.loop = true; bannerVideo.playsInline = true;
+    bannerVideo.preload = 'metadata';
+    bannerVideo.setAttribute('aria-hidden', 'true');
+    bannerVideo.src = '/gifturtle.mp4';
+    banner.append(bannerVideo);
     log = node('div', 'vt-chat-messages'); log.setAttribute('role', 'log'); log.setAttribute('aria-live', 'polite'); log.setAttribute('aria-label', 'Conversa com o assistente');
     const chips = node('div', 'vt-chat-chips');
     for (const [label, shape] of [['Cadastrar um pet','paw'],['Ver vacinas','vaccine'],['Agendar consulta','calendar'],['Falar com a clínica','clinic']]) {
@@ -185,16 +215,16 @@
     submit = button('Enviar mensagem','send','vt-chat-send'); submit.type='submit';
     form.append(input,submit); form.onsubmit=e=>{e.preventDefault();send(input.value);};
     foot.append(chips,form,node('p','vt-chat-notice','Sou um assistente do sistema, não substituo o veterinário.'));
-    dialog.append(head,historyView,log,foot); document.body.append(dialog);
+    dialog.append(led,head,banner,historyView,log,foot); document.body.append(dialog);
     dialog.addEventListener('click', e => { if (e.target === dialog) { const r=dialog.getBoundingClientRect(); if(e.clientX<r.left || e.clientX>r.right || e.clientY<r.top || e.clientY>r.bottom) close(); } });
-    dialog.addEventListener('keydown', e => {
-      if (e.key !== 'Tab') return;
-      const controls = [...dialog.querySelectorAll('button:not(:disabled),input:not(:disabled)')].filter(el => el.getClientRects().length);
-      const first = controls[0], last = controls[controls.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && dialog.open) {
+        e.preventDefault(); close();
+      }
     });
     dialog.addEventListener('close',()=>{
+      bannerVideo.pause();
+      shade.classList.remove('is-visible');
       try { bridge('close'); } catch (_) { /* UI can close while disconnected. */ }
       const first = conversation.find(item => item.user);
       if (first) {
@@ -232,7 +262,10 @@
     resetConversation();
     const mascot=document.getElementById('vettech-mascote');
     if(mascot){mascot.setAttribute('aria-controls','vettech-support-chat');mascot.setAttribute('aria-expanded','true');}
-    document.documentElement.classList.add('vt-chat-open'); dialog.showModal();
+    document.documentElement.classList.add('vt-chat-open');
+    shade.classList.add('is-visible');
+    dialog.show();
+    bannerVideo.play().catch(() => { /* Browser autoplay policy may defer playback. */ });
     window.dispatchEvent(new CustomEvent('vettech:chat-state', {detail:{open:true}}));
     input.focus();
   });

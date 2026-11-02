@@ -207,11 +207,6 @@ textarea {
   gap: var(--vt-space-3);
 }
 
-.sidebar-item--active {
-  color: var(--vt-text);
-  background: var(--vt-surface);
-}
-
 .sidebar-item--disabled {
   cursor: default;
   opacity: 0.88;
@@ -931,7 +926,8 @@ html[data-vt-theme="dark"] {
 }
 .sidebar { background: var(--vt-sidebar-bg); }
 .sidebar a.sidebar-item:hover, .sidebar a.sidebar-item:focus-visible { color: #1a3629; background: #ebeee5; text-decoration: none; }
-.sidebar-item--active { color: #1a3629; background: #fff; }
+.sidebar .sidebar-item.sidebar-item--active { color: #1a3629; background: #fff; }
+.sidebar .sidebar-item.sidebar-item--active:is(:hover, :focus-visible) { color: #1a3629; background: #ebeee5; }
 .pet-form__submit { color: var(--vt-primary-text); }
 .settings-page { position: relative; width: 100%; max-width: 1200px; margin: 0 auto; padding-bottom: 24px; }
 .settings-subtitle { color: var(--vt-muted); margin: -12px 0 24px; }
@@ -1027,3 +1023,137 @@ input.settings-input { padding: 0 16px; }
 .pet-form__fields .pet-form__icon-field [role="combobox"] { padding-left: 44px; }
 .pet-form__icon-field .pet-form__date-control input[type="date"] { padding-left: 44px; }
 .pet-form__icon-field .pet-form__date-label { left: 44px; max-width: calc(100% - 96px); }
+
+/* Veterinarian agenda: local presentation, shared sidebar tokens and behavior. */
+.sidebar-navigation > button.sidebar-item { border: 0; background: transparent; font: inherit; cursor: pointer; text-align: left; }
+.sidebar-navigation > button.sidebar-item:hover { background: var(--vt-sidebar-hover); }
+.vet-schedule { max-width: 1280px; margin-inline: auto; container-type: inline-size; }
+.vet-schedule-calendar, .vet-schedule-timeline { background: var(--vt-surface); border: 1px solid var(--vt-border); border-radius: var(--vt-radius-card); box-shadow: var(--vt-shadow); }
+.vet-schedule-calendar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; padding: 20px; gap: 18px; }
+.vet-schedule-date-navigation { grid-column: 2; grid-row: 1; min-width: 0; }
+.vet-schedule-date-label { text-align: center; font-size: 17px; }
+.vet-schedule-date-controls { grid-column: 3; grid-row: 1; justify-self: end; flex-wrap: wrap; justify-content: center; }
+.vet-schedule-date-caption { display: block; font-size: 11px; color: var(--vt-muted); margin-bottom: 3px; }
+.vet-schedule-week { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+.vet-schedule-week-day { display: flex; gap: 8px; justify-content: center; align-items: center; padding: 10px 4px; border: 1px solid transparent; border-radius: 12px; background: var(--vt-field-bg); color: var(--vt-text); font: inherit; cursor: pointer; }
+.vet-schedule-week-day.is-selected { background: var(--vt-green); color: var(--vt-primary-text); }
+.vet-schedule-week-day:hover:not(.is-selected) { border-color: var(--vt-green); }
+.vet-schedule button:focus-visible, .vet-schedule-logout:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+.vet-schedule-week-day:disabled { cursor: wait; opacity: .65; }
+.vet-schedule-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.vet-schedule-stat { display: flex; align-items: center; gap: 14px; padding: 18px; background: var(--vt-icon-bg); border: 1px solid var(--vt-border); border-radius: 15px; }
+.vet-schedule-stat-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--vt-surface); color: var(--vt-green); flex-shrink: 0; }
+.vet-schedule-timeline { padding: 20px; }
+.vet-schedule-timeline-header { padding-bottom: 20px; }
+.vet-schedule-hour { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; min-height: 66px; }
+.vet-schedule-hour-label { color: var(--vt-muted); font-size: 13px; padding-top: 10px; }
+.vet-schedule-hour-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr)); gap: 12px; border-top: 1px solid var(--vt-border); padding: 10px 0; min-width: 0; }
+.vet-schedule-card { min-width: 0; padding: 14px 16px; border: 1px solid var(--vt-border); border-left: 5px solid var(--vt-green); border-radius: 14px; background: var(--vt-surface); box-shadow: 0 3px 12px rgb(26 54 41 / 7%); }
+.vet-schedule-card--em_atendimento { border-left-color: var(--vt-text); }
+.vet-schedule-card--finalizada { border-left-color: var(--vt-muted); }
+.vet-schedule-pet-name, .vet-schedule-reason { overflow-wrap: anywhere; }
+.vet-schedule-reason { color: var(--vt-muted); }
+.vet-schedule-status { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; background: var(--vt-icon-bg); color: var(--vt-text); }
+.vet-schedule-card--em_atendimento .vet-schedule-status { background: var(--vt-text); color: var(--vt-surface); }
+.vet-schedule-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 30px 20px; text-align: center; color: var(--vt-text); }
+.vet-schedule-empty > svg { color: var(--vt-green); }
+.vet-schedule-identity { padding: 16px 8px 8px; border-radius: 18px; background: var(--vt-surface); color: var(--vt-text); }
+.vet-schedule-identity-icon { display: flex; padding: 12px; border-radius: 50%; background: var(--vt-icon-bg); color: var(--vt-green); }
+.vet-schedule-logout { width: 100%; min-height: 36px; border: 1px solid var(--vt-green); background: transparent; color: var(--vt-text); font: inherit; cursor: pointer; }
+.vet-schedule-logout .sidebar-item__contents { justify-content: center; }
+.sidebar--collapsed .vet-schedule-identity { padding: 8px 0; background: transparent; }
+.sidebar--collapsed .vet-schedule-identity-icon { display: none; }
+.sidebar--collapsed .vet-schedule-logout { color: var(--vt-sidebar-brand); border-color: currentColor; }
+@media (max-width: 1000px) { .vet-schedule-summary { gap: 10px; } .vet-schedule-stat { padding: 14px; gap: 8px; } .vet-schedule-stat-icon { width: 32px; height: 32px; } }
+@container (max-width: 900px) {
+  .vet-schedule-date-navigation { grid-column: 1 / -1; }
+  .vet-schedule-date-controls { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+}
+@media (max-width: 600px) {
+  .vet-schedule-calendar, .vet-schedule-timeline { padding: 14px; }
+  .vet-schedule-date-navigation { flex-basis: 100%; }
+  .vet-schedule-date-label { font-size: 14px; }
+  .vet-schedule-date-controls { width: 100%; }
+  .vet-schedule-week { gap: 4px; }
+  .vet-schedule-week-day { flex-direction: column; gap: 2px; font-size: 12px; padding: 8px 2px; }
+  .vet-schedule-summary { grid-template-columns: 1fr; }
+  .vet-schedule-stat { padding: 12px 16px; }
+  .vet-schedule-stat > div:last-child { flex-direction: row; justify-content: space-between; align-items: center; width: 100%; }
+  .vet-schedule-hour { grid-template-columns: 38px minmax(0, 1fr); gap: 6px; }
+  .vet-schedule-card { padding: 12px; }
+}
+
+/* Agenda date picker: only the open dialog has a rotating green border. */
+.vet-date-today-button, .vet-date-calendar-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: 14px; font: inherit; font-weight: 700; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.vet-date-today-button { padding: 0 18px; border: 1px solid var(--vt-green); background: var(--vt-green); color: var(--vt-primary-text); box-shadow: 0 3px 9px rgb(36 83 31 / 12%); }
+.vet-date-today-button:hover { background: var(--vt-green-hover); }
+.vet-date-calendar-button { width: 46px; border: 1px solid var(--vt-border); background: var(--vt-icon-bg); color: var(--vt-green); }
+.vet-date-calendar-button:hover { background: var(--vt-surface); border-color: var(--vt-green); box-shadow: 0 3px 9px rgb(36 83 31 / 10%); }
+.vet-date-today-button:disabled, .vet-date-calendar-button:disabled { opacity: .55; cursor: wait; }
+@keyframes vet-date-border-orbit { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
+.vet-date-dialog {
+  position: relative; padding: 0 !important; border: 3px solid var(--vt-border); border-radius: 26px !important;
+  background: var(--vt-surface) !important;
+  box-shadow: 0 0 22px rgb(104 180 78 / 24%), 0 24px 90px rgb(0 0 0 / 25%) !important;
+  color: var(--vt-text); overflow: hidden;
+  max-height: calc(100dvh - 40px); overflow-y: auto;
+}
+.vet-date-led { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.vet-date-led-track { width: calc(100% - 3px); height: calc(100% - 3px); fill: none; stroke: #79ed4d; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 14 86; filter: drop-shadow(0 0 4px #65da38); animation: vet-date-border-orbit 6s linear infinite; }
+.vet-date-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.vet-date-welcome { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 30px 24px 24px; background: var(--vt-icon-bg); border-right: 1px solid var(--vt-border); }
+.vet-date-eyebrow { display: flex; gap: 6px; align-items: center; color: var(--vt-green); font-size: 11px; font-weight: 700; }
+.vet-date-title { margin: 18px 0 10px !important; font-size: 27px !important; line-height: 1.15 !important; letter-spacing: -.5px; color: var(--vt-text); }
+.vet-date-description { color: var(--vt-muted); line-height: 1.6; font-size: 13px; }
+.vet-date-turtle { position: absolute; z-index: 1; top: 50%; right: -36px; width: 180px; height: 270px; object-fit: contain; transform: translateY(-50%); pointer-events: none; filter: drop-shadow(-3px 5px 4px rgb(36 83 31 / 12%)); }
+.vet-date-current { display: flex; gap: 8px; align-items: center; margin-top: auto; font-size: 12px; font-weight: 600; color: var(--vt-muted); }
+.vet-date-month-panel { padding: 26px 28px 24px; min-width: 0; }
+.vet-date-close, .vet-date-month-arrow { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; border: 0; border-radius: 11px; background: var(--vt-icon-bg); color: var(--vt-green); cursor: pointer; }
+.vet-date-close { color: var(--vt-muted); background: transparent; }
+.vet-date-close:hover, .vet-date-month-arrow:hover { background: var(--vt-field-bg); }
+.vet-date-month-select { flex: 1; min-width: 0; }
+.vet-date-month-select, .vet-date-year-select { background: var(--vt-surface); color: var(--vt-text); border-radius: 10px; }
+.vet-date-weekdays, .vet-date-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.vet-date-weekdays { margin: 22px 0 10px; color: var(--vt-muted); font-size: 11px; font-weight: 700; text-align: center; }
+.vet-date-day { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 42px; aspect-ratio: 1; padding: 0; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--vt-text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.vet-date-day:hover:not(:disabled):not(.is-selected) { background: var(--vt-icon-bg); border-color: var(--vt-border); }
+.vet-date-day.is-selected { background: var(--vt-green); color: var(--vt-primary-text); box-shadow: 0 3px 8px rgb(36 83 31 / 18%); }
+.vet-date-day.is-today { border-color: var(--vt-green); color: var(--vt-green); }
+.vet-date-day.is-today::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--vt-green); }
+.vet-date-day:disabled { visibility: hidden; pointer-events: none; }
+.vet-date-legend { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--vt-border); color: var(--vt-muted); }
+.vet-date-today-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--vt-green); }
+.vet-date-back { width: 100%; margin-top: 18px; padding: 11px; border: 1px solid var(--vt-border); border-radius: 12px; background: var(--vt-icon-bg); color: var(--vt-text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.vet-date-back:hover { border-color: var(--vt-green); }
+.vet-date-dialog button:focus-visible, .vet-date-today-button:focus-visible, .vet-date-calendar-button:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .vet-date-layout { grid-template-columns: minmax(0, 1fr); }
+  .vet-date-welcome { position: relative; padding: 20px 100px 18px 20px; border-right: 0; border-bottom: 1px solid var(--vt-border); }
+  .vet-date-title { font-size: 22px !important; margin-top: 10px !important; }
+  .vet-date-description { font-size: 12px; }
+  .vet-date-turtle { top: auto; right: 0; bottom: 0; width: 86px; height: 129px; transform: none; }
+  .vet-date-current { margin-top: 12px; font-size: 11px; }
+  .vet-date-month-panel { padding: 18px 16px; }
+  .vet-date-day { min-height: 36px; border-radius: 10px; }
+  .vet-date-month-controls { gap: 5px; }
+  .vet-date-month-select { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .vet-date-led-track { animation-duration: 12s; } }
+
+/* Month/year controls and menus, isolated from other selects. */
+.vet-date-select-trigger.rt-SelectTrigger { display: inline-flex; min-height: 42px; height: auto; padding: 0 13px; border: 1px solid var(--vt-border); border-radius: 13px; background: var(--vt-icon-bg); color: var(--vt-text); box-shadow: 0 2px 5px rgb(36 83 31 / 5%); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: border-color .16s, background .16s; }
+.vet-date-select-trigger--month { flex: 1; min-width: 0; }
+.vet-date-select-trigger--year { min-width: 96px; }
+.vet-date-select-trigger .rt-SelectIcon { display: none; }
+.vet-date-select-trigger .vet-date-select-chevron { color: var(--vt-green); flex-shrink: 0; }
+.vet-date-select-trigger:hover, .vet-date-select-trigger[data-state="open"] { border-color: var(--vt-green); background: var(--vt-surface); }
+.vet-date-select-trigger:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+.vet-date-select-menu.rt-SelectContent { min-width: var(--radix-select-trigger-width); max-height: min(240px, var(--radix-select-content-available-height)); border: 1px solid var(--vt-border); border-radius: 14px; background: var(--vt-surface); color: var(--vt-text); box-shadow: 0 12px 32px rgb(20 50 30 / 18%); overflow: hidden; }
+.vet-date-select-menu .rt-SelectViewport { padding: 6px; }
+.vet-date-select-menu .vet-date-select-option { min-height: 36px; padding-inline: 28px 12px; margin-block: 2px; border-radius: 9px; color: var(--vt-text); font-size: 13px; cursor: pointer; }
+.vet-date-select-menu .vet-date-select-option[data-state="checked"] { background: var(--vt-icon-bg); color: var(--vt-green); font-weight: 700; }
+.vet-date-select-menu .vet-date-select-option[data-highlighted] { background: var(--vt-green); color: var(--vt-primary-text); outline: none; }
+@media (max-width: 600px) {
+  .vet-date-select-trigger.rt-SelectTrigger { min-height: 40px; padding-inline: 10px; font-size: 13px; }
+  .vet-date-select-trigger--year { min-width: 82px; }
+}

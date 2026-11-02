@@ -1,0 +1,5 @@
+[
+  "Published endpoints: own-account projection and cross-profile/unauthenticated rejection",
+  "Allowlist and validation: protected fields and other veterinarian preserved; no partial write",
+  "Password: current/confirmation checked; hash accepts exact new password, rejects old; other accounts unchanged"
+]

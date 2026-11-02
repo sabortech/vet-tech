@@ -179,19 +179,6 @@ def tutor_consultations():
     )
 
 
-def veterinary_sidebar():
-    return rx.box(rx.vstack(
-        rx.heading("Vet Tech", size="5"), rx.text("Área veterinária", size="2"),
-        *[rx.button(rx.icon(icon, size=18), text, on_click=State.vet_navigate(text),
-                    variant=rx.cond(State.vet_section == text, "solid", "soft"), width="100%",
-                    aria_current=rx.cond(State.vet_section == text, "page", "false"))
-          for text, icon in (("Horários", "calendar-days"), ("Consultas", "clipboard-list"))],
-        rx.spacer(), rx.button("Sair", on_click=State.logout, variant="outline", width="100%"),
-        align="stretch", spacing="4", min_height="100dvh", padding="16px"),
-        as_="nav", aria_label="Menu veterinário", width=rx.breakpoints(initial="140px", lg="220px"),
-        flex_shrink="0", background="var(--vt-surface)", position="sticky", top="0")
-
-
 def appointment_card(row, actions=True):
     return rx.card(rx.vstack(
         rx.hstack(rx.text(row["quando"], weight="bold"), rx.badge(row["status"]), wrap="wrap"),
@@ -205,40 +192,25 @@ def appointment_card(row, actions=True):
 
 
 def veterinary_content():
-    timeline = rx.vstack(*[agenda_hour(hour) for hour in range(8, 18)],
-        spacing="0", width="100%", align="stretch", aria_label="Calendário vertical de consultas")
+    from vet_tech.components.veterinary_schedule import schedule_content
     return rx.vstack(
-        rx.hstack(rx.heading(State.vet_section, size="7"), rx.spacer(),
-                  rx.button("Atualizar", on_click=State.load_agenda, disabled=State.clinic_loading), width="100%", wrap="wrap"),
-        notice(),
-        rx.cond(State.vet_section == "Horários", rx.vstack(
-            rx.el.label("Dia da agenda", html_for="agenda-day"),
-            rx.input(id="agenda-day", type="date", value=State.agenda_day, on_change=State.agenda_choose_day, custom_attrs={"lang": "pt-BR"}),
-            date_hint(State.agenda_day),
-            rx.button("Hoje", on_click=State.agenda_today, variant="outline", disabled=State.clinic_loading),
-            rx.cond(State.agenda_rows.length() == 0, rx.text("Nenhuma consulta neste dia.")), timeline,
-            align="stretch", width="100%", spacing="4"),
-            rx.vstack(rx.text("Próximas consultas e atendimentos pendentes"),
-                rx.cond(State.upcoming_rows.length() == 0, rx.text("Nenhum atendimento pendente.")),
+        rx.hstack(rx.vstack(rx.heading(State.vet_section, size="7"),
+                            rx.text(rx.cond(State.vet_section == "Horários", "Sua agenda do dia", "Próximas consultas e atendimentos pendentes"), color="var(--vt-muted)"),
+                            align="start", spacing="1"), rx.spacer(),
+                  rx.button(rx.icon("refresh-cw", size=17), "Atualizar", on_click=State.load_agenda, disabled=State.clinic_loading),
+                  width="100%", align="center", wrap="wrap"),
+        rx.cond(State.clinic_message != "", rx.text(State.clinic_message, role="status")),
+        rx.cond(State.vet_section == "Horários", schedule_content(),
+            rx.vstack(
+                rx.cond(State.clinic_loading, rx.hstack(rx.spinner(), rx.text("Carregando consultas…")),
+                    rx.cond((State.upcoming_rows.length() == 0) & (State.clinic_message == ""), rx.text("Nenhum atendimento pendente."))),
                 rx.foreach(State.upcoming_rows, lambda row: appointment_card(row)), align="stretch", width="100%", spacing="4")),
-        rx.hstack(rx.button("Anterior", on_click=State.agenda_page_by(-1), disabled=State.agenda_page <= 1),
-                  rx.text("Página ", State.agenda_page),
-                  rx.button("Próxima", on_click=State.agenda_page_by(1), disabled=State.agenda_page * 25 >= State.agenda_total), wrap="wrap"),
-        prior_history_panel(),
-        align="stretch", spacing="4", width="100%",
+        rx.hstack(rx.button("Anterior", on_click=State.agenda_page_by(-1), variant="ghost", disabled=(State.agenda_page <= 1) | State.clinic_loading),
+                  rx.text("Página ", State.agenda_page, size="2", color="var(--vt-muted)"),
+                  rx.button("Próxima", on_click=State.agenda_page_by(1), variant="ghost", disabled=(State.agenda_page * 25 >= State.agenda_total) | State.clinic_loading),
+                  justify="center", align="center", wrap="wrap", width="100%"),
+        prior_history_panel(), align="stretch", spacing="5", width="100%",
     )
-
-
-def agenda_hour(hour):
-    # Visual stacking preserves readability without assigning a clinical duration.
-    return rx.hstack(
-        rx.text(f"{hour:02d}:00", size="2", color="var(--vt-muted)", width="48px", flex_shrink="0"),
-        rx.vstack(rx.foreach(State.agenda_rows, lambda row: rx.cond(
-            row.get("hora", "").startswith(f"{hour:02d}:"), rx.box(
-                rx.text(row.get("hora", ""), " · ", row["pet_nome"], weight="bold"), rx.badge(row["status"]),
-                padding="8px", background="var(--vt-icon-bg)", border_radius="8px", border="1px solid var(--vt-border)", width="100%"))),
-            spacing="2", align="stretch", width="100%", min_width="0"),
-        min_height="90px", align="start", width="100%", padding_y="8px", border_top="1px solid #DEE5D8")
 
 
 def prior_history_panel():
