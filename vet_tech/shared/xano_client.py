@@ -90,6 +90,7 @@ async def xano_request(
         # do backend. Erros arbitrários podem conter credenciais ou dados clínicos.
         message = "Não foi possível concluir a solicitação."
         safe_messages = {
+            "Somente consultas finalizadas podem ser exportadas.",
             "Sessão inválida.",
             "Pet não disponível.",
             "Acesso clínico não disponível. Verifique a autorização do tutor.",

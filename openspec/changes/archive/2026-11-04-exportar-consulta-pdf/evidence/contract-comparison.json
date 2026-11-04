@@ -1,0 +1,37 @@
+[
+  {
+    "local": "function/clinical/assert_owner.xs",
+    "remote": "function/clinical/assert_owner.xs",
+    "equal_ignoring_guid_whitespace": false
+  },
+  {
+    "local": "function/clinical/history.xs",
+    "remote": "function/clinical/history.xs",
+    "equal_ignoring_guid_whitespace": false
+  },
+  {
+    "local": "function/clinical/audit.xs",
+    "remote": "function/clinical/audit.xs",
+    "equal_ignoring_guid_whitespace": true
+  },
+  {
+    "local": "table/log_acesso.xs",
+    "remote": "table/log_acesso.xs",
+    "equal_ignoring_guid_whitespace": true
+  },
+  {
+    "local": "table/clinical_lock.xs",
+    "remote": "table/clinical_lock.xs",
+    "equal_ignoring_guid_whitespace": true
+  },
+  {
+    "local": "api/clinical/tutor_history_GET.xs",
+    "remote": "api/clinical/tutor/pets/pet_id/historico_GET.xs",
+    "equal_ignoring_guid_whitespace": true
+  },
+  {
+    "local": "api/clinical/tutor_consultations_GET.xs",
+    "remote": "api/clinical/tutor/consultas_GET.xs",
+    "equal_ignoring_guid_whitespace": false
+  }
+]

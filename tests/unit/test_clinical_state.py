@@ -224,3 +224,105 @@ class ClinicalStateTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
+    def prepare(self):
+        state=session();state.selected_pet={'id':'7'};state.active_section='Consultas'
+        state.detail_id='42';state.detail={'id':'42','status':'finalizada'}
+        State.request_consultation_pdf.fn(state)
+        return state
+
+    def locks(self,state):
+        from contextlib import ExitStack
+        stack=ExitStack()
+        stack.enter_context(patch.object(State,'__aenter__',AsyncMock(return_value=state)))
+        stack.enter_context(patch.object(State,'__aexit__',AsyncMock(return_value=False)))
+        return stack
+
+    async def test_success_duplicate_click_and_retry_operation_key(self):
+        from test_consultation_pdf import export_payload
+        state=self.prepare();generation=state._pdf_generation;key=state._pdf_key
+        self.assertIsNone(State.request_consultation_pdf.fn(state))
+        with self.locks(state),patch(TARGET,new_callable=AsyncMock,side_effect=XanoRequestError('secret',status_code=500)):
+            self.assertEqual(await consume(State.generate_consultation_pdf.fn(state,generation)),[])
+        self.assertFalse(state.pdf_export_busy);self.assertNotIn('secret',state.pdf_export_message)
+        State.request_consultation_pdf.fn(state);self.assertEqual(key,state._pdf_key)
+        with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=export_payload()) as request,patch('vet_tech.features.clinical.state.render_consultation_pdf',return_value=b'%PDF-synthetic'):
+            events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
+        self.assertEqual(len(events),1);self.assertIn('application/pdf',str(events[0]))
+        self.assertEqual(request.await_args.kwargs['json_payload'],{'operacao':key})
+        self.assertFalse(state.pdf_export_busy);self.assertEqual(state._pdf_key,'')
+
+    async def test_failures_do_not_download_and_always_release_loading(self):
+        for code in [401,403,404,400,409,429,500,None]:
+            with self.subTest(code=code):
+                state=self.prepare()
+                with self.locks(state),patch(TARGET,new_callable=AsyncMock,side_effect=XanoRequestError('clinical-secret',status_code=code)):
+                    events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
+                self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+                self.assertNotIn('clinical-secret',state.pdf_export_message)
+
+    async def test_missing_audit_or_renderer_failure_never_downloads(self):
+        from test_consultation_pdf import export_payload
+        for missing_audit in [True,False]:
+            payload=export_payload()
+            if missing_audit:payload.pop('auditoria_id')
+            state=self.prepare()
+            with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=payload),patch('vet_tech.features.clinical.state.render_consultation_pdf',side_effect=RuntimeError('clinical-secret')) as renderer:
+                events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
+            self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+            self.assertNotIn('clinical-secret',state.pdf_export_message)
+            if missing_audit:renderer.assert_not_called()
+
+    async def test_late_http_response_cannot_restore_context_or_release_new_operation(self):
+        from test_consultation_pdf import export_payload
+        for change in ['pet','detail','logout','away-and-back']:
+            with self.subTest(change=change):
+                state=self.prepare();generation=state._pdf_generation
+                started,release=asyncio.Event(),asyncio.Event()
+                async def request(*args,**kwargs):
+                    started.set();await release.wait();return export_payload()
+                with self.locks(state),patch(TARGET,side_effect=request),patch('vet_tech.features.clinical.state.render_consultation_pdf') as renderer:
+                    pending=asyncio.create_task(consume(State.generate_consultation_pdf.fn(state,generation)))
+                    await started.wait()
+                    if change=='pet':state._clear_pet_context()
+                    elif change=='logout':state._expire_session()
+                    else:
+                        State.set_detail_id.fn(state,'')
+                        if change=='away-and-back':
+                            state.detail_id='42';State.request_consultation_pdf.fn(state)
+                    release.set();events=await pending
+                self.assertEqual(events,[]);renderer.assert_not_called()
+                if change=='away-and-back':self.assertTrue(state.pdf_export_busy)
+
+    async def test_context_changes_during_render_do_not_download(self):
+        import threading
+        from test_consultation_pdf import export_payload
+        state=self.prepare();started=threading.Event();release=threading.Event()
+        def render(doc):
+            started.set();release.wait(3);return b'%PDF-private'
+        with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=export_payload()),patch('vet_tech.features.clinical.state.render_consultation_pdf',side_effect=render):
+            pending=asyncio.create_task(consume(State.generate_consultation_pdf.fn(state,state._pdf_generation)))
+            await asyncio.to_thread(started.wait,2)
+            State.set_detail_id.fn(state,'');release.set()
+            self.assertEqual(await pending,[])
+
+    async def test_renderer_timeout_and_ineligible_detail(self):
+        import time
+        from test_consultation_pdf import export_payload
+        state=self.prepare()
+        with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=export_payload()),patch('vet_tech.features.clinical.state.RENDER_TIMEOUT_SECONDS',.001),patch('vet_tech.features.clinical.state.render_consultation_pdf',side_effect=lambda _:time.sleep(.03)):
+            events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
+        self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+        for status in ['legado','em_atendimento','agendada']:
+            state._invalidate_pdf_export();state.detail={'status':status}
+            self.assertIsNone(State.request_consultation_pdf.fn(state));self.assertFalse(state.pdf_export_busy)
+
+    async def test_rollback_switch_blocks_export_without_changing_clinical_data(self):
+        state=self.prepare();state._invalidate_pdf_export()
+        before=deepcopy(state.detail)
+        with patch.dict('os.environ',{'VET_TECH_CONSULTATION_PDF_ENABLED':'false'}),patch(TARGET,new_callable=AsyncMock) as request:
+            self.assertIsNone(State.request_consultation_pdf.fn(state))
+            self.assertFalse(state.pdf_export_busy);self.assertEqual(state.detail,before)
+            request.assert_not_called()

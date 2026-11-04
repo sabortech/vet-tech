@@ -1,0 +1,20 @@
+{
+  "python": "3.13.5",
+  "reportlab": "5.1.0",
+  "short": {
+    "pages": 1,
+    "bytes": 1292874,
+    "base64_bytes": 1723832,
+    "elapsed_seconds": 0.739,
+    "peak_rss_kib": 66936
+  },
+  "long": {
+    "pages": 40,
+    "bytes": 1325455,
+    "base64_bytes": 1767276,
+    "elapsed_seconds": 6.895,
+    "peak_rss_kib": 70448
+  },
+  "scope": "prova local; n\u00e3o homologa hospedagem",
+  "font_license": "/tmp/vet-pdf-proof/reportlab/fonts/bitstream-vera-license.txt"
+}

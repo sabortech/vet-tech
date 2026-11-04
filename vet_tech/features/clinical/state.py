@@ -16,6 +16,8 @@ import reflex as rx
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
 from vet_tech.features.navigation.state import CLINICAL_SECTIONS
 from vet_tech.shared.dates import date_label, instant_label, instant_datetime
+from .consultation_pdf import ConsultationPDFError, map_consultation_document, positive_id, pdf_export_enabled
+from .consultation_pdf_template import render_consultation_pdf, RENDER_TIMEOUT_SECONDS
 
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
@@ -170,6 +172,7 @@ class ClinicalMixin(rx.State, mixin=True):
 
     @rx.event
     def set_detail_id(self, value: str):
+        self._invalidate_pdf_export()
         self.detail_id = value
 
     @rx.event
@@ -285,6 +288,12 @@ class ClinicalMixin(rx.State, mixin=True):
     history_rows: dict[str, list[dict[str, str]]] = {}
     access_rows: list[dict[str, str]] = []
     audit_rows: list[dict[str, str]] = []
+    pdf_export_busy: bool = False
+    pdf_export_message: str = ""
+    _pdf_generation: int = 0
+    _pdf_key: str = ""
+    _pdf_target: tuple[str, str] = ("", "")
+    _pdf_route: str = ""
     detail_id: str = ""
     detail: dict[str, str] = {}
     detail_sections: dict[str, list[dict[str, str]]] = {}
@@ -436,6 +445,7 @@ class ClinicalMixin(rx.State, mixin=True):
         return self.clinic_busy or self._save_uncertain
 
     def _clear_clinical_pet(self):
+        self._invalidate_pdf_export()
         self._clinic_generation += 1
         self._auxiliary_generation += 1
         self._tutor_loaded_at = 0.0
@@ -635,6 +645,8 @@ class ClinicalMixin(rx.State, mixin=True):
     async def clinical_section(self, section: str):
         if section not in ("Início", "Consultas", "Vacinas", "Medicamentos", "Doenças"):
             return
+        if section != self.active_section:
+            self._invalidate_pdf_export()
         self.active_section = section
         event = self._prepare_tutor_clinical()
         if event is not None:
@@ -654,6 +666,7 @@ class ClinicalMixin(rx.State, mixin=True):
             return
         key = self.router.url.query_parameters.get('secao', 'inicio')
         self.active_section = CLINICAL_SECTIONS.get(key, 'Início')
+        self._invalidate_pdf_export()
         self.detail_id = ''
         pet_id = self.router.url.query_parameters.get('pet_id', '')
         if pet_id:
@@ -680,6 +693,7 @@ class ClinicalMixin(rx.State, mixin=True):
         self.clinic_message = ''
         self._tutor_loaded_at = 0.0
         self.tutor_clinical_loaded = False
+        self._invalidate_pdf_export()
         self.detail_id = ''
         self.detail = {}
         self.detail_sections = {}
@@ -813,8 +827,101 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.access_rows, self.audit_rows = accesses, logs
                 self.auxiliary_loaded = True
 
+    def _invalidate_pdf_export(self):
+        self._pdf_generation += 1
+        self.pdf_export_busy = False
+        self.pdf_export_message = ""
+        self._pdf_key = ""
+        self._pdf_target = ("", "")
+        self._pdf_route = ""
+
+    @rx.var
+    def consultation_pdf_available(self) -> bool:
+        return pdf_export_enabled()
+
+    @rx.event
+    def request_consultation_pdf(self):
+        if not pdf_export_enabled() or self.pdf_export_busy or self.profile != "tutor" or not self.is_authenticated or not self._auth_token:
+            return
+        if self.active_section != "Consultas" or self.detail.get("status") != "finalizada":
+            return
+        try:
+            positive_id(self.selected_pet_id)
+            positive_id(self.detail_id)
+        except ConsultationPDFError:
+            self.pdf_export_message = "Consulta não disponível para exportação."
+            return
+        target = (self.selected_pet_id, self.detail_id)
+        if not self._pdf_key or self._pdf_target != target:
+            self._pdf_key = str(uuid4())
+        self._pdf_target = target
+        self._pdf_route = self.router.url.path
+        self._pdf_generation += 1
+        self.pdf_export_busy = True
+        self.pdf_export_message = ""
+        return self.__class__.generate_consultation_pdf(self._pdf_generation)
+
+    def _pdf_current(self, generation, session, token, pet, consultation):
+        return (pdf_export_enabled() and generation == self._pdf_generation and self._clinical_current(session, token)
+                and self.is_authenticated and self.profile == "tutor" and pet == self.selected_pet_id
+                and consultation == self.detail_id and self.active_section == "Consultas"
+                and self.router.url.path == self._pdf_route)
+
+    @rx.event(background=True)
+    async def generate_consultation_pdf(self, generation: int):
+        async with self:
+            session, token = self._session_generation, self._auth_token
+            pet, consultation = self._pdf_target
+            if not self.pdf_export_busy or not self._pdf_current(generation, session, token, pet, consultation):
+                return
+            operation = self._pdf_key
+        try:
+            payload = await xano_request("POST", GROUP,
+                f"tutor/pets/{positive_id(pet)}/consultas/{positive_id(consultation)}/exportar",
+                auth_token=token, json_payload={"operacao": operation})
+            async with self:
+                if not self._pdf_current(generation, session, token, pet, consultation):
+                    return
+            document = map_consultation_document(payload, pet, consultation)
+            del payload
+            content = await asyncio.wait_for(asyncio.to_thread(render_consultation_pdf, document),
+                                             timeout=RENDER_TIMEOUT_SECONDS)
+            async with self:
+                if not self._pdf_current(generation, session, token, pet, consultation):
+                    return
+                self._pdf_key = ""
+                self.pdf_export_busy = False
+                self.pdf_export_message = "PDF pronto para download."
+                yield rx.download(data=content, filename=document.filename, mime_type="application/pdf")
+        except XanoRequestError as error:
+            async with self:
+                if self._pdf_current(generation, session, token, pet, consultation):
+                    if error.session_invalid:
+                        self._expire_session()
+                    else:
+                        self.pdf_export_message = ({403: "Você não tem acesso a esta consulta.",
+                            404: "Consulta não disponível para exportação.",
+                            400: "Não foi possível exportar esta consulta. Atualize o prontuário.",
+                            409: "A consulta foi alterada. Atualize o prontuário.",
+                            429: "Aguarde alguns instantes e tente novamente."}.get(error.status_code)
+                            or "Não foi possível exportar o PDF. Tente novamente.")
+        except (ConsultationPDFError, TimeoutError):
+            async with self:
+                if self._pdf_current(generation, session, token, pet, consultation):
+                    self.pdf_export_message = "Não foi possível gerar o PDF. Tente novamente."
+        except Exception:
+            # Renderer/transport exception details can contain clinical text: never expose them.
+            async with self:
+                if self._pdf_current(generation, session, token, pet, consultation):
+                    self.pdf_export_message = "Não foi possível gerar o PDF. Tente novamente."
+        finally:
+            async with self:
+                if self._pdf_current(generation, session, token, pet, consultation):
+                    self.pdf_export_busy = False
+
     @rx.event
     def show_consultation_detail(self, value: str):
+        self._invalidate_pdf_export()
         self.detail_id = value
         self.detail = next((dict(r) for r in self.history_rows.get("consultas", []) if r["id"] == value), {})
         self.detail_sections = {key: [dict(r) for r in rows if r.get("consulta_id") == value]

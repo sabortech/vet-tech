@@ -60,3 +60,16 @@ class ClinicalXanoClientTests(unittest.IsolatedAsyncioTestCase):
                 await xano_request("GET", "vettech-pets", "pets/1")
         self.assertIsNone(raised.exception.status_code)
         self.assertIn("demorou", str(raised.exception))
+
+
+class PDFExportClientTests(unittest.IsolatedAsyncioTestCase):
+    async def test_export_error_allowlist_tenant_and_secret_sanitization(self):
+        for message,expected in [('Somente consultas finalizadas podem ser exportadas.','Somente consultas finalizadas podem ser exportadas.'),
+                                 ('sensitive-payload-token','Não foi possível concluir a solicitação.')]:
+            client=AsyncMock();client.request.return_value=httpx.Response(400,json={'message':message})
+            with patch('vet_tech.shared.xano_client.httpx.AsyncClient') as factory,patch.dict('os.environ',{'XANO_TENANT':'synthetic-tenant'}):
+                factory.return_value.__aenter__.return_value=client
+                with self.assertRaises(XanoRequestError) as caught:
+                    await xano_request('POST','vettech-clinical','tutor/pets/7/consultas/42/exportar',auth_token='synthetic-token',json_payload={'operacao':'synthetic'})
+            self.assertEqual(str(caught.exception),expected);self.assertEqual(caught.exception.status_code,400)
+            self.assertEqual(client.request.await_args.kwargs['headers'],{'Authorization':'Bearer synthetic-token','X-Tenant':'synthetic-tenant'})
