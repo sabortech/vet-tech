@@ -7,7 +7,7 @@ from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 from pet_loading_browser import control, stats, navigate, open_menu, menu_action
 
-EVIDENCE = Path('openspec/changes/unificar-menus-tutor/evidence')
+EVIDENCE = Path('openspec/changes/archive/2026-11-04-unificar-menus-tutor/evidence')
 
 
 def login(page):

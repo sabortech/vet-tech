@@ -181,3 +181,164 @@ A lista de cada aba de Consultas SHALL agrupar os registros carregados pela data
 #### Scenario: Lista vazia ou com erro
 - **WHEN** a leitura falha ou não encontra resultados
 - **THEN** os estados existentes de erro, carregamento e vazio permanecem distintos e não há divisórias sem consultas
+
+### Requirement: Finalização confirmada retorna à agenda com card concluído
+O sistema SHALL apresentar sucesso no canto inferior esquerdo após confirmação do rascunho ou da finalização. Após finalização confirmada, inclusive reconciliação, SHALL abrir Horários no dia do agendamento em America/Sao_Paulo e revalidar a agenda autenticada. O card finalizado SHALL indicar Concluída e não oferecer Retomar/Começar. A consulta SHALL deixar as pendências da seção Consultas. Datas clínicas editadas SHALL NOT mover o agendamento. Autorização e auditoria do backend SHALL ser preservadas.
+
+#### Scenario: Concluir atendimento autorizado
+- **GIVEN** a consulta pertence ao veterinário e há autorização ativa do tutor
+- **WHEN** a operação de finalização confirma publicação e auditoria pelo backend
+- **THEN** a interface notifica sucesso no canto inferior esquerdo e abre o dia agendado em Horários, com card Concluída após a revalidação
+
+#### Scenario: Confirmar finalização após perda da resposta
+- **GIVEN** a resposta da finalização foi perdida
+- **WHEN** a reconciliação confirma a consulta finalizada
+- **THEN** a interface retorna à agenda e notifica sucesso sem repetir a escrita
+
+#### Scenario: Falha ou resposta antiga
+- **GIVEN** o salvamento falhou, houve conflito ou a sessão/consulta mudou durante a operação
+- **WHEN** a operação termina
+- **THEN** não há declaração falsa de sucesso nem redirecionamento para uma consulta anterior
+
+### Requirement: Cards médicos verdes com luz na agenda e foto
+O sistema SHALL preservar dados, estados textuais e ações autorizadas nos cards de Horários e Consultas. O acabamento dos cards e da moldura da foto/fallback SHALL seguir a paleta contextual do atendimento: vermelho/agendada, amarelo/em atendimento e verde/finalizada. SHALL apresentar LED verde percorrendo no sentido horário o perímetro da agenda do dia, além do calendário existente; o LED da moldura do pet SHALL acompanhar a cor do status. O trecho iluminado SHALL projetar halo da mesma cor que acompanha somente o segmento móvel, inclusive no calendário e chat, sem iluminar estaticamente toda a borda. O conteúdo SHALL permanecer imóvel, legível e clicável; movimento reduzido SHALL desacelerar a circulação.
+
+#### Scenario: Card em atendimento ou concluído
+- **WHEN** a agenda apresenta consultas em atendimento ou finalizadas
+- **THEN** o card usa detalhes amarelos para em atendimento ou verdes para finalizadas, com estado textual correspondente e contorno da foto/fallback na mesma cor em circulação
+
+#### Scenario: Agenda e movimento reduzido
+- **WHEN** Horários está aberto e o navegador solicita movimento reduzido
+- **THEN** a borda da agenda do dia e da moldura do pet continuam circulando em velocidade menor sem bloquear conteúdo ou controles
+
+#### Scenario: Acesso revogado
+- **GIVEN** o tutor revogou o acesso
+- **WHEN** o card é exibido
+- **THEN** foto, nome, motivo e ações privadas permanecem ocultos conforme o backend
+
+### Requirement: Atendimento e painéis acompanham a preferência de tema
+O sistema SHALL aplicar a preferência claro/escuro existente ao atendimento, seus campos, estados, histórico, calendário clínico, confirmação de descarte e notificações de gravação. A troca SHALL atualizar painéis e notificações já abertos sem recarregar ou perder o rascunho, preservando contraste, ícones, LED e sua circulação. A preferência salva SHALL continuar sendo aplicada antes da apresentação visível pelo mecanismo já existente.
+
+#### Scenario: Trocar tema com painel aberto
+- **GIVEN** há um rascunho local e histórico ou calendário aberto
+- **WHEN** a preferência de tema do documento muda
+- **THEN** o formulário e o painel acompanham as cores do tema sem alterar valores, seleção ou visibilidade
+
+#### Scenario: Preferência persistida e notificação
+- **WHEN** o atendimento é aberto com tema escuro salvo e uma gravação é confirmada
+- **THEN** formulário, campos e toast usam superfícies escuras e textos legíveis mantendo identidade verde
+
+### Requirement: Histórico dos cards usa o painel compartilhado
+O sistema SHALL abrir o mesmo painel de histórico do atendimento a partir dos cards autorizados em Horários e Consultas, usando o pet daquele card. SHALL incluir carregamento, falha/nova tentativa, vazio, categorias clínicas, tema e mascote. Nova tentativa SHALL manter o mesmo alvo. Fechamento SHALL restaurar foco ao acionador. O histórico SHALL NOT aparecer inline abaixo da agenda nem modificar o atendimento aberto.
+
+#### Scenario: Abrir histórico de outro pet
+- **GIVEN** o veterinário possui autorização vigente para o pet do card
+- **WHEN** abre seu histórico após ter atendido outro pet, ou repete uma leitura que falhou
+- **THEN** o painel solicita o pet do card pelas mesmas APIs autorizadas e auditadas e preserva o rascunho de atendimento
+
+### Requirement: Lista de Consultas baseada no protótipo
+O sistema SHALL apresentar abas Pendentes, Hoje, Próximas, Concluídas e Canceladas, busca por pet, filtro por estado, cards horizontais com seleção explícita, data, motivo, estado e ações clínicas existentes. Filtros SHALL preceder paginação e distinguir falha, carregamento e vazio. SHALL preservar o menu médico restrito e o assistente flutuante. O campo de busca SHALL ter contorno arredondado pill, e o filtro SHALL apresentar um ícone de ajustes. A aba Canceladas SHALL listar somente status cancelada, excluído das abas ativas, e seus cards SHALL NOT oferecer iniciar/retomar. Não será criada uma operação de cancelamento.
+
+#### Scenario: Buscar e paginar
+- **WHEN** o médico altera aba, busca ou estado
+- **THEN** a lista inicia na página 1 e o total corresponde ao filtro aplicado no backend
+
+#### Scenario: Consultas canceladas
+- **WHEN** o médico seleciona Canceladas
+- **THEN** recebe somente registros cancelados, respeitando paginação e autorização, sem ação de iniciar atendimento
+
+#### Scenario: Contrato anterior
+- **WHEN** o backend ainda não confirma o contrato de filtros
+- **THEN** a tela informa a indisponibilidade sem apresentar dados como filtrados
+
+### Requirement: Resumo autorizado do paciente selecionado
+O sistema SHALL apresentar o resumo do pet escolhido com foto disponível, nome, peso informado, última vacina, última consulta e alergias explicitamente identificadas nos registros de doenças/diagnósticos, incluindo estado e indicação da fonte. Ausência SHALL ser apresentada como informação não registrada, sem afirmar ausência clínica de alergias. SHALL incluir babyturtle.png decorativa sem interceptar ações.
+
+#### Scenario: Seleção com consentimento
+- **GIVEN** o veterinário tem autorização ativa para o pet
+- **WHEN** seleciona seu card
+- **THEN** o backend valida o acesso e audita a leitura, e a página mostra apenas o resumo correspondente à seleção atual
+
+#### Scenario: Revogação ou resposta antiga
+- **GIVEN** o consentimento foi revogado ou o médico mudou de seleção/sessão
+- **WHEN** a leitura falha ou chega uma resposta antiga
+- **THEN** dados anteriores são limpos e a resposta não ocupa o resumo de outro paciente
+
+#### Scenario: Sem registro de alergia
+- **WHEN** o histórico não contém doença ou diagnóstico identificado como alergia
+- **THEN** o resumo mostra “Alergias não informadas” e não usa peso como alergia
+
+### Requirement: LED de estado nos cards de Consultas
+O sistema SHALL apresentar um segmento luminoso contornando o card no sentido horário: verde para consultas finalizadas, vermelho para agendadas ainda não iniciadas e amarelo para em atendimento. O halo da mesma cor SHALL acompanhar somente o segmento móvel, sem transformar toda a caixa em brilho estático. SHALL preservar os estados textuais, cliques, seleção, responsividade, temas, menu e assistente. Canceladas e estados desconhecidos SHALL permanecer sem LED. Movimento reduzido SHALL desacelerar a circulação.
+
+#### Scenario: Cor e movimento por estado
+- **WHEN** um card de consulta é exibido
+- **THEN** o LED assume a cor correspondente ao status real e percorre continuamente o perímetro com sombra móvel da mesma cor
+
+#### Scenario: Interação e adaptação
+- **WHEN** o médico seleciona o pet, abre o prontuário ou usa a página em celular, tema escuro ou movimento reduzido
+- **THEN** controles continuam acessíveis, o contorno acompanha o tamanho do card e a animação permanece horária, mais lenta com movimento reduzido
+
+### Requirement: LED contextual no resumo do paciente
+O resumo do paciente SHALL reutilizar o LED horário e halo móvel dos cards, com vermelho/agendada, amarelo/em atendimento e verde/finalizada, conforme a consulta selecionada e carregada com autorização. SHALL acompanhar trocas de seleção sem reaproveitar o estado de outro card. Sem seleção, em erro/carregamento, canceladas ou estado desconhecido, SHALL permanecer sem LED.
+
+#### Scenario: Alternar consulta selecionada
+- **WHEN** o médico seleciona consultas com estados diferentes
+- **THEN** o resumo confirmado assume a cor da consulta atual e mantém a mesma circulação horária e sombra móvel
+
+#### Scenario: Limpar ou falhar seleção
+- **WHEN** a seleção é limpa, está carregando ou a leitura autorizada falha
+- **THEN** o resumo não mantém o LED da consulta anterior
+
+### Requirement: Paleta do atendimento em todos os elementos contextuais
+Cards de consultas e resumo confirmado SHALL aplicar a paleta do status (vermelho/agendada, amarelo/em atendimento, verde/finalizada) aos botões, ícones, badge, nome, bordas, foco, avatar sem foto e superfícies suaves. SHALL manter contraste nos temas claro/escuro, usando tons escuros para texto sobre fundos claros e texto escuro no botão amarelo. Foto real e mascote SHALL preservar suas cores. Estados neutros e cancelados SHALL ter apresentação neutra. Menus e assistente SHALL ser preservados.
+
+#### Scenario: Troca da paleta contextual
+- **WHEN** o médico seleciona consulta em outro estado ou muda de tema
+- **THEN** o resumo e seus elementos adotam a paleta da seleção atual sem resíduos verdes nos estados vermelho/amarelo, mantendo legibilidade e LED em movimento
+
+#### Scenario: Imagem do paciente
+- **WHEN** não há foto cadastrada ou uma foto existente falha ao carregar
+- **THEN** a patinha vetorial aparece somente para foto nula/vazia e acompanha a paleta do status; foto existente com erro indica falha sem patinha, e foto carregada aparece sem patinha sobreposta
+
+#### Scenario: Mesmo tom no resumo e na seleção
+- **WHEN** um resumo autorizado está exibido para o card selecionado
+- **THEN** fundo e borda usam exatamente os mesmos tons do card selecionado, inclusive no tema claro e escuro
+
+### Requirement: Cards de Horários com paleta do atendimento
+Cards de Horários SHALL compartilhar a paleta de Consultas: vermelho/agendada, amarelo/em atendimento, verde/finalizada, incluindo nome, ícones, badge, botões, fundo, bordas e foco. O LED circular da foto SHALL usar a cor e halo do status, mantendo movimento horário e desaceleração com movimento reduzido. Ações, autorização e dados da agenda SHALL ser preservados.
+
+#### Scenario: Horários com estados diferentes
+- **WHEN** a agenda mostra consultas agendadas, em atendimento e concluídas
+- **THEN** seus cards usam vermelho, amarelo e verde respectivamente em ambos os temas, com controles legíveis e funcionais
+
+### Requirement: Atendimento segue a situação clínica
+O formulário Atendimento SHALL usar a paleta do status confirmado (vermelho/agendada, amarelo/em atendimento, verde/finalizada) em ações, ícones, destaques, bordas e superfícies, inclusive nos painéis de histórico e calendário abertos nessa página. SHALL preservar contraste, vidro, wallpaper, preferências de tema, dados, rascunho e eventos.
+
+#### Scenario: Formulário em atendimento
+- **WHEN** uma consulta em atendimento é aberta nos temas claro ou escuro
+- **THEN** formulário e painéis adotam amarelo com texto legível e preservam edição, histórico e calendário
+
+### Requirement: LED no painel completo do atendimento
+O painel inteiro do formulário SHALL apresentar segmento luminoso no perímetro com cor do status e halo móvel da mesma cor, girando continuamente no sentido horário. SHALL acompanhar altura dinâmica, não interceptar cliques e desacelerar com movimento reduzido. Sem status reconhecido SHALL permanecer sem LED.
+
+#### Scenario: Alterar conteúdo do formulário
+- **WHEN** o médico adiciona registros, redimensiona a tela ou solicita movimento reduzido
+- **THEN** o LED acompanha o perímetro completo e mantém circulação horária, mais lenta em movimento reduzido
+
+### Requirement: Card de identidade profissional na sidebar médica
+O sistema SHALL apresentar nome, avatar de iniciais, indicação de perfil médico, CRMV/UF reais da própria conta e logout em card consistente com o design existente, nos temas claro/escuro e drawer móvel. A sidebar compacta SHALL preservar avatar e saída acessível sem overflow. Destinos e proteção de saída em Configurações SHALL permanecer iguais. SHALL NOT declarar verificação externa do registro.
+
+#### Scenario: Carregar registro profissional
+- **GIVEN** sessão veterinária válida
+- **WHEN** o card é montado
+- **THEN** obtém CRMV/UF pela leitura autenticada da própria conta, sem bloquear navegação, e reutiliza metadados confirmados da sessão
+
+#### Scenario: Troca de sessão ou perfil
+- **GIVEN** uma leitura está em andamento
+- **WHEN** a sessão, identidade, token ou perfil muda
+- **THEN** a resposta antiga não restaura metadados e os dados profissionais são limpos ao sair
+
+#### Scenario: Ausência ou falha
+- **WHEN** o registro não está preenchido ou a leitura falha
+- **THEN** apresenta informação honesta e permite repetir em caso de falha, sem inventar CRMV/UF

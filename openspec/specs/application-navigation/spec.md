@@ -7,7 +7,7 @@ Oferece navegação consistente entre as áreas autenticadas do Vet Tech, com co
 ## Requirements
 
 ### Requirement: Navegação lateral reutilizável e com área ativa identificável
-O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compartilhada com a marca Vet Tech e as opções Dashboard, Prontuário, Vacinas, Consultas, Exames, Meus Pets e Configurações. A opção correspondente à área atual SHALL ser identificada visualmente como ativa e a patinha da marca SHALL usar a mesma cor do texto “Vet Tech”. No modo expandido, os itens SHALL ter área de interação de aproximadamente 48 px de altura e o item ativo SHALL manter o destaque branco com cantos arredondados.
+O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compartilhada com a marca Vet Tech e as opções Dashboard, Prontuário, Vacinas, Medicamentos, Doenças, Consultas, Exames, Meus Pets e Configurações. A opção correspondente à área atual SHALL ser identificada visualmente como ativa e a patinha da marca SHALL usar a mesma cor do texto “Vet Tech”. No modo expandido, os itens SHALL ter área de interação de aproximadamente 48 px de altura e o item ativo SHALL manter o destaque branco com cantos arredondados.
 
 #### Scenario: Perfil do tutor identifica Meus Pets como área ativa
 - **WHEN** o tutor autenticado visualiza o perfil atual
@@ -20,6 +20,15 @@ O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compa
 #### Scenario: Marca mantém proporção e cor consistentes
 - **WHEN** a sidebar aparece em modo expandido ou recolhido
 - **THEN** a patinha e o texto “Vet Tech” usam o mesmo token de cor e a marca e os itens permanecem alinhados sem cortes
+
+#### Scenario: Tutor alterna entre áreas com o mesmo design
+- **WHEN** o tutor navega entre Meus Pets, Configurações e Prontuário
+- **THEN** encontra a mesma sidebar verde personalizada, marca, ordem de itens, ícones, dimensões, foco e destaque ativo
+- **AND** o tema escuro usa os tokens da mesma identidade visual, sem trocar para um menu de aparência padrão
+
+#### Scenario: Seção clínica ativa
+- **WHEN** o tutor abre Vacinas, Medicamentos, Doenças ou Consultas
+- **THEN** somente a seção clínica correspondente é marcada como atual, sem manter outro item ativo simultaneamente
 
 ### Requirement: Áreas sem tela implementada não causam navegação inválida
 O sistema SHALL manter visíveis as opções de navegação de áreas ainda não implementadas sem encaminhar o tutor a uma rota inexistente. Essas opções SHALL indicar discretamente que a área estará disponível em breve ou não iniciar navegação.
@@ -37,7 +46,7 @@ O sistema SHALL manter sempre visível um controle acessível para alternar a na
 
 #### Scenario: Itens do rail recolhido ficam centralizados
 - **WHEN** a sidebar está recolhida em desktop
-- **THEN** os ícones dos sete itens ficam centralizados no eixo vertical da sidebar, alinhados com a patinha da marca e o botão de alternar
+- **THEN** os ícones dos itens de navegação ficam centralizados no eixo vertical da sidebar, alinhados com a patinha da marca e o botão de alternar
 - **AND** os rótulos ficam ocultos sem espaço residual, o item ativo mantém o ícone no centro do pill e cada item mantém tooltip com seu nome
 - **AND** os itens permanecem alinhados à esquerda com ícone e texto quando a sidebar está aberta
 
@@ -55,6 +64,11 @@ O sistema SHALL manter sempre visível um controle acessível para alternar a na
 - **WHEN** o tutor abre o controle de navegação em viewport abaixo de 768 px
 - **THEN** o drawer é exibido sobre o conteúdo com backdrop e o conteúdo continua ocupando a largura disponível
 - **AND** acionar o backdrop ou pressionar Esc fecha o drawer
+
+#### Scenario: Navegação fecha o drawer
+- **WHEN** o tutor conclui uma navegação pelo drawer móvel
+- **THEN** o drawer fecha e o conteúdo de destino fica acessível sem backdrop residual
+- **AND** cancelar uma confirmação de descarte mantém a tela atual e devolve foco ao controle apropriado
 
 ### Requirement: Estado da navegação é compartilhado e acessível
 O sistema SHALL manter o estado de navegação em um estado compartilhado entre as telas autenticadas, para que a preferência de expansão seja consistente durante a navegação. O controle SHALL ser operável por teclado e expor rótulo acessível, estado expandido e indicador de foco visível.
@@ -95,6 +109,12 @@ O sistema SHALL solicitar confirmação antes de abandonar dados pessoais altera
 - **WHEN** o tutor navega sem alterações pendentes
 - **THEN** a navegação ocorre sem confirmação desnecessária
 
+#### Scenario: Descarte preserva o destino clínico
+- **GIVEN** existem dados pessoais alterados em Configurações
+- **WHEN** o tutor escolhe Vacinas no menu e confirma Descartar alterações
+- **THEN** segue para Vacinas no Prontuário, preservando a seleção autorizada do pet
+- **AND** não é encaminhado a Meus Pets por um destino fixo do guard
+
 ### Requirement: Navegação limpa não espera leitura remota de conta
 O sistema SHALL permitir trocar entre Meus Pets e Configurações sem aguardar
 consulta remota de conta nem confirmação do servidor quando não houver edição
@@ -107,3 +127,20 @@ pendente. Uma consulta em andamento SHALL manter navegação e abas responsivas.
 #### Scenario: Reentrada recente na mesma sessão
 - **WHEN** o tutor volta às configurações em até 60 segundos após carregar os dados
 - **THEN** os dados confirmados da mesma sessão podem ser reutilizados sem nova leitura, preservando isolamento entre contas
+
+### Requirement: Entradas clínicas do menu conduzem à seção existente
+O sistema SHALL disponibilizar Prontuário, Vacinas, Medicamentos, Doenças e Consultas no menu compartilhado do tutor. Prontuário SHALL abrir o resumo Início. A navegação SHALL preservar a seleção autorizada e, sem pet selecionado, solicitar escolha explícita sem inventar dados ou selecionar um animal automaticamente.
+
+#### Scenario: Abrir seção a partir de Meus Pets
+- **GIVEN** o tutor tem um pet selecionado e autorizado
+- **WHEN** aciona Medicamentos pelo menu de Meus Pets
+- **THEN** abre essa seção no Prontuário usando o mesmo pet
+
+#### Scenario: Entrar em seção sem pet
+- **WHEN** o tutor aciona uma seção clínica sem pet selecionado
+- **THEN** vê a orientação e a lista para escolher um pet, mantendo a seção pretendida identificável
+- **AND** o sistema não consulta dados clínicos sem uma seleção autorizada
+
+#### Scenario: Áreas futuras continuam indisponíveis
+- **WHEN** o tutor aciona Exames ou outra área ainda sem tela implementada
+- **THEN** permanece na tela atual e não recebe erro 404

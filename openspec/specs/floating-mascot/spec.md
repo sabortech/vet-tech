@@ -65,11 +65,11 @@ O botão SHALL ser acessível por teclado, ter nome “Abrir assistente Vet Tech
 - **THEN** a pose feliz aparece enquanto pressiona, sem seguir coordenadas de toque
 
 ### Requirement: Gancho público de clique sem chat
-Ao ser ativado por mouse, teclado ou toque, o botão SHALL disparar uma única ocorrência de `window.dispatchEvent(new CustomEvent("vettech:mascote-click"))`, sem abrir interface ou fazer chamada ao backend.
+Ao ser ativado, o botão SHALL publicar uma única ocorrência de vettech:mascote-click. O consumidor local SHALL abrir o chat de suporte, sem fazer chamadas ao backend pela abertura.
 
 #### Scenario: Ativação
 - **WHEN** uma pessoa clica ou ativa com Enter ou Espaço
-- **THEN** o evento público é disparado uma vez por ativação e nenhum chat é aberto
+- **THEN** o evento é disparado uma vez e o chat abre
 
 ### Requirement: Proporção fiel e fundo completo
 O sistema SHALL usar idle quadrado transparente com uma única tartaruga inteira sem sombra incorporada, sem esticar ou estreitar a arte. SHALL desenhar sombra elíptica suave sob os pés por CSS. O fundo do login SHALL cobrir toda a viewport, inclusive a faixa inferior da mascote, sem alterar os fundos das outras telas.
