@@ -28,7 +28,7 @@ def prepare():
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
         manifest.append({"path": relative.as_posix(), "sha256": hashlib.sha256(source.read_bytes()).hexdigest()})
-    evidence = ROOT / "openspec/changes/fluxo-consultas-prontuario/bundle-manifest.json"
+    evidence = ROOT / "openspec/changes/archive/2026-11-04-fluxo-consultas-prontuario/bundle-manifest.json"
     evidence.write_text(json.dumps({"workspace": 167758, "profile": "vetech", "branch": "profile-default", "records": False,
         "files": manifest}, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"directory": str(destination), "documents": len(paths), "records": False}))

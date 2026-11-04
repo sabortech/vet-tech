@@ -1,6 +1,6 @@
 # Fluxo clínico — contrato implementado
 
-Change: `openspec/changes/fluxo-consultas-prontuario/`. Backend publicado no workspace 167758; interface integrada e verificada localmente. Evidências em `verification.md` e `smoke-result.json` dessa change. Sem publicação do frontend em hospedagem externa.
+Change: `openspec/changes/archive/2026-11-04-fluxo-consultas-prontuario/`. Backend publicado no workspace 167758; interface integrada e verificada localmente. Evidências em `verification.md` e `smoke-result.json` dessa change. Sem publicação do frontend em hospedagem externa.
 
 Consulta passa a representar a reserva e o atendimento com estados agendada, em atendimento e finalizada. Horário reservado, início/fim reais e data clínica são campos distintos. O tutor agenda no dashboard em diálogo de duas etapas; o veterinário acessa Horários (calendário vertical) e Consultas (próximas/pendências), de onde começa o atendimento. Não há bloqueio do início pelo relógio.
 
@@ -110,7 +110,7 @@ mantém suas verificações de autorização e auditoria existentes.
 
 `ClinicalMixin` é composto à única `State` autenticada; usa seu token e contador de sessão. Logout/expiração limpam agenda, atendimento, histórico e modal. Troca de pet limpa as seções e invalida respostas antigas sem modificar a seleção independente do modal. Buscas de profissionais e histórico prévio têm contadores próprios para descartar respostas ultrapassadas. Dados clínicos permanecem somente no servidor da sessão, sem armazenamento de token em componente ou sessão paralela.
 
-O percurso remoto, as fixtures propostas e os limites da publicação estão em `openspec/changes/fluxo-consultas-prontuario/deployment-review.md`. Testes locais de validação/projeção executam as Lambdas JavaScript reais; testes de estado usam HTTP mockado. Compilação e dry-run não substituem testes de transação, identidade e navegador.
+O percurso remoto, as fixtures propostas e os limites da publicação estão em `openspec/changes/archive/2026-11-04-fluxo-consultas-prontuario/deployment-review.md`. Testes locais de validação/projeção executam as Lambdas JavaScript reais; testes de estado usam HTTP mockado. Compilação e dry-run não substituem testes de transação, identidade e navegador.
 
 ### Agenda visual do veterinário
 
