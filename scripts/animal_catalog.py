@@ -108,9 +108,9 @@ def build_plan(seed, records):
 
 
 class XanoStore:
-    def __init__(self, profile_name, workspace):
+    def __init__(self, profile_name, workspace, *, profile_config=None):
         os.environ["XANO_PROFILE"] = profile_name
-        profile = cli_profile()
+        profile = profile_config if profile_config is not None else cli_profile()
         if str(profile["workspace"]) != str(workspace):
             raise CatalogError("Workspace não corresponde ao perfil selecionado")
         origin = profile["instance_origin"].rstrip("/")

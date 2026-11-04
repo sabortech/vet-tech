@@ -129,7 +129,14 @@ def records(group: str):
 
 def consultation_detail():
     return rx.vstack(
-        rx.button("Voltar à lista", on_click=State.set_detail_id(""), variant="outline"),
+        rx.hstack(
+            rx.button("Voltar à lista", on_click=State.set_detail_id(""), variant="outline"),
+            rx.cond((State.detail.get("status", "") == "finalizada") & State.consultation_pdf_available,
+                rx.button("Exportar PDF", on_click=State.request_consultation_pdf,
+                          loading=State.pdf_export_busy, disabled=State.pdf_export_busy,
+                          aria_label="Exportar PDF da consulta", variant="solid")),
+            wrap="wrap", spacing="3"),
+        rx.text(State.pdf_export_message, role="status", aria_live="polite"),
         rx.heading("Prontuário da consulta", size="5"),
         rx.text(State.detail.get("quando", "")),
         *[rx.cond(State.detail.get(key, "") != "", rx.text(label, ": ", State.detail.get(key, "")))

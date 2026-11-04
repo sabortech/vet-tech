@@ -28,11 +28,11 @@ CLEAN_ORDER = ("pet_doenca", "consulta_doenca", "vacina", "medicamento", "exame"
 
 
 class Smoke:
-    def __init__(self, folder):
+    def __init__(self, folder, *, profile_name="vetech", workspace=167758, profile_config=None):
         self.folder = Path(folder).resolve()
         if not self.folder.is_relative_to(PRIVATE.resolve()):
             raise RuntimeError("Run must stay inside private fixture directory")
-        self.store = XanoStore("vetech", 167758)
+        self.store = XanoStore(profile_name, workspace, profile_config=profile_config)
         self.path = self.folder / "ledger.json"
         self.data = json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {}
         self.client = httpx.Client(timeout=40)
