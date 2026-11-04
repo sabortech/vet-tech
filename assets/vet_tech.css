@@ -1430,9 +1430,12 @@ html[data-vt-theme="dark"] :is(.attendance-page, .attendance-history-dialog, .at
 
 /* Physician cards and their clockwise perimeter lights. */
 .vet-schedule-card .vet-schedule-status { display: inline-flex; align-items: center; gap: 5px; background: #e7efe2; color: #356438; border: 1px solid #c7dbbd; }
-.vet-schedule-avatar-frame { position: relative; width: 52px; height: 52px; padding: 4px; border: 1px solid #c6dcbc; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--vt-icon-bg); }
-.vet-schedule-avatar-frame .rt-AvatarRoot { width: 42px; height: 42px; border-radius: 50%; color: #477b3b; }
-.vet-schedule-avatar-frame .rt-AvatarImage { object-fit: cover; }
+.vet-schedule-avatar-frame { position: relative; width: 52px; height: 52px; padding: 0; border: 1px solid #c6dcbc; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--vt-icon-bg); }
+.vet-schedule-avatar-frame > [role="img"],
+.vet-schedule-avatar-frame .consultations-avatar,
+.vet-schedule-avatar-frame .rt-AvatarRoot { width: 100%; height: 100%; border-radius: 50%; }
+.vet-schedule-avatar-frame .rt-AvatarRoot { overflow: hidden; color: #477b3b; }
+.vet-schedule-avatar-frame .rt-AvatarImage { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .vet-schedule-avatar-led .vet-date-led-track { --vt-led-glow: drop-shadow(0 0 2px #79ed4de6) drop-shadow(0 0 6px #79ed4d99) drop-shadow(0 0 10px #79ed4d55); stroke-width: 2; stroke-dasharray: 22 78; animation-duration: 5s; }
 .vet-schedule-timeline { position: relative; isolation: isolate; }
 .vet-schedule-timeline-led { z-index: 1; }
@@ -1612,8 +1615,11 @@ html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(
 
 /* Perfil do paciente no topo do histórico compartilhado. */
 .attendance-history-pet.history-profile { display:grid; grid-template-columns:128px minmax(0,1fr); gap:20px 26px; padding:26px; background:var(--vet-surface); border:1px solid var(--vet-border); border-radius:22px; }
-.history-profile-portrait { grid-row:1 / span 3; align-self:center; justify-self:center; padding:6px; border:2px solid var(--vet-primary); border-radius:50%; background:var(--vet-panel); box-shadow:0 0 0 5px var(--vet-soft); }
-.history-profile-portrait .rt-AvatarRoot { width:104px; height:104px; border-radius:50%; background:var(--vet-icon); color:var(--vet-primary); }
+.history-profile-portrait { grid-row:1 / span 3; align-self:center; justify-self:center; display:flex; width:120px; height:120px; padding:0; border:2px solid var(--vet-primary); border-radius:50%; background:var(--vet-panel); box-shadow:0 0 0 5px var(--vet-soft); }
+.history-profile-portrait .consultations-avatar,
+.history-profile-portrait .rt-AvatarRoot { width:100%; height:100%; border-radius:50%; }
+.history-profile-portrait .rt-AvatarRoot { overflow:hidden; background:var(--vet-icon); color:var(--vet-primary); }
+.history-profile-portrait .rt-AvatarImage { width:100%; height:100%; object-fit:cover; object-position:center; }
 .history-profile-portrait .consultations-avatar-paw { width:36px; height:36px; color:var(--vet-primary); }
 .history-profile-identity { min-width:0; }
 .history-profile-eyebrow { color:var(--vet-primary); font-size:9px; font-weight:800; letter-spacing:.12em; }
@@ -1630,8 +1636,7 @@ html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(
 .history-profile-fact-value { color:var(--vet-text); font-size:13px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
 @media(max-width:640px) {
   .attendance-history-pet.history-profile { grid-template-columns:1fr; gap:20px; padding:24px 16px; }
-  .history-profile-portrait { grid-row:auto; }
-  .history-profile-portrait .rt-AvatarRoot { width:94px; height:94px; }
+  .history-profile-portrait { grid-row:auto; width:110px; height:110px; }
   .history-profile-identity { text-align:center; }
   .history-profile-eyebrow { justify-content:center; }
   .history-profile-name { font-size:25px; }
