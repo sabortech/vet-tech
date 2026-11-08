@@ -1,0 +1,142 @@
+[
+  {
+    "source": "assets/fundo.jpeg",
+    "output": "assets/optimized/fundo.webp",
+    "before_bytes": 559401,
+    "after_bytes": 30258,
+    "dimensions": [
+      1376,
+      768
+    ]
+  },
+  {
+    "source": "assets/fundo02.jpeg",
+    "output": "assets/optimized/fundo02.webp",
+    "before_bytes": 628262,
+    "after_bytes": 57660,
+    "dimensions": [
+      1024,
+      1024
+    ]
+  },
+  {
+    "source": "assets/fundo_mar.jpeg",
+    "output": "assets/optimized/fundo_mar.webp",
+    "before_bytes": 571309,
+    "after_bytes": 31934,
+    "dimensions": [
+      1024,
+      1024
+    ]
+  },
+  {
+    "source": "assets/fundinho.jpeg",
+    "output": "assets/optimized/fundinho.webp",
+    "before_bytes": 588602,
+    "after_bytes": 52562,
+    "dimensions": [
+      1236,
+      864
+    ]
+  },
+  {
+    "source": "assets/fundopets.jpeg",
+    "output": "assets/optimized/fundopets.webp",
+    "before_bytes": 544007,
+    "after_bytes": 19032,
+    "dimensions": [
+      1306,
+      816
+    ]
+  },
+  {
+    "source": "assets/fundpet.jpeg",
+    "output": "assets/optimized/fundpet.webp",
+    "before_bytes": 370576,
+    "after_bytes": 43246,
+    "dimensions": [
+      1024,
+      1024
+    ]
+  },
+  {
+    "source": "assets/fundpet-dark.png",
+    "output": "assets/optimized/fundpet-dark.webp",
+    "before_bytes": 1679129,
+    "after_bytes": 59644,
+    "dimensions": [
+      1254,
+      1254
+    ]
+  },
+  {
+    "source": "assets/mascote02-sem-sombra.png",
+    "output": "assets/optimized/mascote02-sem-sombra.webp",
+    "before_bytes": 1009820,
+    "after_bytes": 51832,
+    "dimensions": [
+      640,
+      640
+    ]
+  },
+  {
+    "source": "assets/tutu-sem-fundo.png",
+    "output": "assets/optimized/tutu-sem-fundo.webp",
+    "before_bytes": 764944,
+    "after_bytes": 39184,
+    "dimensions": [
+      640,
+      573
+    ]
+  },
+  {
+    "source": "assets/mascote_logo.png",
+    "output": "assets/optimized/mascote_logo.webp",
+    "before_bytes": 883357,
+    "after_bytes": 17242,
+    "dimensions": [
+      512,
+      512
+    ]
+  },
+  {
+    "source": "assets/mascote05.png",
+    "output": "assets/optimized/mascote05.webp",
+    "before_bytes": 144434,
+    "after_bytes": 18514,
+    "dimensions": [
+      500,
+      500
+    ]
+  },
+  {
+    "source": "assets/mascote-perfil.png",
+    "output": "assets/optimized/mascote-perfil.webp",
+    "before_bytes": 397035,
+    "after_bytes": 27906,
+    "dimensions": [
+      640,
+      343
+    ]
+  },
+  {
+    "source": "assets/espreitando.png",
+    "output": "assets/optimized/espreitando.webp",
+    "before_bytes": 201349,
+    "after_bytes": 23830,
+    "dimensions": [
+      409,
+      610
+    ]
+  },
+  {
+    "source": "assets/mascote_logo.png",
+    "output": "assets/optimized/favicon.png",
+    "before_bytes": 883357,
+    "after_bytes": 3534,
+    "dimensions": [
+      64,
+      64
+    ]
+  }
+]

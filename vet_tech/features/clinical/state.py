@@ -2,6 +2,8 @@
 import asyncio
 import calendar
 import json
+from hashlib import sha256
+from random import choice
 import unicodedata
 from time import monotonic
 from copy import deepcopy
@@ -13,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 import reflex as rx
 
-from vet_tech.shared.xano_client import XanoRequestError, xano_request
+from vet_tech.shared.xano_client import XanoRequestError, xano_request, xano_request_batch
 from vet_tech.features.navigation.state import CLINICAL_SECTIONS
 from vet_tech.shared.dates import date_label, instant_label, instant_datetime
 from .consultation_pdf import ConsultationPDFError, map_consultation_document, positive_id, pdf_export_enabled
@@ -22,6 +24,7 @@ from .consultation_pdf_template import render_consultation_pdf, RENDER_TIMEOUT_S
 GROUP = "vettech-clinical"
 TZ = ZoneInfo("America/Sao_Paulo")
 GROUPS = ("vacinas", "medicamentos", "doencas", "exames")
+RECORD_BACKGROUNDS = ("/optimized/fundo.webp", "/optimized/fundo02.webp", "/optimized/fundo_mar.webp", "/optimized/fundinho.webp")
 WEEKDAYS = ("Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo")
 MONTHS = ("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
 
@@ -286,6 +289,7 @@ class ClinicalMixin(rx.State, mixin=True):
     _auxiliary_running: int = -1
     consultation_rows: list[dict[str, str]] = []
     history_rows: dict[str, list[dict[str, str]]] = {}
+    _record_background_choices: dict[str, str] = {}
     access_rows: list[dict[str, str]] = []
     audit_rows: list[dict[str, str]] = []
     pdf_export_busy: bool = False
@@ -444,6 +448,32 @@ class ClinicalMixin(rx.State, mixin=True):
     def clinical_locked(self) -> bool:
         return self.clinic_busy or self._save_uncertain
 
+    def _with_record_backgrounds(self, history, pet_id):
+        projected = {group: [dict(row) for row in rows] for group, rows in history.items()}
+        for group in ("vacinas", "medicamentos", "doencas", "diagnosticos", "exames", "consultas"):
+            rows = projected.get(group, [])
+            keys = []
+            for row in rows:
+                identity = row.get("id") or sha256(json.dumps(
+                    {key: value for key, value in row.items() if key != "fundo_card"},
+                    sort_keys=True, ensure_ascii=False,
+                ).encode()).hexdigest()
+                keys.append(f"{pet_id}:{group}:{identity}")
+            used = {self._record_background_choices[key] for key in keys if key in self._record_background_choices}
+            previous = None
+            for key, row in zip(keys, rows):
+                if key not in self._record_background_choices:
+                    available = [background for background in RECORD_BACKGROUNDS if background not in used]
+                    if not available:
+                        used = set()
+                        available = [background for background in RECORD_BACKGROUNDS if background != previous]
+                    self._record_background_choices[key] = choice(available)
+                background = self._record_background_choices[key]
+                row["fundo_card"] = background
+                used.add(background)
+                previous = background
+        return projected
+
     def _clear_clinical_pet(self):
         self._invalidate_pdf_export()
         self._clinic_generation += 1
@@ -465,6 +495,7 @@ class ClinicalMixin(rx.State, mixin=True):
         self.clinic_message = ""
 
     def _clear_clinical_session(self):
+        self._record_background_choices = {}
         self._clear_clinical_calendar()
         self._clear_clinical_pet()
         self._prior_generation += 1
@@ -523,12 +554,30 @@ class ClinicalMixin(rx.State, mixin=True):
                 self.prior_history_message = ""
 
     @rx.var
+    def booking_calendar_locked(self) -> bool:
+        return self.booking_busy or self._booking_uncertain
+
+    @rx.var
+    def booking_date_label(self) -> str:
+        return date_label(self.booking_day) or "Nenhuma data selecionada"
+
+    @rx.var
+    def booking_month_name(self) -> str:
+        return MONTHS[int((self.booking_month or today()[:7])[5:7])-1].capitalize()
+
+    @rx.var
+    def booking_year(self) -> str:
+        return (self.booking_month or today()[:7])[:4]
+
+    @rx.var
+    def booking_years(self) -> list[str]:
+        year = int(self.booking_year)
+        return [str(y).zfill(4) for y in range(max(1, year-10), min(9998, year+10)+1)]
+
+    @rx.var
     def booking_days(self) -> list[dict[str, str]]:
-        month = self.booking_month or today()[:7]
-        year, number = map(int, month.split("-"))
-        return [{"date": d.isoformat(), "label": str(d.day) if d.month == number else "",
-                 "disabled": "sim" if d.month != number or d.isoformat() < today() else "nao"}
-                for week in calendar.Calendar().monthdatescalendar(year, number) for d in week]
+        return [{**day, "disabled": "sim" if day["date"] and day["date"] < today() else "nao"}
+                for day in calendar_days(self.booking_month, self.booking_day)]
 
     @rx.event
     def booking_set_open(self, value: bool):
@@ -554,17 +603,41 @@ class ClinicalMixin(rx.State, mixin=True):
 
     @rx.event
     def booking_shift_month(self, offset: int):
+        if not self.booking_open or self.booking_calendar_locked:
+            return
         year, month = map(int, (self.booking_month or today()[:7]).split("-"))
         serial = year * 12 + month - 1 + offset
-        self.booking_month = f"{serial // 12:04d}-{serial % 12 + 1:02d}"
+        if 12 <= serial < 119988:
+            self.booking_month = f"{serial // 12:04d}-{serial % 12 + 1:02d}"
+
+    @rx.event
+    def booking_choose_month(self, value: str):
+        names = [name.capitalize() for name in MONTHS]
+        if self.booking_open and not self.booking_calendar_locked and value in names:
+            self.booking_month = f"{self.booking_year}-{names.index(value)+1:02d}"
+
+    @rx.event
+    def booking_choose_year(self, value: str):
+        if (self.booking_open and not self.booking_calendar_locked and value.isascii()
+                and value.isdecimal() and 1 <= int(value) <= 9998):
+            self.booking_month = f"{int(value):04d}-" + (self.booking_month or today()[:7])[5:7]
 
     @rx.event
     def booking_choose_day(self, value: str):
-        if not self._booking_uncertain:
+        if not self.booking_open or self.booking_calendar_locked:
+            return
+        try:
+            chosen = date.fromisoformat(value)
+        except ValueError:
+            return
+        if chosen.isoformat() == value and value >= today():
             self.booking_day = value
+            self.booking_message = ""
 
     @rx.event
     def booking_next(self):
+        if not self.booking_open or self.booking_calendar_locked:
+            return
         try:
             instant = datetime.fromisoformat(f"{self.booking_day}T{self.booking_time}").replace(tzinfo=TZ)
             if not ("08:00" <= self.booking_time <= "17:00") or instant <= datetime.now(TZ):
@@ -742,7 +815,8 @@ class ClinicalMixin(rx.State, mixin=True):
             reads = [xano_request('GET', GROUP, 'tutor/consultas?' + urlencode({'pet_id': pet}), auth_token=token)]
             if not reservations_only:
                 reads.insert(0, xano_request('GET', GROUP, f'tutor/pets/{pet}/historico', auth_token=token))
-            results = await asyncio.gather(*reads, return_exceptions=True)
+            async with xano_request_batch():
+                results = await asyncio.gather(*reads, return_exceptions=True)
             errors = [item for item in results if isinstance(item, BaseException)]
             if errors:
                 raise next((item for item in errors if isinstance(item, XanoRequestError) and item.status_code in (401, 403, 404)), errors[0])
@@ -768,8 +842,8 @@ class ClinicalMixin(rx.State, mixin=True):
                 self._tutor_load_error(error)
             else:
                 self._tutor_history_pet = pet
-                self.history_rows = history
-                self.consultation_rows = appointments
+                self.history_rows = self._with_record_backgrounds(history, pet)
+                self.consultation_rows = self._with_record_backgrounds({"consultas": appointments}, pet)["consultas"]
                 if not reservations_only:
                     self._tutor_history_loaded_at = monotonic()
                 self._tutor_loaded_at = self._tutor_history_loaded_at

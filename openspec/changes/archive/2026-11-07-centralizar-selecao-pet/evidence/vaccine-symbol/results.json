@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: seringa visível, sem overflow e sem interceptar ações",
+    "1440/dark: seringa visível, sem overflow e sem interceptar ações",
+    "390/light: seringa visível, sem overflow e sem interceptar ações",
+    "390/dark: seringa visível, sem overflow e sem interceptar ações"
+  ],
+  "errors": []
+}

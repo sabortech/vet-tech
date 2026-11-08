@@ -1,0 +1,248 @@
+[
+  {
+    "section": "inicio",
+    "empty": true
+  },
+  {
+    "section": "vacinas",
+    "empty": true
+  },
+  {
+    "section": "medicamentos",
+    "empty": true
+  },
+  {
+    "section": "doencas",
+    "empty": true
+  },
+  {
+    "section": "consultas",
+    "empty": true
+  },
+  {
+    "width": 1180,
+    "theme": "light",
+    "scroll": 1180,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern-light.svg\")"
+  },
+  {
+    "width": 1180,
+    "theme": "dark",
+    "scroll": 1180,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern.svg\")"
+  },
+  {
+    "width": 508,
+    "theme": "light",
+    "scroll": 508,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern-light.svg\")"
+  },
+  {
+    "width": 508,
+    "theme": "dark",
+    "scroll": 508,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern.svg\")"
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "scroll": 390,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern-light.svg\")"
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "scroll": 390,
+    "bg": "url(\"http://localhost:47455/fundpet-pattern.svg\")"
+  },
+  {
+    "dashboard_does_not_prefetch_history": true
+  },
+  {
+    "dashboard_general_identifies_selected_pet_during_details_load": true
+  },
+  {
+    "clinical_entry_loads_history_once": true
+  },
+  {
+    "backgrounds_vary_per_record_and_remain_stable": true
+  },
+  {
+    "select_and_navigate": true
+  },
+  {
+    "pet_list_aligned_and_selection_changes": true
+  },
+  {
+    "optimized_assets_loaded": [
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "mascote-perfil.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundpet.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundpet.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundpet.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundpet.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote_logo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo02.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundpet.webp",
+        "status": 200
+      },
+      {
+        "url": "fundpet-dark.webp",
+        "status": 200
+      },
+      {
+        "url": "mascote-perfil.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundopets.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "mascote02-sem-sombra.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundo_mar.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "fundo.webp",
+        "status": 200
+      },
+      {
+        "url": "tutu-sem-fundo.webp",
+        "status": 200
+      },
+      {
+        "url": "fundo_mar.webp",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      },
+      {
+        "url": "favicon.png?v=optimized-1",
+        "status": 200
+      }
+    ]
+  }
+]

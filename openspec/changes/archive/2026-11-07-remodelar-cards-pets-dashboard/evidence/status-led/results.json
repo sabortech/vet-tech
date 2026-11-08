@@ -1,0 +1,55 @@
+{
+  "checks": [
+    {
+      "theme": "light",
+      "state": "futura",
+      "matched": true
+    },
+    {
+      "theme": "light",
+      "state": "proxima",
+      "matched": true
+    },
+    {
+      "theme": "light",
+      "state": "hoje",
+      "matched": true
+    },
+    {
+      "theme": "light",
+      "state": "ultrapassada",
+      "matched": true
+    },
+    {
+      "theme": "light",
+      "state": "sem-data",
+      "matched": true
+    },
+    {
+      "theme": "dark",
+      "state": "futura",
+      "matched": true
+    },
+    {
+      "theme": "dark",
+      "state": "proxima",
+      "matched": true
+    },
+    {
+      "theme": "dark",
+      "state": "hoje",
+      "matched": true
+    },
+    {
+      "theme": "dark",
+      "state": "ultrapassada",
+      "matched": true
+    },
+    {
+      "theme": "dark",
+      "state": "sem-data",
+      "matched": true
+    }
+  ],
+  "errors": []
+}

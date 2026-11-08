@@ -1,7 +1,7 @@
 :root {
   --vt-led-color: #79ed4d;
   --vt-led-glow: drop-shadow(0 0 3px #79ed4de6) drop-shadow(0 0 9px #79ed4d99) drop-shadow(0 0 18px #79ed4d55);
-  --vt-page-bg: #f4f5f7;
+  --vt-page-bg: #efede6;
   --vt-surface: #ffffff;
   --vt-text: #182b21;
   --vt-green: #477b36;
@@ -120,12 +120,16 @@ textarea {
 }
 
 .sidebar-header {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
   flex-shrink: 0;
   min-height: 48px;
   margin-bottom: var(--vt-space-8);
 }
 
 .sidebar-brand {
+  grid-column: 2;
+  justify-content: center;
   min-width: 0;
   overflow: hidden;
   color: var(--vt-sidebar-brand);
@@ -133,6 +137,10 @@ textarea {
   font-weight: 700;
   white-space: nowrap;
 }
+
+.sidebar-brand__mascot { width: 40px; height: 36px; object-fit: contain; flex-shrink: 0; }
+.sidebar:not(.sidebar--collapsed) .sidebar-brand { transform: translateX(-24px); }
+.sidebar-header > .sidebar-toggle--desktop { grid-column: 3; width: 28px; height: 36px; }
 
 .sidebar-brand > svg {
   flex: 0 0 28px;
@@ -180,12 +188,17 @@ textarea {
 }
 
 .sidebar-navigation {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--vt-space-2);
   min-width: 0;
 }
+
+.sidebar-pet-entries { display: flex; flex-shrink: 0; flex-direction: column; gap: var(--vt-space-2); }
 
 .sidebar-item {
   flex-shrink: 0;
@@ -359,6 +372,9 @@ textarea {
 }
 
 .pet-card {
+  position: relative;
+  --vt-led-color: #69ca49;
+  --vt-led-glow: drop-shadow(0 0 2px #69ca49b3) drop-shadow(0 0 6px #69ca4966);
   min-width: 0;
   padding: clamp(18px, 2.1vw, 28px);
   border: 1px solid var(--vt-card-border);
@@ -366,6 +382,11 @@ textarea {
   background: var(--vt-surface);
   box-shadow: var(--vt-shadow);
 }
+
+.pet-card--led > .pets-card-led { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pet-card--led { --vt-led-glow: drop-shadow(0 0 2px #69ca4980) drop-shadow(0 0 4px #69ca4933); }
+.pets-card-led .vet-date-led-track { stroke-width: 2; animation-duration: 8s; rx: calc(var(--vt-radius-card) - 1px); ry: calc(var(--vt-radius-card) - 1px); }
+@media (prefers-reduced-motion: reduce) { .pets-card-led .vet-date-led-track { animation-duration: 20s; } }
 
 .pet-card__title {
   margin: 0;
@@ -650,7 +671,8 @@ textarea {
 }
 
 .pet-entry {
-  display: flex;
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) 180px;
   align-items: center;
   gap: var(--vt-space-3);
   min-width: 0;
@@ -939,6 +961,10 @@ html[data-vt-theme="dark"] {
 .settings-tab--active { background: var(--vt-surface); border-bottom-color: var(--vt-green); }
 .settings-tab:focus-visible, .vt-primary:focus-visible, .vt-secondary:focus-visible, .settings-eye:focus-visible, .settings-switch:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
 .settings-card { padding: 28px; border-radius: 20px; background: var(--vt-surface); color: var(--vt-text); box-shadow: var(--vt-shadow); border: 1px solid var(--vt-card-border); }
+.settings-card { --vt-led-color: #69ca49; --vt-led-glow: drop-shadow(0 0 2px #69ca4980) drop-shadow(0 0 4px #69ca4933); }
+.settings-card > .settings-card-led { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.settings-card-led .vet-date-led-track { stroke-width: 2; animation-duration: 8s; }
+@media (prefers-reduced-motion: reduce) { .settings-card-led .vet-date-led-track { animation-duration: 20s; } }
 .settings-card h2 { margin: 0 0 16px; font-size: 26px; line-height: 1.3; color: var(--vt-text); }
 .settings-profile { margin: 0 0 28px; font-size: 18px; font-weight: 600; }
 .settings-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
@@ -1458,7 +1484,7 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 .attendance-page .rt-SelectTrigger[data-placeholder] { color: var(--vet-muted); }
 
 /* Global command shape, including portals and inline-styled buttons. */
-:is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
+:is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not(.dashboard-selected-pet):not(.dashboard-pet-vaccines):not(.tutor-calendar-dialog button):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
   border-radius: var(--vt-radius-pill, 999px) !important;
 }
 
@@ -1661,3 +1687,657 @@ html[data-vt-theme="dark"] :is(.attendance-page, html:has(.attendance-page) :is(
 .consultations-day-group + .consultations-day-group { margin-top:20px; }
 .consultations-day-divider { display:flex; align-items:center; gap:12px; margin:4px 0 8px; color:var(--vet-text, var(--vt-text)); overflow-wrap:anywhere; }
 .consultations-day-divider::before, .consultations-day-divider::after { content:""; height:1px; flex:1; background:var(--vet-border, var(--vt-border)); }
+
+/* Tutor Dashboard: complete pet cards and the supplied illustrated background. */
+.dashboard-page {
+  --dashboard-card: #fff;
+  --dashboard-ink: #302b25;
+  --dashboard-name: #654832;
+  --dashboard-tile: #f1ebde;
+  --dashboard-line: #d8d1c4;
+  --dashboard-primary: #637851;
+  color: var(--dashboard-ink);
+  background: #f4ecdc url('/optimized/fundopets.webp') center top / cover;
+  min-height: 100dvh;
+  container-type: inline-size;
+  padding: 40px 40px 200px;
+}
+.dashboard-page > .rt-Flex { max-width: 1500px; margin-inline: auto; }
+.dashboard-title { font-weight: 600; letter-spacing: -.025em; }
+.dashboard-heading { min-width: 0; flex: 1 1 260px; }
+.dashboard-header { gap: 16px; }
+.dashboard-toolbar { padding: 14px; border: 1px solid var(--vt-border); border-radius: 18px; background: var(--vt-surface); box-shadow: 0 3px 12px rgb(26 54 41 / 4%); gap: 12px; }
+.dashboard-scope { min-width: 0; max-width: 100%; }
+.dashboard-scope [role="combobox"] { width: 220px; min-width: 0; max-width: 100%; }
+@media (max-width: 479px) {
+  .dashboard-scope { width: 100%; }
+  .dashboard-scope [role="combobox"] { flex: 1; width: 0; }
+  .dashboard-toolbar > .rt-Button { width: 100%; }
+}
+.dashboard-pets-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; width: 100%; align-items: stretch; }
+@container (min-width: 970px) {
+  .dashboard-pets-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.dashboard-pet-card { min-width: 0; padding: 9px; background: var(--dashboard-card); border: 1px solid var(--dashboard-line); border-radius: 11px; box-shadow: 0 3px 7px #493d2826; color: var(--dashboard-ink); overflow-wrap: anywhere; }
+.dashboard-pet-top { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 11px; }
+.dashboard-pet-photo.rt-AvatarRoot { width: 150px; height: 190px; border-radius: 9px; background: var(--dashboard-tile); font-size: 38px; }
+.dashboard-pet-photo img { width: 100%; height: 100%; object-fit: cover; }
+.dashboard-pet-summary { min-width: 0; }
+.dashboard-pet-identity { display: flex; align-items: start; justify-content: space-between; gap: 6px; }
+.dashboard-pet-name.rt-Heading { color: var(--dashboard-name); font-size: 32px; line-height: 1.15; font-weight: 650; letter-spacing: -.025em; margin: 3px 0 4px; }
+.dashboard-pet-stamp { width: 27px; height: 27px; object-fit: contain; flex-shrink: 0; opacity: .75; }
+.dashboard-pet-description { font-size: 13px; line-height: 1.4; margin-bottom: 9px; }
+.dashboard-pet-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.dashboard-pet-metric { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 8px 5px; min-height: 85px; text-align: center; background: var(--dashboard-tile); border-radius: 9px; font-size: 12px; line-height: 1.25; }
+.dashboard-pet-metric > svg { color: var(--dashboard-name); flex-shrink: 0; margin-bottom: 2px; }
+.dashboard-pet-metric__value { font-weight: 550; }
+.dashboard-pet-metric__detail { font-size: 11px; }
+.dashboard-pet-vaccines { margin-top: 10px; }
+.dashboard-pet-vaccine-label { font-size: 12px; line-height: 1.3; }
+.dashboard-pet-track { position: relative; height: 8px; margin: 6px 19px 8px 0; border-radius: 20px; background: linear-gradient(90deg, #70845e, #b9dbb7); }
+.dashboard-pet-track__turtle { position: absolute; width: 25px; height: 25px; right: -18px; top: -11px; object-fit: contain; }
+.dashboard-pet-followup { display: flex; flex-direction: column; gap: 4px; margin: 9px -9px 0; padding: 9px 11px; background: var(--dashboard-tile); font-size: 13px; line-height: 1.4; }
+.dashboard-pet-followup__title.rt-Heading { color: var(--dashboard-ink); font-size: 16px; font-weight: 550; line-height: 1.3; }
+.dashboard-pet-followup .rt-Text { color: inherit; }
+.dashboard-pet-actions { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 9px; }
+.dashboard-pet-actions .rt-Button { flex: 1 1 auto; min-height: 32px; height: auto; padding: 5px 8px; border-radius: 20px; font-size: 11px; line-height: 1.3; gap: 4px; color: var(--dashboard-ink); background: var(--dashboard-card); box-shadow: inset 0 0 0 1px #7c886f; cursor: pointer; }
+.dashboard-pet-actions .rt-Button svg { width: 14px; height: 14px; flex-shrink: 0; }
+.dashboard-pet-actions .rt-Button.rt-variant-solid { color: #fff; background: var(--dashboard-primary); box-shadow: none; }
+.dashboard-pet-actions .rt-Button:hover { filter: brightness(.94); }
+.dashboard-page :is(button, a, [role='combobox']):focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 3px; }
+html[data-vt-theme="dark"] .dashboard-page { --dashboard-card: #242b25; --dashboard-ink: #f0eee5; --dashboard-name: #e1c5a5; --dashboard-tile: #343c30; --dashboard-line: #59614f; --dashboard-primary: #485f3c; background-image: linear-gradient(#142218dc, #142218dc), url('/optimized/fundopets.webp'); }
+@container (max-width: 470px) {
+  .dashboard-pet-top { grid-template-columns: 100px minmax(0, 1fr); gap: 10px; }
+  .dashboard-pet-photo.rt-AvatarRoot { width: 100px; height: 140px; }
+  .dashboard-pet-name.rt-Heading { font-size: 26px; }
+  .dashboard-pet-metrics { grid-template-columns: 1fr; }
+  .dashboard-pet-metric { min-height: 0; padding: 7px; display: grid; grid-template-columns: 18px 1fr; text-align: left; gap: 3px 7px; }
+  .dashboard-pet-metric > svg { grid-row: span 3; width: 17px; }
+  .dashboard-pet-metric__detail { grid-column: 2; }
+  .dashboard-pet-description { font-size: 12px; }
+  .dashboard-pet-actions .rt-Button { flex-basis: calc(50% - 5px); min-height: 40px; }
+}
+.app-content:has(> .dashboard-page) { padding: 0; }
+.app-layout:has(.dashboard-page) { background: #f4ecdc url('/optimized/fundopets.webp') center top / cover; }
+html[data-vt-theme="dark"] .app-layout:has(.dashboard-page) { background-image: linear-gradient(#142218dc, #142218dc), url('/optimized/fundopets.webp'); }
+html[data-vt-theme="dark"] :is(.app-layout:has(.dashboard-page), .dashboard-page) { background-attachment: fixed; }
+.app-content:has(> .dashboard-page) .mobile-toolbar { background: #f4ecdc; }
+html[data-vt-theme="dark"] .app-content:has(> .dashboard-page) .mobile-toolbar { background: #202a22; }
+
+@media (max-width: 1023px) { .dashboard-page { padding: 16px 16px 200px; } }
+
+/* Temporal vaccine indicator: constant length, no immunization percentage. */
+.dashboard-pet-vaccines {
+  --dose-led: #819177;
+  --dose-glow: transparent;
+  display: block; width: 100%; padding: 5px 0 3px; border: 0;
+  background: transparent; color: inherit; text-align: left; font: inherit;
+  cursor: pointer; border-radius: 6px; white-space: normal;
+}
+.dashboard-pet-vaccines--futura, .dashboard-pet-card--futura { --dose-led: #68964d; --dose-glow: #68964d55; }
+.dashboard-pet-vaccines--proxima, .dashboard-pet-card--proxima { --dose-led: #c5a51c; --dose-glow: #e6c83966; }
+.dashboard-pet-vaccines--hoje, .dashboard-pet-card--hoje { --dose-led: #d58b22; --dose-glow: #e9a93366; }
+.dashboard-pet-vaccines--ultrapassada, .dashboard-pet-card--ultrapassada { --dose-led: #c25d56; --dose-glow: #da786266; }
+.dashboard-vaccine-status { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 1.4; }
+.dashboard-vaccine-led { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--dose-led); box-shadow: 0 0 7px 2px var(--dose-glow); }
+.dashboard-vaccine-reference { display: block; margin: 3px 0 0 15px; font-size: 11px; line-height: 1.4; }
+.dashboard-pet-vaccines .dashboard-pet-track { background: color-mix(in srgb, var(--dose-led) 25%, var(--dashboard-card)); box-shadow: 0 0 5px 1px var(--dose-glow); margin-top: 8px; }
+.dashboard-pet-vaccines--sem-data { --dose-led: #879084; }
+.dashboard-pet-vaccines--sem-data .dashboard-pet-track { background: var(--dose-led); opacity: .55; }
+.dashboard-pet-vaccines:hover { background: var(--dashboard-tile); }
+.dashboard-pet-vaccines:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 4px; }
+
+/* Keep colored labels; make legend paragraphs legible only in dark mode. */
+.dashboard-vaccine-legend > .rt-Text { color: var(--vaccine-legend-text); }
+:root {
+  --vaccine-legend-bg: #fff;
+  --vaccine-legend-text: #252b26;
+  --vaccine-legend-green: #3c702d;
+  --vaccine-legend-yellow: #806600;
+  --vaccine-legend-amber: #995700;
+  --vaccine-legend-red: #b23c35;
+  --vaccine-legend-muted: #596259;
+}
+html[data-vt-theme="dark"] {
+  --vaccine-legend-bg: #202822;
+  --vaccine-legend-text: #fff;
+  --vaccine-legend-green: #a3d88b;
+  --vaccine-legend-yellow: #f5dc62;
+  --vaccine-legend-amber: #ffbb66;
+  --vaccine-legend-red: #ff9992;
+  --vaccine-legend-muted: #c5cbc5;
+}
+
+/* Equal row heights follow content; footers sit at the bottom of every card. */
+.dashboard-pet-card { display: flex; flex-direction: column; }
+.dashboard-pet-actions { margin-top: auto; }
+
+/* Same perimeter LED used by the veterinarian area, colored by vaccine status. */
+.dashboard-pet-card { position: relative; isolation: isolate; }
+.dashboard-individual-card {
+  padding: 24px; border-radius: 18px; background: var(--vt-surface); color: var(--vt-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dose-led) 18%, transparent),
+              0 5px 18px -4px color-mix(in srgb, var(--dose-led) 32%, transparent),
+              0 0 24px -8px color-mix(in srgb, var(--dose-led) 22%, transparent);
+}
+.dashboard-individual-content { min-width: 0; gap: 22px; }
+.dashboard-individual-identity { padding-bottom: 20px; border-bottom: 1px solid var(--vt-border); }
+.dashboard-individual-content > .rt-Grid > .rt-Box { padding: 18px; border-radius: 12px; background: var(--vt-icon-bg); min-width: 0; }
+.dashboard-individual-activity { padding-top: 20px; border-top: 1px solid var(--vt-border); }
+.dashboard-individual-card .rt-Text { overflow-wrap: anywhere; }
+.dashboard-individual-card .rt-Button.rt-variant-outline { color: var(--vt-green); background: transparent; }
+@media (max-width: 767px) {
+  .dashboard-individual-card { padding: 18px; }
+  .dashboard-individual-content > .rt-Grid > .rt-Box { padding: 14px; }
+}
+.dashboard-card-led { z-index: 1; border-radius: inherit; }
+.dashboard-individual-card > .dashboard-card-led { display: block; visibility: visible; opacity: 1; }
+.dashboard-pet-card > .dashboard-card-led .vet-date-led-track {
+  stroke: var(--dose-led); stroke-width: 2.5; stroke-dasharray: 14 86;
+  filter: drop-shadow(0 0 2px var(--dose-led)) drop-shadow(0 0 6px var(--dose-glow));
+  animation: vet-date-border-orbit 6s linear infinite;
+}
+.dashboard-pet-card--sem-data .dashboard-card-led { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-pet-card > .dashboard-card-led .vet-date-led-track { animation-duration: 20s; }
+}
+
+
+/* Decorative light sweep; status stays textual and is never a loading percentage. */
+.dashboard-pet-track__sweep { position:absolute; inset:0; overflow:hidden; border-radius:inherit; pointer-events:none; }
+.dashboard-pet-track__sweep::after {
+  content:""; position:absolute; inset:0 auto 0 0; width:30%; border-radius:inherit;
+  background:linear-gradient(90deg, transparent, var(--dose-led) 30%, var(--dose-led) 70%, transparent);
+  animation:dashboard-vaccine-sweep 2.4s linear infinite;
+}
+@keyframes dashboard-vaccine-sweep { from { transform:translateX(-100%); } to { transform:translateX(333.333%); } }
+.dashboard-pet-vaccines--sem-data .dashboard-pet-track__sweep { display:none; }
+@media (prefers-reduced-motion:reduce) { .dashboard-pet-track__sweep::after { animation-duration:8s; } }
+
+/* Subtle status-colored halo around each pet portrait, with no animation. */
+.dashboard-pet-card--sem-data { --dose-led: #879084; }
+.dashboard-pet-card .dashboard-pet-photo.rt-AvatarRoot {
+  box-shadow: 0 0 0 2px var(--dose-led),
+              0 0 10px 3px color-mix(in srgb, var(--dose-led) 85%, transparent),
+              0 0 20px 5px color-mix(in srgb, var(--dose-led) 60%, transparent);
+}
+
+
+/* Shared medical calendar adapted for tutor booking and pet registration. */
+.vet-date-day.is-disabled:disabled { visibility:visible; opacity:.32; cursor:not-allowed; }
+.vet-date-day.is-empty:disabled { visibility:hidden; }
+.pet-birth-date-trigger { display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:left; cursor:pointer; }
+.tutor-calendar-dialog .vet-date-day,
+.tutor-calendar-dialog .vet-date-month-arrow,
+.tutor-calendar-dialog .vet-date-close { border-radius:10px!important; }
+.tutor-calendar-dialog .vet-date-back { border-radius:12px!important; }
+.tutor-booking-calendar .vet-date-month-panel { padding-bottom:18px; }
+
+/* Shared clinical invitation before selecting a pet in Meus Pets. */
+.pet-selection-empty {
+  --pet-invitation-ink: #273d2c;
+  --pet-invitation-muted: #58634f;
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+}
+.pet-selection-copy { padding: clamp(32px, 5vh, 64px) 24px 64px; background: none; }
+.pet-selection-empty .pet-selection-eyebrow {
+  background: #e6ecda; color: #4d6842; border: 1px solid #d4dfc7;
+  padding: 6px 12px; border-radius: 999px; text-align: center;
+}
+.pet-selection-empty .rt-Heading {
+  max-width: 580px; color: var(--pet-invitation-ink);
+  font-size: clamp(26px, 2.8vw, 36px); line-height: 1.15; letter-spacing: -.035em;
+}
+.pet-selection-description { color: var(--pet-invitation-muted); max-width: 440px; font-size: 16px; line-height: 1.5; }
+.pet-selection-empty .rt-Button {
+  max-width: 100%; white-space: normal; height: auto; min-height: 46px;
+  padding: 12px 20px; text-align: center; box-shadow: 0 5px 14px rgb(51 90 37 / 16%);
+}
+html[data-vt-theme="dark"] .pet-selection-empty {
+  --pet-invitation-ink: #f0f3e7;
+  --pet-invitation-muted: #c0cdbb;
+
+}
+html[data-vt-theme="dark"] .pet-selection-eyebrow { background: #2b4133; color: #d3e7c5; border-color: #48604b; }
+@media (max-width: 767px) {
+  .pet-selection-copy { padding: 72px 18px 48px; }
+}
+@media (max-width: 479px) {
+  .pet-selection-empty .pet-selection-eyebrow { font-size: 11px; }
+  .pet-selection-description { font-size: 15px; }
+  .pet-selection-empty .rt-Button { padding-inline: 14px; font-size: 14px; }
+}
+
+.app-content:has(.pet-selection-empty) {
+  padding: 0;
+  background: #f7f3e7 url('/fundpet-pattern-light.svg') center / 360px 320px repeat;
+  isolation: isolate;
+}
+html[data-vt-theme="dark"] .app-content:has(.pet-selection-empty) {
+  background: #12221b url('/fundpet-pattern.svg') center / 360px 320px repeat;
+  isolation: isolate;
+}
+html[data-vt-theme="dark"] .pet-selection-copy {
+  background: none;
+}
+.app-content:has(.pet-selection-empty) .mobile-toolbar {
+  position: absolute; top: 16px; left: 16px; z-index: 2;
+}
+
+@media (max-width: 767px) {
+  .app-content:has(.pet-selection-empty) { background-position: center bottom; }
+}
+
+/* Clockwise green outline follows the illustrated scene in either theme. */
+.pet-selection-empty { position: relative; }
+.pet-selection-art-frame {
+  position: absolute; width: min(100%, 100dvh); aspect-ratio: 1;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.pet-selection-scene-outline {
+  position: absolute; left: 5.6%; top: 36.2%; width: 88.8%; height: 53.8%;
+  --vt-led-color: #69ca49;
+  --vt-led-glow: drop-shadow(0 0 3px #69ca49cc) drop-shadow(0 0 8px #69ca4980);
+}
+.pet-selection-led .vet-date-led-track { stroke-width: 2.5; animation-duration: 8s; }
+@media (max-width: 767px) {
+  .pet-selection-art-frame { top: auto; bottom: 0; transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pet-selection-led .vet-date-led-track { animation-duration: 20s; }
+}
+
+/* Stable action column in Meus Pets, including the selected state. */
+.pet-list { container-type: inline-size; }
+.pet-entry__action.rt-Button { width: 100%; min-height: 38px; height: auto; padding: 8px 10px; margin: 0; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.pet-entry__action[aria-pressed="true"] { background: var(--vt-green); color: #fff; box-shadow: 0 2px 8px rgb(49 97 38 / 18%); }
+.pet-entry__action[aria-pressed="true"]:hover { background: var(--vt-green-hover); }
+@container (max-width: 440px) {
+  .pet-entry { grid-template-columns: 60px minmax(0, 1fr); row-gap: 8px; }
+  .pet-entry__action { grid-column: 2; justify-self: end; max-width: 180px; }
+}
+
+/* Selected pet's Prontuário: identity hero and registered facts. */
+.app-content:has(.pet-record-page) { background: #f4eedf; }
+.pet-record-page { max-width: 1120px; margin-inline: auto; }
+.pet-record-toolbar { max-width: 920px; margin-inline: auto; gap: 12px; margin-bottom: 28px; }
+.pet-record-details { max-width: 920px; margin-inline: auto; }
+.pet-record-hero {
+  display: grid; grid-template-columns: 220px minmax(0, 1fr) 200px;
+  align-items: center; gap: 24px; padding: 28px; min-width: 0;
+  background: var(--vt-surface);
+  --pet-record-band: #f0ead9;
+  border: 1px solid var(--vt-border); border-radius: 18px;
+  box-shadow: 0 6px 24px rgb(52 49 37 / 4%);
+}
+.pet-record-photo.rt-AvatarRoot {
+  width: 220px; height: 220px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--vt-border); padding: 4px; background: var(--vt-surface);
+  box-shadow: 0 4px 16px rgb(23 42 29 / 10%);
+}
+.pet-record-photo img { border-radius: 50%; object-fit: cover; }
+.pet-record-photo .rt-AvatarFallback { border-radius: 50%; background: var(--vt-icon-bg); color: var(--vt-green); }
+.pet-record-identity { min-width: 0; color: var(--vt-text); }
+.pet-record-identity .rt-Heading { font-size: clamp(30px, 3.5vw, 48px); line-height: 1.15; letter-spacing: -.025em; margin-bottom: 10px; }
+.pet-record-identity .rt-Text { font-size: 19px; }
+.pet-record-mascot { width: 200px; height: 240px; object-fit: contain; }
+.pet-record-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.pet-record-fact { min-width: 0; padding: 22px; background: var(--vt-surface); border: 1px solid var(--vt-border); border-radius: 16px; }
+.pet-record-fact-icon { display: inline-flex; padding: 9px; border-radius: 10px; color: var(--vt-green); background: var(--vt-icon-bg); margin-bottom: 12px; }
+.pet-record-fact-label { color: var(--vt-muted); font-size: 14px; margin-bottom: 4px; }
+.pet-record-fact-value { color: var(--vt-text); font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
+html[data-vt-theme="dark"] .app-content:has(.pet-record-page) { background: var(--vt-page-bg); }
+html[data-vt-theme="dark"] .pet-record-hero { --pet-record-band: #2b3b2d; }
+@media (max-width: 1199px) {
+  .pet-record-hero { grid-template-columns: 160px minmax(0, 1fr) 150px; gap: 18px; padding: 22px; }
+  .pet-record-photo.rt-AvatarRoot { width: 160px; height: 160px; }
+  .pet-record-mascot { width: 150px; height: 200px; }
+}
+@media (max-width: 767px) {
+  .pet-record-toolbar { margin-bottom: 24px; }
+  .pet-record-hero { grid-template-columns: 100px minmax(0, 1fr); padding: 20px; gap: 16px; background: var(--vt-surface); }
+  .pet-record-photo.rt-AvatarRoot { width: 100px; height: 100px; }
+  .pet-record-identity .rt-Heading { font-size: 30px; }
+  .pet-record-identity .rt-Text { font-size: 16px; }
+  .pet-record-mascot { grid-column: 1 / -1; justify-self: center; width: 150px; height: 180px; }
+  .pet-record-facts { grid-template-columns: 1fr; gap: 12px; }
+  .pet-record-fact { padding: 18px; }
+}
+
+.pet-record-toolbar .rt-Button:is(.rt-variant-outline, .rt-variant-ghost) { color: var(--vt-text); }
+html[data-vt-theme="dark"] .pet-record-toolbar .rt-variant-outline { border-color: var(--vt-border); box-shadow: inset 0 0 0 1px var(--vt-border); }
+
+.pet-record-toolbar > .rt-Button { margin: 0; min-height: 40px; }
+
+/* Clip the actual scene to the same rounded outline as its LED. */
+.pet-selection-scene-outline::before {
+  content: ""; position: absolute; inset: 0;
+  border-radius: 20px;
+  background: url('/optimized/fundpet.webp') center 78.355% / 112.6126% 185.8736% no-repeat;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  pointer-events: none;
+}
+html[data-vt-theme="dark"] .pet-selection-scene-outline::before { background-image: url('/optimized/fundpet-dark.webp'); }
+
+/* Decorative clockwise LEDs follow each Prontuário frame. */
+.pet-record-hero, .pet-record-fact, .pet-record-photo-frame {
+  position: relative;
+  --vt-led-color: #69ca49;
+  --vt-led-glow: drop-shadow(0 0 2px #69ca49b3) drop-shadow(0 0 6px #69ca4966);
+}
+.pet-record-photo-frame { width: fit-content; border-radius: 50%; }
+.pet-record-led .vet-date-led-track { stroke-width: 2; animation-duration: 8s; }
+.pet-record-photo-led .vet-date-led-track { stroke-dasharray: 20 80; animation-duration: 6s; }
+@media (prefers-reduced-motion: reduce) {
+  .pet-record-led .vet-date-led-track { animation-duration: 20s; }
+}
+
+/* Soft LED-colored shadow behind each Prontuário surface. */
+.pet-record-hero, .pet-record-fact, .pet-record-photo-frame {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vt-led-color) 18%, transparent),
+              0 5px 18px -4px color-mix(in srgb, var(--vt-led-color) 32%, transparent),
+              0 0 24px -8px color-mix(in srgb, var(--vt-led-color) 22%, transparent);
+}
+
+/* Crop the existing pet wallpaper into the identity banner. */
+.pet-record-hero::before {
+  content: ""; position: absolute; inset: 23% 0 20%;
+  background: #f4ecdc url('/optimized/fundopets.webp') center top / cover no-repeat;
+  pointer-events: none;
+}
+html[data-vt-theme="dark"] .pet-record-hero::before {
+  background-image: linear-gradient(#142218d9, #142218d9), url('/optimized/fundopets.webp');
+}
+.pet-record-identity, .pet-record-mascot { position: relative; }
+
+/* Vaccines keep a simple list with structured facts and compact origin action. */
+.tutor-vaccines-page { max-width: 1120px; margin-inline: auto; }
+.tutor-vaccines-page .tutor-section-header { gap: 16px; }
+.vaccine-record-card { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); overflow: visible; width: 100%; padding: 0; background: var(--vt-surface); color: var(--vt-text); border: 1px solid var(--vt-border); border-radius: 18px; box-shadow: 0 4px 16px rgb(23 42 29 / 4%); overflow-wrap: anywhere; }
+.vaccine-record-icon { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex-shrink: 0; background: var(--vt-icon-bg); color: var(--vt-green); border-radius: 13px; }
+.vaccine-record-eyebrow { font-size: 12px; color: var(--vt-muted); margin-bottom: 3px; }
+.vaccine-record-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 24px 0; border-top: 1px solid var(--vt-border); }
+.vaccine-record-field { display: flex; align-items: flex-start; gap: 12px; padding: 18px 12px 18px 0; border-bottom: 1px solid var(--vt-border); }
+.vaccine-record-field:nth-child(even) { border-left: 1px solid var(--vt-border); padding-left: 18px; }
+.vaccine-record-field > svg { flex-shrink: 0; color: var(--vt-muted); margin-top: 2px; }
+.vaccine-record-label { font-size: 13px; color: var(--vt-muted); margin-bottom: 5px; }
+.vaccine-record-value { font-size: 16px; font-weight: 600; }
+.vaccine-record-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 18px; border-top: 1px solid var(--vt-border); color: var(--vt-muted); font-size: 13px; }
+.vaccine-record-footer .rt-Button { flex: 0 0 auto; width: auto; height: auto; min-height: 38px; white-space: normal; color: var(--vt-text); }
+@media (max-width: 767px) {
+  .vaccine-record-card { grid-template-columns: minmax(0, 1fr); }
+  .vaccine-record-fields { grid-template-columns: 1fr; margin: 20px 0; }
+  .vaccine-record-field:nth-child(even) { border-left: 0; padding-left: 0; }
+  .vaccine-record-footer { align-items: flex-start; }
+  .vaccine-record-footer .rt-Button { flex: 1 1 100%; }
+}
+
+.tutor-vaccines-page .tutor-section-header .rt-Button { color: var(--vt-text); }
+html[data-vt-theme="dark"] .tutor-vaccines-page .rt-variant-outline { box-shadow: inset 0 0 0 1px var(--vt-border); }
+html[data-vt-theme="dark"] .tutor-vaccines-page .rt-Badge { background: var(--vt-icon-bg); color: var(--vt-text); }
+
+/* Vaccine heading and selected pet/actions share a single aligned row. */
+.vaccines-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; margin-bottom: 28px; }
+.vaccines-heading { min-width: 0; }
+.vaccines-heading .rt-Heading { color: var(--vt-text); letter-spacing: -.025em; margin-bottom: 6px; }
+.vaccines-heading .rt-Text { font-size: 15px; line-height: 1.5; }
+.vaccines-header-actions { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.vaccines-current-pet { display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 260px; padding: 8px 14px 8px 10px; border: 1px solid var(--vt-border); border-radius: 14px; background: var(--vt-surface); }
+.vaccines-current-pet .rt-AvatarRoot { flex-shrink: 0; }
+.vaccines-pet-label { color: var(--vt-muted); font-size: 11px; line-height: 1.4; }
+.vaccines-pet-name { color: var(--vt-text); font-size: 14px; line-height: 1.4; font-weight: 600; overflow-wrap: anywhere; }
+.vaccines-refresh.rt-Button { min-height: 42px; padding-inline: 16px; flex-shrink: 0; }
+@media (max-width: 767px) {
+  .vaccines-header { grid-template-columns: 1fr; gap: 18px; margin-bottom: 24px; }
+  .vaccines-header-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .vaccines-current-pet { max-width: none; }
+}
+
+.vaccine-record-body { min-width: 0; padding: 28px; }
+.vaccine-record-origin { color: var(--vt-muted); font-size: 13px; margin-top: 6px; }
+.vaccine-record-art { background: #efe8d9 var(--record-background, url('/optimized/fundo.webp')) center / cover no-repeat; min-height: 400px; border-left: 1px solid var(--vt-border); }
+.vaccine-record-next-dose { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; }
+.vaccine-record-next-dose > svg { flex-shrink: 0; color: var(--vt-green); margin-top: 2px; }
+html[data-vt-theme="dark"] .vaccine-record-art { background-image: linear-gradient(#14221866, #14221866), var(--record-background, url('/optimized/fundo.webp')); }
+@media (max-width: 767px) {
+  .vaccine-record-body { padding: 20px; }
+  .vaccine-record-art { min-height: 180px; border-left: 0; border-top: 1px solid var(--vt-border); }
+}
+
+/* One clockwise LED follows the entire split vaccine card. */
+.vaccine-record-card { position: relative; --vt-led-color: #69ca49; --vt-led-glow: drop-shadow(0 0 2px #69ca49b3) drop-shadow(0 0 6px #69ca4966); }
+.vaccine-record-led .vet-date-led-track { stroke-width: 2; animation-duration: 8s; }
+.vaccine-record-art { border-radius: 0 18px 18px 0; }
+.vaccine-record-art { display: flex; align-items: center; justify-content: center; padding: 28px; }
+.vaccine-art-symbol { display: flex; align-items: center; justify-content: center; width: 200px; height: 200px; border-radius: 50%; background: #f7fff2b3; color: #477b35; border: 1px solid #ffffff80; box-shadow: 0 14px 40px #183f2626, inset 0 0 0 10px #ffffff33; pointer-events: none; }
+.vaccine-art-symbol > svg { flex-shrink: 0; opacity: .4; filter: drop-shadow(0 4px 2px #477b351a); }
+html[data-vt-theme="dark"] .vaccine-art-symbol { background: #173624b3; color: #b4e995; border-color: #b4e9954d; box-shadow: 0 14px 40px #00000030, inset 0 0 0 10px #b4e9950d; }
+@media (max-width: 767px) {
+  .vaccine-art-symbol { width: 130px; height: 130px; }
+  .vaccine-art-symbol > svg { width: 76px; height: 76px; }
+}
+@media (max-width: 767px) { .vaccine-record-art { border-radius: 0 0 18px 18px; } }
+@media (prefers-reduced-motion: reduce) { .vaccine-record-led .vet-date-led-track { animation-duration: 20s; } }
+
+/* Medication prescriptions: grouped facts and the supplied clipboard mascot. */
+.tutor-medications-page { max-width: 1120px; margin-inline: auto; }
+.app-content:has(.tutor-medications-page) { background: #efede6; }
+html[data-vt-theme="dark"] .app-content:has(.tutor-medications-page) { background: var(--vt-page-bg); }
+.medication-list { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.medication-card { min-width: 0; overflow-wrap: anywhere; }
+.medication-card .rt-Heading { letter-spacing: -.025em; line-height: 1.2; }
+.medication-title-icon { width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--vt-icon-bg); color: var(--vt-green); border-radius: 20px; }
+.medication-eyebrow { color: var(--vt-muted); font-size: 13px; margin-top: 8px; }
+.medication-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 24px 0 18px; }
+.medication-group { padding: 16px 12px; border: 1px solid var(--vt-border); border-radius: 14px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.medication-secondary { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.medication-dosage { justify-content: space-between; }
+.medication-field { display: flex; align-items: flex-start; gap: 10px; min-width: 0; }
+.medication-field-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--vt-icon-bg); color: var(--vt-text); border-radius: 9px; }
+.medication-field-label { font-size: 13px; color: var(--vt-muted); line-height: 1.4; }
+.medication-field-value { font-size: 15px; font-weight: 600; color: var(--vt-text); line-height: 1.5; }
+.medication-origin-button.rt-Button { height: auto; min-height: 38px; white-space: normal; text-align: center; }
+.medication-mascot { width: 100%; max-width: 320px; height: 380px; object-fit: contain; }
+.medication-empty { padding: 28px; background: var(--vt-surface); border: 1px solid var(--vt-border); border-radius: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; color: var(--vt-text); }
+.medication-empty > svg { color: var(--vt-green); }
+.medication-empty > .rt-Text { color: var(--vt-muted); }
+html[data-vt-theme="dark"] .medication-title-icon { background: var(--vt-icon-bg); color: var(--vt-green); }
+@media (max-width: 1023px) {
+}
+@media (max-width: 479px) {
+  .medication-info-grid { grid-template-columns: 1fr; }
+  .medication-title-icon { width: 58px; height: 58px; border-radius: 16px; }
+  .medication-title-icon svg { width: 32px; height: 32px; }
+  .medication-card .rt-Heading { font-size: 26px; }
+}
+
+/* Medication uses the same split frame as Vaccines; mascot stays inside. */
+.medication-art { display: flex; align-items: center; justify-content: center; min-width: 0; padding: 24px; background: #80a85c var(--record-background, url('/optimized/fundo_mar.webp')) center / cover no-repeat; border-left: 1px solid var(--vt-border); border-radius: 0 18px 18px 0; }
+@media (max-width: 767px) {
+  .medication-art { border-left: 0; border-top: 1px solid var(--vt-border); border-radius: 0 0 18px 18px; padding: 20px; }
+  .medication-mascot { max-width: 180px; height: 220px; }
+}
+
+/* Shared green halo around the complete vaccine and medication cards. */
+.vaccine-record-card {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vt-led-color) 18%, transparent),
+              0 5px 18px -4px color-mix(in srgb, var(--vt-led-color) 32%, transparent),
+              0 0 24px -8px color-mix(in srgb, var(--vt-led-color) 22%, transparent);
+}
+
+html[data-vt-theme="dark"] .medication-art { background-image: linear-gradient(#14221844, #14221844), var(--record-background, url('/optimized/fundo_mar.webp')); }
+
+/* Disease list shares the clinical card shell; consultation cards stay compact. */
+.disease-card { min-width: 0; overflow-wrap: anywhere; }
+.disease-card .rt-Heading { line-height: 1.2; letter-spacing: -.025em; }
+.disease-eyebrow { font-size: 12px; color: var(--vt-muted); margin-bottom: 6px; }
+.disease-status { display: inline-flex; margin-top: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--vt-border); color: var(--vt-text); background: var(--vt-icon-bg); font-size: 12px; font-weight: 700; }
+.disease-status[data-state="em_tratamento"] { border-color: var(--vt-green); }
+.disease-status[data-state="ativa"] { border-color: var(--vt-error); }
+.disease-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 16px; padding: 24px 0; margin-top: 8px; }
+.disease-description-block { display: flex; align-items: flex-start; gap: 10px; border-block: 1px solid var(--vt-border); padding: 18px 0; margin-bottom: 18px; }
+.disease-field-content { min-width: 0; flex: 1; }
+
+/* Tutor consultations: the complete record reads as one clinical document. */
+.consultations-content, .consultation-detail { min-width: 0; width: 100%; }
+.consultation-detail { display: flex; flex-direction: column; gap: 22px; }
+.consultation-card { min-width: 0; overflow-wrap: anywhere; }
+.consultation-card .medication-title-icon { width: 64px; height: 64px; border-radius: 18px; }
+.consultation-list-fields { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; margin-top: 28px; }
+.consultation-art { min-height: 280px; }
+.consultations-content .medication-field-label, .consultations-content .medication-field-value { display: block; }
+.consultations-content .medication-field-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+.consultation-toolbar { width: 100%; gap: 12px; }
+.consultations-header { margin-bottom: 24px; gap: 20px; }
+.consultations-header .vaccines-header-actions { flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.consultations-header .rt-Button { min-height: 42px; height: auto; white-space: nowrap; padding-inline: 16px; }
+.consultations-header .consultation-header-back { color: var(--vt-text); border-color: var(--vt-border); background: var(--vt-surface); }
+@media (max-width: 1100px) {
+  .consultations-header { grid-template-columns: 1fr; gap: 16px; }
+  .consultations-header .vaccines-header-actions { justify-content: flex-start; }
+}
+@media (max-width: 767px) {
+  .consultations-header .vaccines-header-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .consultations-header .vaccines-current-pet { grid-column: 1 / -1; }
+  .consultations-header .consultation-header-export { grid-column: 1 / -1; }
+  .consultations-header .rt-Button { width: 100%; white-space: normal; }
+}
+.consultation-summary, .consultation-section, .consultation-access, .consultation-text-block { border: 1px solid var(--vt-border); border-radius: 18px; background: var(--vt-surface); color: var(--vt-text); min-width: 0; }
+.consultation-summary { position: relative; padding: 0; --vt-led-color: #69ca49; --vt-led-glow: drop-shadow(0 0 3px #69ca4970); }
+.consultation-summary-body { min-width: 0; padding: 28px; }
+.consultation-summary .consultation-metadata { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.consultation-summary .consultation-narratives { grid-template-columns: 1fr; gap: 0; margin-top: 24px; }
+.consultation-summary .consultation-text-block { border: 0; border-top: 1px solid var(--vt-border); border-radius: 0; padding: 20px 0; background: transparent; }
+.consultation-summary .consultation-text-block:last-child { padding-bottom: 0; }
+.consultation-summary .disease-status { margin-top: 0; }
+.consultation-metadata { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; border-top: 1px solid var(--vt-border); padding-top: 24px; margin-top: 24px; }
+.consultation-narratives { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.consultation-text-block { padding: 24px; }
+.consultation-text-block:last-child { grid-column: 1 / -1; }
+.consultation-text-block svg, .consultation-section-title svg, .consultation-access > .rt-Flex > svg { color: var(--vt-green); flex-shrink: 0; }
+.consultation-narrative { display: block; margin-top: 14px; font-size: 15px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.consultation-section { padding: 24px; }
+.consultation-section-title { margin-bottom: 20px; }
+.consultation-complements { display: grid; grid-template-columns: 1fr; gap: 24px; }
+.consultation-record:only-child { grid-column: 1 / -1; }
+.consultation-record { min-width: 0; padding: 20px; border: 1px solid var(--vt-border); border-radius: 14px; background: var(--vt-page-bg, var(--vt-surface)); overflow-wrap: anywhere; }
+.consultation-record-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; margin-top: 22px; }
+.consultation-section-empty { display: block; color: var(--vt-muted); font-size: 14px; line-height: 1.6; }
+.consultation-access { padding: 24px; display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.consultation-access > .rt-Button { align-self: flex-start; height: auto; min-height: 38px; white-space: normal; }
+.consultation-access-card > .consultation-access { border: 0; border-radius: 0; margin: 0; background: transparent; }
+.consultation-access-art { min-height: 280px; }
+@media (max-width: 767px) { .consultation-access-art { min-height: 190px; } }
+@media (max-width: 1050px) {
+  .consultation-metadata { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .consultation-complements { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+  .consultation-section, .consultation-text-block, .consultation-access, .consultation-summary-body { padding: 20px; }
+  .consultation-summary .consultation-metadata { grid-template-columns: 1fr; }
+  .consultation-narratives, .consultation-metadata, .consultation-list-fields, .consultation-record-fields { grid-template-columns: 1fr; }
+  .consultation-record { padding: 16px; }
+  .consultation-toolbar > .rt-Button { flex: 1 1 auto; min-height: 40px; }
+  .consultation-summary .rt-Heading { font-size: 24px; }
+  .consultation-card .rt-Heading { font-size: 22px; }
+  .consultation-art { min-height: 190px; }
+}
+.disease-card .medication-field-label, .disease-card .medication-field-value, .disease-description { display: block; }
+.disease-description { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--vt-text); font-size: 15px; line-height: 1.7; margin-top: 8px; }
+.disease-body .vaccine-record-footer { margin-top: 18px; }
+@media (max-width: 767px) {
+  .disease-card .rt-Heading { font-size: 26px; }
+  .disease-fields { grid-template-columns: 1fr; gap: 18px; }
+  .disease-card .medication-title-icon { width: 58px; height: 58px; border-radius: 16px; }
+}
+
+/* Meus Pets selection belongs to that pet's own overview card. */
+.dashboard-pet-identity { align-items: flex-start; gap: 8px; }
+.dashboard-pet-identity .dashboard-pet-name { flex: 1; min-width: 0; }
+.dashboard-pet-identity .dashboard-pet-stamp { flex-shrink: 0; }
+.dashboard-selected-pet.rt-Button {
+  width: max-content; max-width: 160px; flex: 0 1 auto;
+  min-height: 44px; height: auto; padding: 6px 9px; margin-top: 3px;
+  display: flex; align-items: center; gap: 6px;
+  white-space: normal; text-align: left;
+  border: 1px solid var(--vt-border); border-radius: 999px 10px 10px 999px;
+  background: var(--vt-icon-bg); color: var(--vt-text);
+  box-shadow: 0 2px 6px rgb(20 45 27 / 8%);
+}
+.dashboard-selected-pet.rt-Button:hover { background: var(--vt-surface); }
+.dashboard-selected-pet > :is(svg, .rt-AvatarRoot) { flex-shrink: 0; }
+.dashboard-selected-pet-label { color: var(--vt-muted); font-size: 10px; line-height: 1.35; }
+.dashboard-selected-pet-name { color: var(--vt-text); font-size: 12px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .dashboard-selected-pet.rt-Button { max-width: 45%; padding: 5px 7px; }
+  .dashboard-selected-pet > .rt-AvatarRoot { width: 20px; height: 20px; }
+  .dashboard-selected-pet-name { font-size: 11px; }
+  .dashboard-selected-pet-label { font-size: 9px; }
+}
+
+/* Shared card halo; Dashboard retains its own shadows and vaccine status colors. */
+.pet-picker-page { min-height: calc(100dvh - clamp(40px, 6.4vw, 96px)); display: flex; flex-direction: column; }
+.pet-picker-page > .profile-heading { flex-shrink: 0; }
+.pet-picker-layout { position: relative; display: flex; align-items: center; width: min(980px, 100%); margin: auto; padding-left: 160px; min-width: 0; min-height: 384px; }
+.pet-picker-layout > .pet-card { z-index: 1; width: 100%; }
+.pet-picker-turtle { position: absolute; left: -42px; top: 50%; transform: translateY(-50%); width: 240px; height: 360px; object-fit: contain; pointer-events: none; filter: drop-shadow(-3px 5px 4px #24531f1f); }
+.pet-picker-back { display: inline-flex; align-items: center; gap: 8px; color: var(--vt-text); font-size: 14px; text-decoration: none; padding: 10px 14px; border: 1px solid var(--vt-border); border-radius: 999px; background: var(--vt-surface); }
+.pet-picker-message { color: var(--vt-text); max-width: 820px; margin: 18px auto 0; }
+.pet-picker-page .pet-entry__action[aria-pressed="false"] { color: var(--vt-text); }
+@media (max-width: 1100px) {
+  .pet-picker-layout { padding-left: 120px; }
+  .pet-picker-turtle { left: 0; width: 180px; height: 270px; }
+}
+@media (max-width: 767px) {
+  .pet-picker-layout { padding-left: 44px; margin-top: 24px; min-height: 174px; }
+  .pet-picker-turtle { left: -20px; top: 24px; transform: none; width: 100px; height: 150px; }
+  .pet-picker-page .profile-heading { align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  .pet-picker-page .profile-heading h1 { font-size: 28px; }
+}
+
+/* Shared card halo; Dashboard retains its own shadows and vaccine status colors. */
+:root {
+  --vt-card-green-shadow: 0 0 0 1px #69ca492e,
+                          0 5px 18px -4px #69ca4952,
+                          0 0 24px -8px #69ca4938;
+}
+:is(.pet-card, .settings-card, .vaccine-record-card, .pet-record-hero,
+    .pet-record-fact, .medication-empty, .consultation-section,
+    .consultation-record, .rt-Card, .vet-schedule-calendar,
+    .vet-schedule-timeline, .vet-schedule-stat, .vet-schedule-card,
+    .consultations-card, .consultations-summary, .attendance-glass,
+    .attendance-record-card):not(.dashboard-page *) {
+  box-shadow: var(--vt-card-green-shadow);
+}
+
+/* Same warm page background across the light theme; card artwork stays intact. */
+html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content, .dashboard-page) {
+  background-color: var(--vt-page-bg);
+  background-image: none;
+}
+html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) {
+  background: #f7f3e7 url('/fundpet-pattern-light.svg') center / 360px 320px repeat;
+}
+html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) {
+  background: #12221b url('/fundpet-pattern.svg') center / 360px 320px repeat;
+}
+@media (max-width: 767px) {
+  html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)),
+  html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) { background-position: center bottom; }
+}
+
+/* Shared bounded LED and green halo for login and registration. */
+.auth-led-card {
+  --vt-led-color: #69ca49;
+  --vt-led-glow: drop-shadow(0 0 2px #69ca4980) drop-shadow(0 0 4px #69ca4933);
+  isolation: isolate;
+  box-shadow: 0 0 0 1px #69ca492e, 0 5px 18px -4px #69ca4952, 0 0 24px -8px #69ca4938;
+}
+.auth-card-led { z-index: 2; border-radius: inherit; }
+
+.auth-card-led .vet-date-led-track { rx: 30px; ry: 30px; }
+@media (max-width: 767px) { .login-view .auth-card-led .vet-date-led-track { rx: 18px; ry: 18px; } }

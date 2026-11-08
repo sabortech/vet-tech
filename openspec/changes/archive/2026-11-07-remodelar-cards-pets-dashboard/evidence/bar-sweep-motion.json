@@ -1,0 +1,8 @@
+{
+  "before": "matrix(1, 0, 0, 1, -97.083, 0)",
+  "after": "matrix(1, 0, 0, 1, -31.7601, 0)",
+  "direction": "normal",
+  "loop": "infinite",
+  "reduced_duration": "8s",
+  "no_date": "off"
+}

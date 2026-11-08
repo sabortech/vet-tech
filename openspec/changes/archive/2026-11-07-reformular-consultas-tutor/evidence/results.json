@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "1440/light: lista, documento completo, campos, retorno e PDF elegível",
+    "1440/dark: lista, documento completo, campos, retorno e PDF elegível",
+    "390/light: lista, documento completo, campos, retorno e PDF elegível",
+    "390/dark: lista, documento completo, campos, retorno e PDF elegível",
+    "legado sem PDF, categorias vazias, permissões, erro/retry, lista vazia e atualização",
+    "porta 3001 com segundo pet e navegação funcional"
+  ],
+  "errors": []
+}

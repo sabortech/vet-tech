@@ -21,7 +21,19 @@ ENDPOINT = ROOT / "xano" / "api" / "clinical" / "tutor" / "dashboard_GET.xs"
 
 
 async def consume(generator):
-    return [event async for event in generator]
+    state = generator.ag_frame.f_locals.get("self")
+    events = []
+    async for event in generator:
+        events.append(event)
+        if event is not None and getattr(getattr(event, "handler", None), "fn", None) is State.fetch_dashboard.fn:
+            generation = event.args[0][1]._var_value
+            async def enter(*_args):
+                return state
+            async def leave(*_args):
+                pass
+            with patch.object(State, "__aenter__", enter), patch.object(State, "__aexit__", leave):
+                await State.fetch_dashboard.fn(state, generation)
+    return events
 
 
 def signed_in_state():
@@ -31,6 +43,27 @@ def signed_in_state():
     state.is_authenticated = True
     state.pets = [{"id": "1", "nome": "Pet 1"}, {"id": "2", "nome": "Pet 2"}]
     return state
+
+
+class DashboardSelectedContextTests(unittest.TestCase):
+    def test_explicit_choice_is_visible_before_details_finish(self):
+        state = signed_in_state()
+        state.pet_target_id = '1'
+        state.is_loading_pet = True
+        self.assertEqual(state.selected_pet_id, '')
+        self.assertEqual(state.dashboard_context_pet_id, '1')
+        state.is_loading_pet = False
+        state.pet_detail_message = 'Leitura indisponível'
+        self.assertEqual(state.dashboard_context_pet_id, '1')
+
+    def test_context_never_identifies_unknown_pet_and_clears_on_picker(self):
+        state = signed_in_state()
+        state.pet_target_id = '99'
+        self.assertEqual(state.dashboard_context_pet_id, '')
+        state.pet_target_id = '2'
+        self.assertEqual(state.dashboard_context_pet_id, '2')
+        State.show_pet_picker.fn(state)
+        self.assertEqual(state.dashboard_context_pet_id, '')
 
 
 def execute_dashboard_lambda(variables: dict[str, object]) -> dict[str, object]:
@@ -56,6 +89,43 @@ def execute_dashboard_lambda(variables: dict[str, object]) -> dict[str, object]:
 
 
 class DashboardProjectionTests(unittest.TestCase):
+    def test_vaccine_led_deadline_boundaries_and_plural(self):
+        today = date(2026, 11, 6)
+        cases = [
+            (8, "futura", "Próxima dose em 8 dias"),
+            (7, "proxima", "Dose prevista em 7 dias"),
+            (1, "proxima", "Dose prevista em 1 dia"),
+            (0, "hoje", "Dose prevista para hoje"),
+            (-1, "ultrapassada", "Data prevista há 1 dia — confira os registros"),
+            (-3, "ultrapassada", "Data prevista há 3 dias — confira os registros"),
+        ]
+        for days, tone, label in cases:
+            with self.subTest(days=days):
+                due = today + timedelta(days=days)
+                pet = project_pet({"vacinas": [{"vacina": "Raiva", "data_prox_dose": due.isoformat()}]}, today)
+                self.assertEqual(pet["indicador_vacina"], {
+                    "estado": tone, "texto": label, "nome": "Raiva", "data": due.strftime("%d/%m/%Y")})
+
+    def test_vaccine_led_invalid_dates_are_off(self):
+        for value in (None, "", "2026-02-30", "invalid"):
+            with self.subTest(value=value):
+                pet = project_pet({"vacinas": [{"data_prox_dose": value}]}, date(2026, 11, 6))
+                self.assertEqual(pet["indicador_vacina"], {
+                    "estado": "sem-data", "texto": "Sem próxima dose registrada", "nome": "", "data": ""})
+
+    def test_vaccine_led_uses_same_upcoming_dose_or_latest_past_date(self):
+        past = [{"vacina": "Antiga", "data_prox_dose": "2026-10-01"},
+                {"vacina": "Recente", "data_prox_dose": "2026-11-05"}]
+        row = {"vacinas": past}
+        pet = project_pet(row, date(2026, 11, 6))
+        self.assertEqual(pet["indicador_vacina"]["nome"], "Recente")
+        self.assertEqual(pet["proxima_vacina"], {"nome": "", "data": ""})
+        row["vacinas"] += [{"vacina": "Futura", "data_prox_dose": "2026-11-08"},
+                           {"vacina": "Mais distante", "data_prox_dose": "2026-12-01"}]
+        pet = project_pet(row, date(2026, 11, 6))
+        self.assertEqual(pet["indicador_vacina"]["nome"], pet["proxima_vacina"]["nome"])
+        self.assertEqual(pet["indicador_vacina"]["nome"], "Futura")
+
     def test_profile_age_and_optional_fields_are_derived_without_invention(self):
         row = {
             "id": 1,
@@ -261,6 +331,130 @@ class DashboardProjectionTests(unittest.TestCase):
 
 
 class DashboardStateTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fast_pet_is_visible_while_slow_pet_is_still_loading(self):
+        state = signed_in_state()
+        release = asyncio.Event()
+        async def request(_method, _group, endpoint, **_kwargs):
+            if endpoint.endswith("=2"):
+                await release.wait()
+            return {"id": int(endpoint.rsplit("=", 1)[1])}
+        async def first_visible():
+            while not state.dashboard_pets:
+                await asyncio.sleep(0)
+        with patch("vet_tech.features.dashboard.state.xano_request", side_effect=request):
+            task = asyncio.create_task(consume(State.load_dashboard.fn(state)))
+            await asyncio.wait_for(first_visible(), 2)
+            self.assertTrue(state.dashboard_loading)
+            self.assertEqual([pet["id"] for pet in state.dashboard_pets], ["1"])
+            self.assertFalse(task.done())
+            release.set()
+            await task
+        self.assertEqual([pet["id"] for pet in state.dashboard_pets], ["1", "2"])
+        self.assertFalse(state.dashboard_loading)
+
+    async def test_immediate_return_and_scope_reuse_data_but_force_refresh_reads(self):
+        state = signed_in_state()
+        async def request(_method, _group, endpoint, **_kwargs):
+            return {"id": int(endpoint.rsplit("=", 1)[1])}
+        with patch("vet_tech.features.dashboard.state.xano_request", side_effect=request) as remote:
+            await consume(State.load_dashboard.fn(state))
+            self.assertEqual(remote.await_count, 2)
+            await consume(State.load_dashboard.fn(state))
+            await consume(State.set_dashboard_scope.fn(state, "1"))
+            self.assertEqual(remote.await_count, 2)
+            await consume(State.load_dashboard.fn(state, True))
+            self.assertEqual(remote.await_count, 3)
+
+    async def test_dashboard_reuse_expires_and_is_invalidated_by_context(self):
+        import time
+        state = signed_in_state()
+        async def request(_method, _group, endpoint, **_kwargs):
+            return {"id": int(endpoint.rsplit("=", 1)[1])}
+        with patch("vet_tech.features.dashboard.state.xano_request", side_effect=request) as remote:
+            await consume(State.load_dashboard.fn(state))
+            self.assertTrue(state._dashboard_cache_fresh("todos"))
+            state._dashboard_loaded_at = {key: time.monotonic()-16 for key in state._dashboard_loaded_at}
+            await consume(State.load_dashboard.fn(state))
+            self.assertEqual(remote.await_count, 4)
+        state._dashboard_cache_day = "2000-01-01"
+        self.assertFalse(state._dashboard_cache_fresh("todos"))
+        state._dashboard_cache_day = date.today().isoformat()
+        state.pets = [{"id": "1"}]
+        self.assertFalse(state._dashboard_cache_fresh("todos"))
+        state._clear_session()
+        self.assertEqual(state._dashboard_loaded_at, {})
+
+    async def test_opening_clinical_records_invalidates_dashboard_reuse(self):
+        state = signed_in_state()
+        state.dashboard_pets = [{"id": "1"}]
+        state._dashboard_loaded_at = {"1": 1.0}
+        State.dashboard_open_clinical.fn(state, "1", "vacinas")
+        self.assertEqual(state._dashboard_loaded_at, {})
+
+    async def test_loading_event_schedules_without_io_and_duplicate_does_not_restart(self):
+        import time
+        state = signed_in_state()
+        with patch("vet_tech.features.dashboard.state.xano_request", new_callable=AsyncMock) as request:
+            started = time.perf_counter()
+            events = [event async for event in State.load_dashboard.fn(state)]
+            elapsed = time.perf_counter() - started
+            self.assertLess(elapsed, .1)
+            self.assertTrue(state.dashboard_loading)
+            self.assertTrue(State.fetch_dashboard.is_background)
+            request.assert_not_awaited()
+            self.assertEqual(len(events), 2)
+            generation = state._dashboard_generation
+            self.assertEqual([event async for event in State.load_dashboard.fn(state)], [])
+            self.assertEqual([event async for event in State.set_dashboard_scope.fn(state, "todos")], [])
+            self.assertEqual(state._dashboard_generation, generation)
+
+    async def test_first_error_cancels_other_reads_without_waiting_for_timeout(self):
+        state = signed_in_state()
+        waiting, cancelled = asyncio.Event(), asyncio.Event()
+        async def request(_method, _group, endpoint, **_kwargs):
+            if endpoint.endswith("=1"):
+                await waiting.wait()
+                raise XanoRequestError("Sessão inválida.", status_code=401)
+            waiting.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+        with patch("vet_tech.features.dashboard.state.xano_request", side_effect=request):
+            await asyncio.wait_for(consume(State.load_dashboard.fn(state)), 2)
+        self.assertTrue(cancelled.is_set())
+        self.assertFalse(state.is_authenticated)
+        self.assertFalse(state.dashboard_loading)
+
+    async def test_background_io_runs_outside_lock_and_duplicate_worker_is_ignored(self):
+        state = signed_in_state()
+        state.dashboard_scope = "1"
+        await State.load_dashboard.fn(state).__anext__()
+        held = False
+        started, release = asyncio.Event(), asyncio.Event()
+        async def enter(*_args):
+            nonlocal held
+            held = True
+            return state
+        async def leave(*_args):
+            nonlocal held
+            held = False
+        async def request(*_args, **_kwargs):
+            self.assertFalse(held)
+            started.set()
+            await release.wait()
+            return {"id": 1}
+        with patch.object(State, "__aenter__", enter), patch.object(State, "__aexit__", leave), patch("vet_tech.features.dashboard.state.xano_request", side_effect=request) as remote:
+            generation = state._dashboard_generation
+            task = asyncio.create_task(State.fetch_dashboard.fn(state, generation))
+            await asyncio.wait_for(started.wait(), 2)
+            await State.fetch_dashboard.fn(state, generation)
+            self.assertEqual(remote.await_count, 1)
+            self.assertFalse(held)
+            release.set()
+            await task
+        self.assertFalse(state.dashboard_loading)
+
     async def test_dashboard_load_redirects_unauthenticated_and_non_tutor_profiles(self):
         for authenticated, profile, destination in (
             (False, "", "/login"),

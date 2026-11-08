@@ -1,3 +1,4 @@
+import asyncio
 import base64
 from typing import Any
 from urllib.parse import urlencode
@@ -5,7 +6,7 @@ from urllib.parse import urlencode
 import reflex as rx
 
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
-from vet_tech.features.clinical.state import ClinicalMixin
+from vet_tech.features.clinical.state import ClinicalMixin, MONTHS, calendar_days, today
 from vet_tech.features.dashboard.state import TutorDashboardMixin
 from vet_tech.features.support_chat.state import SupportChatMixin
 from vet_tech.features.veterinarians.validation import professional_payload
@@ -14,6 +15,7 @@ from vet_tech.shared.xano_client import (
     PET_API_GROUP,
     XanoRequestError,
     xano_request,
+    xano_request_batch,
 )
 from vet_tech.shared.dates import calendar_date, date_label
 
@@ -55,33 +57,39 @@ def _pet_photo_url(value: Any) -> str:
 
 async def _fetch_pet_details(pet_id, token, species, known_pet):
     """Fetch and project authorized details without accessing mutable State."""
-    warnings = []
-    pet = await xano_request('GET', PET_API_GROUP, f'pets/{pet_id}', auth_token=token)
-    if not isinstance(pet, dict) or str(pet.get('id')) != pet_id:
-        raise XanoRequestError('O Xano retornou dados incompatíveis com o pet solicitado.')
-    species_id = str(pet.get('especie_id') or '')
-    species_name = next((item['nome'] for item in species if item['id'] == species_id), '')
-    if not species_name:
-        warnings.append('Não foi possível identificar a espécie no catálogo.')
-    breed_id = str(pet.get('raca_id') or '')
-    breed_name = 'SRD'
-    if breed_id not in ('', '0'):
-        breed_name = known_pet.get('raca', '') if known_pet.get('raca_id') == breed_id else ''
-        if not breed_name or breed_name == 'SRD':
-            breed_name = 'Raça'
-            try:
-                breeds = await xano_request('GET', PET_API_GROUP, 'catalog/racas?' + urlencode({'especie_id': species_id}), auth_token=token)
-                breed_name = next((str(item['nome']) for item in breeds or [] if str(item['id']) == breed_id), 'Raça')
-            except XanoRequestError as caught:
-                if caught.status_code in (401, 403):
-                    raise
-                warnings.append(f'Não foi possível consultar as raças: {caught}')
-            if breed_name == 'Raça':
-                warnings.append('Não foi possível identificar a raça no catálogo.')
-    details = {key: '' if pet.get(key) is None else str(pet[key])
-               for key in ('id', 'nome', 'especie_id', 'raca_id', 'sexo', 'data_nasc', 'peso_atual', 'cor_pelo', 'num_microchip')}
-    details.update(nome=details['nome'] or 'Pet', especie=species_name or 'Espécie', raca=breed_name)
-    return details, warnings
+    async with xano_request_batch():
+        warnings = []
+        pet = await xano_request('GET', PET_API_GROUP, f'pets/{pet_id}', auth_token=token)
+        if not isinstance(pet, dict) or str(pet.get('id')) != pet_id:
+            raise XanoRequestError('O Xano retornou dados incompatíveis com o pet solicitado.')
+        species_id = str(pet.get('especie_id') or '')
+        species_name = next((item['nome'] for item in species if item['id'] == species_id), '')
+        if not species_name:
+            warnings.append('Não foi possível identificar a espécie no catálogo.')
+        breed_id = str(pet.get('raca_id') or '')
+        breed_name = 'SRD'
+        if breed_id not in ('', '0'):
+            breed_name = known_pet.get('raca', '') if known_pet.get('raca_id') == breed_id else ''
+            if not breed_name or breed_name == 'SRD':
+                breed_name = 'Raça'
+                try:
+                    breeds = await xano_request('GET', PET_API_GROUP, 'catalog/racas?' + urlencode({'especie_id': species_id}), auth_token=token)
+                    breed_name = next((str(item['nome']) for item in breeds or [] if str(item['id']) == breed_id), 'Raça')
+                except XanoRequestError as caught:
+                    if caught.status_code in (401, 403):
+                        raise
+                    warnings.append(f'Não foi possível consultar as raças: {caught}')
+                if breed_name == 'Raça':
+                    warnings.append('Não foi possível identificar a raça no catálogo.')
+        details = {key: '' if pet.get(key) is None else str(pet[key])
+                   for key in ('id', 'nome', 'especie_id', 'raca_id', 'sexo', 'data_nasc', 'peso_atual', 'cor_pelo', 'num_microchip')}
+        details.update(nome=details['nome'] or 'Pet', especie=species_name or 'Espécie', raca=breed_name)
+        photo = pet.get('foto')
+        if 'foto' not in pet and str(known_pet.get('id')) == pet_id:
+            photo = known_pet.get('foto')
+        details['foto'] = _pet_photo_url(photo)
+        details['data_nasc_legivel'] = format_pet_birth_date(pet.get('data_nasc'))
+        return details, warnings
 
 
 class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
@@ -120,6 +128,8 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     selected_breed_id: str = ""
     pet_sex: str = ""
     pet_birth_date: str = ""
+    birth_calendar_open: bool = False
+    birth_calendar_month: str = ""
     pet_weight: str = ""
     pet_coat_color: str = ""
     pet_microchip: str = ""
@@ -136,6 +146,14 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     _pet_list_generation: int = 0
     _registration_generation: int = 0
     _pet_detail_running: int = -1
+
+    @rx.var
+    def is_pet_form_page(self) -> bool:
+        return self.router.url.path.rstrip("/") in ("", "/login") and not self.is_pet_picker_page
+
+    @rx.var
+    def is_pet_picker_page(self) -> bool:
+        return self.router.url.query_parameters.get("selecionar", "") == "pet"
 
     @rx.var
     def selected_pet_id(self) -> str:
@@ -297,6 +315,68 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     @rx.event
     def set_pet_birth_date(self, value: str):
         self.pet_birth_date = value
+
+    @rx.var
+    def birth_date_label(self) -> str:
+        return date_label(self.pet_birth_date) or "Nenhuma data selecionada"
+
+    @rx.var
+    def birth_calendar_month_name(self) -> str:
+        return MONTHS[int((self.birth_calendar_month or today()[:7])[5:7])-1].capitalize()
+
+    @rx.var
+    def birth_calendar_year(self) -> str:
+        return (self.birth_calendar_month or today()[:7])[:4]
+
+    @rx.var
+    def birth_calendar_years(self) -> list[str]:
+        year = int(self.birth_calendar_year)
+        return [str(y).zfill(4) for y in range(max(1, year-10), min(9998, year+10)+1)]
+
+    @rx.var
+    def birth_calendar_days(self) -> list[dict[str, str]]:
+        return [{**day, "disabled": "sim" if day["date"] and day["date"] > today() else "nao"}
+                for day in calendar_days(self.birth_calendar_month, self.pet_birth_date)]
+
+    @rx.event
+    def birth_calendar_set_open(self, value: bool):
+        if not value:
+            self.birth_calendar_open = False
+        elif self.is_authenticated and self.profile == "tutor" and not self.is_busy:
+            selected = calendar_date(self.pet_birth_date)
+            self.birth_calendar_month = (selected.isoformat() if selected else today())[:7]
+            self.birth_calendar_open = True
+
+    @rx.event
+    def birth_calendar_shift(self, offset: int):
+        if not self.birth_calendar_open or self.is_busy:
+            return
+        year, month = map(int, (self.birth_calendar_month or today()[:7]).split("-"))
+        serial = year * 12 + month - 1 + offset
+        if 12 <= serial < 119988:
+            self.birth_calendar_month = f"{serial // 12:04d}-{serial % 12 + 1:02d}"
+
+    @rx.event
+    def birth_calendar_choose_month(self, value: str):
+        names = [name.capitalize() for name in MONTHS]
+        if self.birth_calendar_open and not self.is_busy and value in names:
+            self.birth_calendar_month = f"{self.birth_calendar_year}-{names.index(value)+1:02d}"
+
+    @rx.event
+    def birth_calendar_choose_year(self, value: str):
+        if (self.birth_calendar_open and not self.is_busy and value.isascii() and value.isdecimal()
+                and 1 <= int(value) <= 9998):
+            self.birth_calendar_month = f"{int(value):04d}-" + (self.birth_calendar_month or today()[:7])[5:7]
+
+    @rx.event
+    def birth_calendar_choose_day(self, value: str):
+        if not self.birth_calendar_open or self.is_busy or not self.is_authenticated or self.profile != "tutor":
+            return
+        parsed = calendar_date(value)
+        if value and (parsed is None or parsed.isoformat() != value or value > today()):
+            return
+        self.pet_birth_date = value
+        self.birth_calendar_open = False
 
     @rx.event
     def set_pet_weight(self, value: str):
@@ -523,6 +603,8 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
             self.professional_clinic = "" if value == "none" else value
 
     def _reset_pet_form(self):
+        self.birth_calendar_open = False
+        self.birth_calendar_month = ""
         self.pet_name = ""
         self.pet_sex = ""
         self.pet_birth_date = ""
@@ -558,6 +640,7 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         self._clear_pet_context()
         self.pet_picker_open = True
         self.active_section = "Início"
+        return rx.redirect("/?selecionar=pet")
 
     async def _load_species(self):
         session = self._session_generation
@@ -625,7 +708,12 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         self._start_pet_selection(pet_id)
         yield
         if self.pet_target_id:
-            yield State.load_selected_pet(self._pet_context_generation)
+            self.active_section = "Início"
+            yield [
+                State.load_selected_pet(self._pet_context_generation),
+                State.set_dashboard_scope(self.pet_target_id),
+                rx.redirect("/dashboard"),
+            ]
 
     @rx.event
     async def retry_pet(self):
@@ -669,13 +757,15 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
                 self.selected_pet = details
                 self.pet_picker_open = False
                 self.pet_detail_message = ' '.join(warnings)
-                event = self._prepare_tutor_clinical()
+                if self.router.url.path.rstrip("/") == "/prontuario":
+                    event = self._prepare_tutor_clinical()
         if event is not None:
             yield event
 
     @rx.event
     def close_pet(self):
         self._clear_pet_context()
+        return rx.redirect("/")
 
     async def _load_pets(self):
         self._pet_list_generation += 1
@@ -687,75 +777,83 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         context_generation = self._pet_context_generation
         self.is_loading_pets = True
         try:
-            result = await xano_request(
-                "GET",
-                PET_API_GROUP,
-                "pets",
-                auth_token=token,
-            )
-            species_names = {item["id"]: item["nome"] for item in self.species_options}
-            species_ids = sorted(
-                {
-                    str(item.get("especie_id"))
-                    for item in result or []
-                    if item.get("especie_id") and item.get("raca_id")
-                }
-            )
-            breed_names: dict[str, str] = {}
-            for species_id in species_ids:
-                try:
-                    breeds = await self._load_breeds(species_id, token=token)
-                except XanoRequestError as error:
-                    if session != self._session_generation or list_generation != self._pet_list_generation:
-                        return
-                    if error.status_code == 401:
-                        raise
-                    self.pet_message = f"Pets carregados, mas não foi possível consultar as raças: {error}"
-                    continue
-                for breed in breeds:
-                    breed_names[breed["id"]] = breed["nome"]
-
-            if session != self._session_generation or list_generation != self._pet_list_generation:
-                return
-            self.pets = []
-            for item in result or []:
-                species_name = species_names.get(str(item.get("especie_id")), "")
-                breed_name = (
-                    "SRD"
-                    if not item.get("raca_id")
-                    else breed_names.get(str(item.get("raca_id")), "")
+            async with xano_request_batch():
+                result = await xano_request(
+                    "GET",
+                    PET_API_GROUP,
+                    "pets",
+                    auth_token=token,
                 )
-                sex = display_pet_sex(item.get("sexo"))
-                birth_date = format_pet_birth_date(item.get("data_nasc"))
-                metadata = " · ".join(
-                    value
-                    for value in (species_name, breed_name, sex, birth_date)
-                    if value
-                )
-                self.pets.append(
+                species_names = {item["id"]: item["nome"] for item in self.species_options}
+                species_ids = sorted(
                     {
-                        "id": str(item.get("id") or ""),
-                        "raca_id": str(item.get("raca_id") or ""),
-                        "nome": str(item.get("nome") or "Pet"),
-                        "especie": species_name,
-                        "raca": breed_name,
-                        "sexo": sex,
-                        "data_nasc": birth_date,
-                        "metadados": metadata,
-                        "foto": _pet_photo_url(item.get("foto")),
-                        "peso_atual": (
-                            str(item["peso_atual"])
-                            if item.get("peso_atual") is not None
-                            else ""
-                        ),
+                        str(item.get("especie_id"))
+                        for item in result or []
+                        if item.get("especie_id") and item.get("raca_id")
                     }
                 )
-            if context_generation == self._pet_context_generation and target:
-                if any(item["id"] == target for item in self.pets):
-                    self._start_pet_selection(target)
-                    return State.load_selected_pet(self._pet_context_generation)
-                else:
-                    self.pet_detail_message = "O pet selecionado não está mais disponível."
+                breed_names: dict[str, str] = {}
+                semaphore = asyncio.Semaphore(4)
+
+                async def read_breeds(species_id):
+                    async with semaphore:
+                        return await self._load_breeds(species_id, token=token)
+
+                results = await asyncio.gather(*(read_breeds(species_id) for species_id in species_ids), return_exceptions=True)
+                for breeds in results:
+                    if session != self._session_generation or list_generation != self._pet_list_generation:
+                        return
+                    if isinstance(breeds, XanoRequestError):
+                        if breeds.status_code == 401:
+                            raise breeds
+                        self.pet_message = f"Pets carregados, mas não foi possível consultar as raças: {breeds}"
+                        continue
+                    if isinstance(breeds, BaseException):
+                        raise breeds
+                    for breed in breeds:
+                        breed_names[breed["id"]] = breed["nome"]
+
+                if session != self._session_generation or list_generation != self._pet_list_generation:
+                    return
+                self.pets = []
+                for item in result or []:
+                    species_name = species_names.get(str(item.get("especie_id")), "")
+                    breed_name = (
+                        "SRD"
+                        if not item.get("raca_id")
+                        else breed_names.get(str(item.get("raca_id")), "")
+                    )
+                    sex = display_pet_sex(item.get("sexo"))
+                    birth_date = format_pet_birth_date(item.get("data_nasc"))
+                    metadata = " · ".join(
+                        value
+                        for value in (species_name, breed_name, sex, birth_date)
+                        if value
+                    )
+                    self.pets.append(
+                        {
+                            "id": str(item.get("id") or ""),
+                            "raca_id": str(item.get("raca_id") or ""),
+                            "nome": str(item.get("nome") or "Pet"),
+                            "especie": species_name,
+                            "raca": breed_name,
+                            "sexo": sex,
+                            "data_nasc": birth_date,
+                            "metadados": metadata,
+                            "foto": _pet_photo_url(item.get("foto")),
+                            "peso_atual": (
+                                str(item["peso_atual"])
+                                if item.get("peso_atual") is not None
+                                else ""
+                            ),
+                        }
+                    )
+                if context_generation == self._pet_context_generation and target:
+                    if any(item["id"] == target for item in self.pets):
+                        self._start_pet_selection(target)
+                        return State.load_selected_pet(self._pet_context_generation)
+                    else:
+                        self.pet_detail_message = "O pet selecionado não está mais disponível."
         except XanoRequestError as error:
             if session == self._session_generation and list_generation == self._pet_list_generation:
                 if error.status_code == 401:

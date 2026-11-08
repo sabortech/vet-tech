@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "1440/light: status, ausência, descrição, layout, LED e ação",
+    "1440/dark: status, ausência, descrição, layout, LED e ação",
+    "390/light: status, ausência, descrição, layout, LED e ação",
+    "390/dark: status, ausência, descrição, layout, LED e ação",
+    "Consulta correta abre e mantém cartão genérico no detalhe",
+    "Vacinas/Medicamentos, atualização, erro/retry, vazio e troca de pet"
+  ],
+  "errors": []
+}

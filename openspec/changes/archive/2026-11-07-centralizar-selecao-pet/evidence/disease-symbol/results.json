@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: coração com pulso visível, sem overflow e sem interceptar ações",
+    "1440/dark: coração com pulso visível, sem overflow e sem interceptar ações",
+    "390/light: coração com pulso visível, sem overflow e sem interceptar ações",
+    "390/dark: coração com pulso visível, sem overflow e sem interceptar ações"
+  ],
+  "errors": []
+}

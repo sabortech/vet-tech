@@ -1,0 +1,7 @@
+{
+  "before_first_card_ms": 370,
+  "after_first_card_ms": 79,
+  "cached_return_ms": 0.4,
+  "requests_for_first_and_cached_return": 2,
+  "mode": "controlled-local-api-30ms-and-300ms"
+}

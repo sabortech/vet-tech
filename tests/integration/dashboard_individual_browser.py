@@ -1,0 +1,178 @@
+"""Consultation list/detail browser checks with an isolated synthetic backend.
+
+Uses the compiled frontend at localhost:3000; overrides endpoint configuration
+only in the test browser so credentials never reach the active backend.
+"""
+import json
+import os
+import re
+from pathlib import Path
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import time
+from http.server import ThreadingHTTPServer
+from urllib.parse import urlsplit
+
+import httpx
+from playwright.sync_api import expect, sync_playwright
+import dashboard_dates_browser as fixture
+
+ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_PORT=os.getenv('VET_TECH_TEST_FRONTEND_PORT','3002')
+ORIGIN=f'http://localhost:{FRONTEND_PORT}'
+OUT=ROOT/'openspec/changes/archive/2026-11-07-remodelar-cards-pets-dashboard/evidence/individual-unified'
+MODE = 'records'
+READS = []
+DESCRIPTION = 'Acompanhamento sintético.\nOrientação registrada. ' + 'Texto longo para verificar leitura e quebra de linha. ' * 12
+CONSULTATIONS = [
+    {'id': 43, 'status': 'finalizada', 'data_atendimento': '2026-11-02', 'motivo': DESCRIPTION,
+     'diagnostico': 'Diagnóstico sintético', 'obs': 'Observações sintéticas.\nSegunda linha.',
+     'veterinario_nome': 'Profissional sintético', 'veterinario_id': 8,
+     'iniciada_em': '2026-11-02T12:00:00Z', 'finalizada_em': '2026-11-02T13:00:00Z', 'retorno_previsto': '2026-12-02'},
+    {'id': 44, 'status': 'agendada', 'data_atendimento': '2026-12-01'},
+    {'id': 45, 'status': 'legado', 'data_atendimento': '2026-10-01'},
+    {'id': 46, 'status': 'em_atendimento'}, {'id': 47, 'status': 'cancelada'},
+]
+
+class API(fixture.SyntheticAPI):
+    def handle_api(self):
+        path = urlsplit(self.path).path.split('/', 2)[-1]
+        if path.endswith('/historico'):
+            READS.append(path)
+            time.sleep(.4)
+            body = {'consultas': CONSULTATIONS,
+                'vacinas': [{'id': 1, 'consulta_id': 43, 'vacina': 'Vacina sintética', 'data_aplicacao': '2026-11-02', 'lote': 'Lote QA', 'data_prox_dose': '2026-12-02'}],
+                'medicamentos': [{'id': 2, 'consulta_id': 43, 'nome': 'Medicamento sintético', 'dose': 10, 'unidade': 'mg', 'frequencia': 'Uma vez por dia', 'via': 'oral', 'tipo': 'outro', 'data_inicio': '2026-11-02', 'data_fim': '2026-11-12'}],
+                'diagnosticos': [{'id': 3, 'consulta_id': 43, 'nome': 'Condição sintética', 'estado': 'em_tratamento', 'data_diagnostico': '2026-11-02', 'observacoes': 'Nota clínica sintética'}],
+                'exames': [{'id': 4+i, 'consulta_id': 43, 'tipo': 'Exame sintético '+str(i+1), 'status': 'realizado', 'data_solicitacao': '2026-11-02', 'data_realizacao': '2026-11-03', 'resultado': 'Resultado sintético'} for i in range(4)]}
+            status = 503 if MODE == 'error' else 200
+            if status != 200: body = {'message': 'Falha sintética'}
+        elif path == 'pets':
+            body,status=[{**fixture.PET,'id':i,'nome':'Pet status '+str(i)} for i in range(1,6)],200
+        elif path == 'tutor/dashboard':
+            pet_id=int(self.path.split('pet_id=')[1].split('&')[0])
+            days={1:10,2:3,3:0,4:-3}
+            body,status={**fixture.PET,'id':pet_id,'nome':'Pet status '+str(pet_id),'especie_nome':'Cachorro','vacinas':[] if pet_id==5 else [{'vacina':'Dose sintética','data_prox_dose':(fixture.TODAY+fixture.timedelta(days=days[pet_id])).isoformat()}],'consultas':[],'exames':[]},200
+        elif path == 'tutor/consultas':
+            body, status = ([] if MODE == 'empty' else CONSULTATIONS), 200
+        elif path.startswith('pets/'):
+            body, status = {**fixture.PET, 'id': int(path.split('/')[-1])}, 200
+        else:
+            return super().handle_api()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())
+
+
+def main():
+    global MODE
+    OUT.mkdir(parents=True, exist_ok=True)
+    api = ThreadingHTTPServer(('127.0.0.1', 0), API)
+    threading.Thread(target=api.serve_forever, daemon=True).start()
+    with socket.socket() as available:
+        available.bind(('127.0.0.1', 0))
+        port = available.getsockname()[1]
+    env_file = ROOT / '.web/env.json'
+    original = env_file.read_bytes()
+    log = (OUT / 'backend.log').open('w')
+    process = subprocess.Popen([sys.executable, '-m', 'reflex', 'run', '--backend-only', '--env', 'prod', '--backend-port', str(port)],
+        cwd=ROOT, env={**os.environ, 'XANO_API_BASE_URL': f'http://127.0.0.1:{api.server_port}', 'XANO_TENANT': ''},
+        stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+    checks, errors = [], []
+    try:
+        for _ in range(120):
+            if process.poll() is not None:
+                raise RuntimeError('Test backend stopped; inspect backend.log')
+            try:
+                if httpx.get(f'http://localhost:{port}/ping', timeout=.5).status_code == 200:
+                    break
+            except httpx.HTTPError:
+                pass
+            time.sleep(.5)
+        else:
+            raise RuntimeError('Test backend did not start')
+        if env_file.read_bytes() != original:
+            env_file.write_bytes(original)
+        with sync_playwright() as p:
+            browser = p.chromium.launch(executable_path='/home/usuario/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome', args=['--no-sandbox'])
+            page = browser.new_page(viewport={'width':1440, 'height':1000})
+            def test_endpoints(route):
+                response = route.fetch()
+                body = re.sub(r'((?:https?|ws)://localhost):\d+', lambda m: m[1] + f':{port}', response.text())
+                route.fulfill(response=response, body=body)
+            page.route('**/env.json*', test_endpoints)
+            connected = []
+            page.on('websocket', lambda ws: connected.append(ws.url))
+            page.on('pageerror', lambda e: errors.append(str(e)))
+            page.route('https://fonts.googleapis.com/**', lambda r:r.abort())
+            page.goto(ORIGIN+'/login', wait_until='domcontentloaded')
+            page.wait_for_function('!!window.__reflex', timeout=60000)
+            expect(page.locator('head link[href*="vet_tech.css"]')).to_have_attribute('href','/vet_tech.css?v=dashboard-status-shadow-20261107')
+            page.wait_for_timeout(500)
+            assert any(f':{port}/_event/' in url for url in connected), connected
+            page.get_by_label('E-mail', exact=True).fill('tutor@example.invalid')
+            page.get_by_label('Senha', exact=True).fill('synthetic-password')
+            page.get_by_role('button', name='Login', exact=True).click()
+            expect(page.locator('.pet-entry__action').first).to_be_visible()
+            page.locator('#vet-tech-sidebar').get_by_label('Dashboard',exact=True).click()
+            expect(page.locator('.dashboard-pet-card')).to_have_count(5)
+            tones=('futura','proxima','hoje','ultrapassada','sem-data')
+            expected_colors={tone:page.locator('.dashboard-pet-card--'+tone+' .dashboard-vaccine-led').evaluate('(e)=>getComputedStyle(e).backgroundColor') for tone in tones}
+            for i,tone in enumerate(tones,1):
+                page.get_by_role('combobox',name='Mostrar pets',exact=True).click()
+                page.get_by_role('option',name='Pet status '+str(i),exact=True).click()
+                card=page.locator('.dashboard-individual-card')
+                expect(card).to_have_count(1)
+                expect(card.get_by_role('heading',name='Pet status '+str(i),exact=True)).to_be_visible()
+                expect(card.locator('.dashboard-individual-metric')).to_have_count(3)
+                expect(card.locator('.rt-Card')).to_have_count(0)
+                for text in ('Próximo evento registrado','Itens registrados para acompanhar','Atividade recente'):
+                    expect(card.get_by_role('heading',name=text,exact=True)).to_be_visible()
+                expect(card.get_by_role('button',name='Agendar consulta',exact=True)).to_be_visible()
+                expect(card.get_by_role('button',name='Abrir prontuário',exact=True)).to_be_visible()
+                for width in (1440,390):
+                    page.set_viewport_size({'width':width,'height':1000})
+                    for theme in ('light','dark'):
+                        page.evaluate('(t)=>{document.documentElement.dataset.vtTheme=t;document.documentElement.classList.toggle("dark",t==="dark")}',theme)
+                        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                        led=card.locator('.dashboard-card-led')
+                        if tone=='sem-data':
+                            expect(led).not_to_be_visible()
+                        else:
+                            expect(led).to_be_visible()
+                            expect(led).to_have_css('display','block')
+                            expect(led).to_have_css('opacity','1')
+                            track=led.locator('rect')
+                            assert track.bounding_box()['width']>100 and track.bounding_box()['height']>100
+                            expect(track).to_have_css('animation-name','vet-date-border-orbit')
+                            assert track.evaluate('(e)=>getComputedStyle(e).stroke')==expected_colors[tone]
+                        shadow=card.evaluate('(e)=>getComputedStyle(e).boxShadow')
+                        rgb=expected_colors[tone].removeprefix('rgb(').removesuffix(')')
+                        channels=re.findall(r'color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)',shadow)
+                        if channels:
+                            wanted=[int(v) for v in rgb.split(',')]
+                            assert all(all(abs(round(float(c)*255)-wanted[i])<=1 for i,c in enumerate(values)) for values in channels),(tone,shadow)
+                        else:
+                            assert rgb in shadow,(tone,shadow,expected_colors[tone])
+                        assert led.evaluate('(e)=>getComputedStyle(e).pointerEvents')=='none'
+                        card.screenshot(path=str(OUT/f'{tone}-{width}-{theme}.png'))
+                checks.append(f'Pet {i}: cartão único, informações/ações e LED {tone}, temas e celular')
+            assert not errors,errors
+            browser.close()
+        (OUT/'results.json').write_text(json.dumps({'checks':checks,'errors':errors},ensure_ascii=False,indent=2))
+        print('PASS: cinco pets com cartão individual unificado, LED de status, temas e celular')
+    finally:
+        if env_file.read_bytes() != original:
+            env_file.write_bytes(original)
+        os.killpg(process.pid, signal.SIGINT)
+        process.wait(timeout=20)
+        api.shutdown()
+        log.close()
+
+
+if __name__ == '__main__':
+    main()

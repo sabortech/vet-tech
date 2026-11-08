@@ -1,12 +1,11 @@
 """Clinical actions composed into the shared tutor sidebar."""
 import reflex as rx
 
-from vet_tech.components.pets import pet_form
 from vet_tech.features.auth.state import State
 from vet_tech.features.navigation.state import NavigationState
 
 
-def menu_button(label: str, icon: str, **props) -> rx.Component:
+def menu_button(label: str, icon: str, active=False, **props) -> rx.Component:
     return rx.button(
         rx.hstack(
             rx.icon(icon, size=20, class_name='sidebar-item__icon'),
@@ -14,11 +13,13 @@ def menu_button(label: str, icon: str, **props) -> rx.Component:
             class_name='sidebar-item__contents',
         ),
         aria_label=label, title=label,
-        class_name='sidebar-item sidebar-action', **props,
+        class_name=rx.cond(active, 'sidebar-item sidebar-action sidebar-item--active', 'sidebar-item sidebar-action'),
+        custom_attrs={'aria-current': rx.cond(active, 'page', 'false')}, **props,
     )
 
 
 def new_pet_dialog() -> rx.Component:
+    from vet_tech.components.pets import pet_form
     return rx.dialog.root(
         rx.dialog.trigger(menu_button('Novo pet', 'circle-plus', disabled=State.is_busy)),
         rx.dialog.content(
@@ -33,10 +34,16 @@ def new_pet_dialog() -> rx.Component:
     )
 
 
-def clinical_menu_actions() -> rx.Component:
+def tutor_menu_entries(in_settings=False) -> rx.Component:
+    from vet_tech.features.settings.state import SettingsState
     return rx.box(
-        new_pet_dialog(),
-        menu_button('Mudar pet', 'arrow-left-right', on_click=[State.show_pet_picker, NavigationState.close_drawer]),
-        menu_button('Sair', 'log-out', on_click=State.logout),
-        class_name='sidebar-action-list',
+        menu_button('Mudar pet', 'arrow-left-right', active=State.is_pet_picker_page,
+            on_click=[SettingsState.request_action('change_pet') if in_settings else State.show_pet_picker, NavigationState.close_drawer]),
+        class_name='sidebar-pet-entries',
     )
+
+
+def tutor_menu_footer(in_settings=False) -> rx.Component:
+    from vet_tech.features.settings.state import SettingsState
+    return menu_button('Sair', 'log-out',
+        on_click=SettingsState.request_action('logout') if in_settings else State.logout)

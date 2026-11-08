@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "agendamento: painel, mês/ano, passado bloqueado, horário, etapas, volta e cancelamento",
+    "nascimento direto: futuro bloqueado, mês/ano, bissexto, ISO e limpeza preservando rascunho",
+    "Novo pet: calendário aninhado fecha por Escape/seleção sem fechar pai; cadastro enviou data ISO",
+    "regressão: calendário da agenda médica mantém painel e seletores",
+    "build e testes isolados preservaram módulos e configuração do servidor ativo"
+  ],
+  "javascript_errors": []
+}

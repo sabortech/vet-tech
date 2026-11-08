@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import AsyncMock, patch
 
 from test_clinical_state import consume, session, TARGET
+from reflex.istate.data import RouterData, ReflexURL
 from test_pet_selection import pet
 from vet_tech.features.auth.state import State
 from vet_tech.shared.xano_client import XanoRequestError
@@ -41,6 +42,7 @@ async def fetch(state):
 class PetClinicalLoadingTests(unittest.IsolatedAsyncioTestCase):
     async def test_selection_schedules_without_http_and_detail_schedules_clinical(self):
         state = session()
+        state.router = RouterData(url=ReflexURL('http://localhost/prontuario'))
         state.species_options = [{'id': '1', 'nome': 'Cachorro'}]
         with patch('vet_tech.features.auth.state.xano_request', AsyncMock(return_value=pet())) as detail:
             events = await consume(State.open_pet.fn(state, '1'))

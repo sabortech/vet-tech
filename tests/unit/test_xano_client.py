@@ -6,7 +6,7 @@ from unittest.mock import patch
 import httpx
 
 from vet_tech.shared.config import ConfigurationError, get_xano_base_url
-from vet_tech.shared.xano_client import XanoRequestError, xano_request
+from vet_tech.shared.xano_client import XanoRequestError, xano_request, xano_request_batch
 
 
 class ConfigurationTests(unittest.TestCase):
@@ -55,6 +55,41 @@ class XanoClientTests(unittest.IsolatedAsyncioTestCase):
         with patch("vet_tech.shared.xano_client.httpx.AsyncClient",
                    side_effect=lambda **options: self.client_class(transport=transport, **options)):
             return await xano_request("POST", "pets", "/pets", **kwargs)
+
+    async def test_batch_reuses_transport_without_persisting_bearer_headers(self):
+        clients, headers = [], []
+        def handler(request):
+            headers.append(request.headers.get("Authorization"))
+            return httpx.Response(200, json={})
+        def factory(**options):
+            client = self.client_class(transport=httpx.MockTransport(handler), **options)
+            clients.append(client)
+            return client
+        with patch("vet_tech.shared.xano_client.httpx.AsyncClient", side_effect=factory):
+            async with xano_request_batch():
+                await xano_request("GET", "pets", "pets/1", auth_token="first")
+                await xano_request("GET", "pets", "pets/2", auth_token="second")
+            self.assertEqual(len(clients), 1)
+            self.assertTrue(clients[0].is_closed)
+            await xano_request("GET", "pets", "pets")
+        self.assertEqual(len(clients), 2)
+        self.assertEqual(headers, ["Bearer first", "Bearer second", None])
+        self.assertTrue(clients[1].is_closed)
+
+    async def test_nested_batches_share_client_until_outer_operation_finishes(self):
+        clients = []
+        def factory(**options):
+            client = self.client_class(transport=httpx.MockTransport(lambda request: httpx.Response(200, json={})), **options)
+            clients.append(client)
+            return client
+        with patch("vet_tech.shared.xano_client.httpx.AsyncClient", side_effect=factory):
+            async with xano_request_batch():
+                async with xano_request_batch():
+                    await xano_request("GET", "pets", "pets/1", auth_token="first")
+                self.assertEqual(len(clients), 1)
+                self.assertFalse(clients[0].is_closed)
+                await xano_request("GET", "pets", "pets/2", auth_token="second")
+        self.assertTrue(clients[0].is_closed)
 
     async def test_json_and_bearer_token(self):
         def handler(request):

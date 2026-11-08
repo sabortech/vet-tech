@@ -55,19 +55,7 @@ def _menu_item(item_id: str, label: str, icon_name: str, pagina_ativa: str) -> r
 
 def _toggle_button(mobile: bool) -> rx.Component:
     is_open = NavigationState.drawer_open if mobile else NavigationState.sidebar_expanded
-    icon = (
-        rx.cond(
-            NavigationState.drawer_open,
-            rx.icon("x", size=20),
-            rx.icon("menu", size=20),
-        )
-        if mobile
-        else rx.cond(
-            NavigationState.sidebar_expanded,
-            rx.icon("panel-left-close", size=20),
-            rx.icon("menu", size=20),
-        )
-    )
+    icon = rx.icon("menu", size=20)
     label = (
         rx.cond(
             NavigationState.drawer_open,
@@ -98,7 +86,7 @@ def _toggle_button(mobile: bool) -> rx.Component:
     )
 
 
-def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation: rx.Component | None = None) -> rx.Component:
+def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation: rx.Component | None = None, extra_navigation: rx.Component | None = None) -> rx.Component:
     sidebar_class = rx.cond(
         NavigationState.drawer_open,
         "sidebar sidebar--mobile-open",
@@ -111,13 +99,13 @@ def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation:
     return rx.box(
         rx.hstack(
             rx.hstack(
-                rx.icon("paw-print", size=24),
+                rx.image(src="/consultation-pdf/mascote-v.png", alt="", aria_hidden="true",
+                         class_name="sidebar-brand__mascot"),
                 rx.text("Vet Tech", class_name="sidebar-brand__label"),
                 class_name="sidebar-brand",
                 align="center",
-                spacing="3",
+                spacing="2",
             ),
-            rx.spacer(),
             _toggle_button(mobile=False),
             class_name="sidebar-header",
             align="center",
@@ -127,7 +115,10 @@ def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation:
             *([navigation] if navigation is not None else [
                 _menu_item(item_id, label, icon_name, pagina_ativa)
                 for item_id, label, icon_name in _NAV_ITEMS
+                if item_id != "configuracoes"
             ]),
+            *([extra_navigation] if extra_navigation is not None else []),
+            *([_menu_item("configuracoes", "Configurações", "settings", pagina_ativa)] if navigation is None else []),
             class_name="sidebar-navigation",
             role="navigation",
             custom_attrs={"aria-label": "Navegação principal"},
@@ -135,12 +126,19 @@ def _sidebar(pagina_ativa: str, actions: rx.Component | None = None, navigation:
         *([rx.box(actions, class_name='sidebar-actions')] if actions is not None else []),
         id="vet-tech-sidebar",
         class_name=sidebar_class,
+        border_radius="0 24px 24px 0",
     )
 
 
 def layout_com_menu(conteudo: rx.Component, pagina_ativa: str, actions: rx.Component | None = None, navigation: rx.Component | None = None) -> rx.Component:
+    extra_navigation = None
+    if navigation is None:
+        from vet_tech.components.navigation import tutor_menu_entries, tutor_menu_footer
+        in_settings = isinstance(pagina_ativa, str) and pagina_ativa == "configuracoes"
+        extra_navigation = tutor_menu_entries(in_settings=in_settings)
+        actions = tutor_menu_footer(in_settings=in_settings)
     return rx.box(
-        _sidebar(pagina_ativa, actions, navigation),
+        _sidebar(pagina_ativa, actions, navigation, extra_navigation),
         rx.button(
             on_click=NavigationState.close_drawer,
             id="vet-tech-drawer-escape-close",

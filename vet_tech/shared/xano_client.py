@@ -1,6 +1,8 @@
 import asyncio
 import os
 import re
+from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from typing import Any, Optional
 
 import httpx
@@ -37,6 +39,33 @@ class XanoRequestError(Exception):
         return self.status_code == 401 or str(self) == "Sessão inválida."
 
 
+_batch_client: ContextVar[httpx.AsyncClient | None] = ContextVar("xano_batch_client", default=None)
+
+
+@asynccontextmanager
+async def xano_request_batch():
+    """Reuse transport only within one operation, never session credentials."""
+    if _batch_client.get() is not None:
+        yield
+        return
+    async with httpx.AsyncClient(timeout=20) as client:
+        marker = _batch_client.set(client)
+        try:
+            yield
+        finally:
+            _batch_client.reset(marker)
+
+
+@asynccontextmanager
+async def _request_client():
+    client = _batch_client.get()
+    if client is not None:
+        yield client
+    else:
+        async with httpx.AsyncClient(timeout=20) as client:
+            yield client
+
+
 async def xano_request(
     method: str,
     api_group: str,
@@ -60,7 +89,7 @@ async def xano_request(
 
     url = f"{base_url}/api:{api_group}/{endpoint.lstrip('/')}"
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with _request_client() as client:
             attempts = 3 if api_group == "vettech-clinical" else 1
             for attempt in range(attempts):
                 response = await client.request(

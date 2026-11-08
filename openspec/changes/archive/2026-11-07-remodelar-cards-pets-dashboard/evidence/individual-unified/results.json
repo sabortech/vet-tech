@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Pet 1: cartão único, informações/ações e LED futura, temas e celular",
+    "Pet 2: cartão único, informações/ações e LED proxima, temas e celular",
+    "Pet 3: cartão único, informações/ações e LED hoje, temas e celular",
+    "Pet 4: cartão único, informações/ações e LED ultrapassada, temas e celular",
+    "Pet 5: cartão único, informações/ações e LED sem-data, temas e celular"
+  ],
+  "errors": []
+}
