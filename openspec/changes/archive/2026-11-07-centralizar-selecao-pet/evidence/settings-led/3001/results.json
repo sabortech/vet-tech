@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "1440/light/Minha conta: contornos contidos e sem overflow",
+    "1440/light/Segurança: contornos contidos e sem overflow",
+    "1440/light/Preferências: contornos contidos e sem overflow",
+    "1440/dark/Minha conta: contornos contidos e sem overflow",
+    "1440/dark/Segurança: contornos contidos e sem overflow",
+    "1440/dark/Preferências: contornos contidos e sem overflow",
+    "390/light/Minha conta: contornos contidos e sem overflow",
+    "390/light/Segurança: contornos contidos e sem overflow",
+    "390/light/Preferências: contornos contidos e sem overflow",
+    "390/dark/Minha conta: contornos contidos e sem overflow",
+    "390/dark/Segurança: contornos contidos e sem overflow",
+    "390/dark/Preferências: contornos contidos e sem overflow"
+  ],
+  "errors": []
+}

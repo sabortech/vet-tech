@@ -32,6 +32,33 @@ def pet(pet_id="1", **extra):
 
 
 class PetSelectionTests(unittest.IsolatedAsyncioTestCase):
+    async def test_profile_photo_is_validated_and_birth_date_is_presented(self):
+        state = signed_in_state()
+        with patch("vet_tech.features.auth.state.xano_request", AsyncMock(return_value=pet(foto={"url": "https://example.invalid/pet.jpg"}, data_nasc="2026-01-31", num_microchip=0))):
+            await open_pet(state, "1")
+        self.assertEqual(state.selected_pet["foto"], "https://example.invalid/pet.jpg")
+        self.assertEqual(state.selected_pet["data_nasc"], "2026-01-31")
+        self.assertEqual(state.selected_pet["data_nasc_legivel"], "31/01/2026")
+        self.assertEqual(state.selected_pet["num_microchip"], "0")
+        with patch("vet_tech.features.auth.state.xano_request", AsyncMock(return_value=pet(foto="javascript:invalid"))):
+            await open_pet(state, "1")
+        self.assertEqual(state.selected_pet["foto"], "")
+
+    async def test_missing_photo_reuses_only_same_authorized_pet_from_list(self):
+        state = signed_in_state()
+        state.pets = [{"id": "1", "foto": "https://example.invalid/jessy.jpg"},
+                      {"id": "2", "foto": "https://example.invalid/morph.jpg"}]
+        with patch("vet_tech.features.auth.state.xano_request", AsyncMock(return_value=pet())):
+            await open_pet(state, "1")
+        self.assertEqual(state.selected_pet["foto"], "https://example.invalid/jessy.jpg")
+        with patch("vet_tech.features.auth.state.xano_request", AsyncMock(return_value=pet("2"))):
+            await open_pet(state, "2")
+        self.assertEqual(state.selected_pet["foto"], "https://example.invalid/morph.jpg")
+        for value, expected in [(None, ""), ("https://example.invalid/new.jpg", "https://example.invalid/new.jpg")]:
+            with patch("vet_tech.features.auth.state.xano_request", AsyncMock(return_value=pet(foto=value))):
+                await open_pet(state, "1")
+            self.assertEqual(state.selected_pet["foto"], expected)
+
     async def test_selection_is_pending_until_authorized_and_preserves_zero(self):
         state = signed_in_state()
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock, return_value=pet(peso_atual=0)) as request:

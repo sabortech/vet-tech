@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="320" viewBox="0 0 360 320" fill="none" stroke="#b4a384" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".23">
+  <defs>
+    <g id="paw">
+      <ellipse cx="-17" cy="-12" rx="6" ry="9" transform="rotate(-28 -17 -12)"/>
+      <ellipse cx="-5" cy="-24" rx="6" ry="9" transform="rotate(-8 -5 -24)"/>
+      <ellipse cx="10" cy="-22" rx="6" ry="9" transform="rotate(15 10 -22)"/>
+      <ellipse cx="21" cy="-9" rx="6" ry="9" transform="rotate(32 21 -9)"/>
+      <path d="M-17 13C-22 3-11-1-6-9C-2-15 5-14 9-7C13 0 23 3 20 12C17 22 8 15 2 16C-5 16-12 23-17 13Z"/>
+    </g>
+    <path id="bone" d="M-20-6C-35-5-34-23-25-24C-23-35-7-31-9-19L17-3C26-14 40-3 34 5C40 17 25 24 19 13L-8-3C-13 10-29 5-27-4Z"/>
+  </defs>
+  <use href="#bone" transform="translate(70 65) rotate(-12)"/>
+  <use href="#paw" transform="translate(260 83) rotate(22)"/>
+  <use href="#paw" transform="translate(86 245) rotate(-24)"/>
+  <use href="#bone" transform="translate(277 241) rotate(-62)"/>
+</svg>

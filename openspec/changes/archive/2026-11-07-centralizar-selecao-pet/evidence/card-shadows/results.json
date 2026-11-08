@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Meus Pets/light: sombra verde nos dois cartões",
+    "Meus Pets/dark: sombra verde nos dois cartões",
+    "Configurações: três abas; Dashboard conserva sombra original nos dois temas",
+    "Consultas: resumo, seções, cartões clínicos e permissões com sombra verde"
+  ],
+  "errors": []
+}

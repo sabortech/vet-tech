@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: tartaruga V, marca centrada e três barras",
+    "1440/dark: tartaruga V, marca centrada e três barras",
+    "390/light: tartaruga V, marca centrada e três barras",
+    "390/dark: tartaruga V, marca centrada e três barras"
+  ],
+  "errors": []
+}

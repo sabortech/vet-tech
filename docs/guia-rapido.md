@@ -15,6 +15,8 @@ se a conta pertence a um tutor ou a um veterinário.
   o pet escolhido.
 - **Meus Pets:** consulte os animais cadastrados, selecione um pet ou cadastre
   um novo animal.
+- **Mudar pet:** abre somente a lista de animais para escolher outro pet. O cadastro
+  continua em Meus Pets; Configurações fica logo abaixo de Mudar pet no menu.
 - **Prontuário:** acesse a área clínica para acompanhar consultas e o histórico
   do pet, conforme as opções disponíveis.
 - **Configurações → Minha conta:** atualize nome, telefone e endereço. E-mail e
@@ -41,6 +43,21 @@ auditoria no fuso America/Sao_Paulo.
 “Próxima vacina” usa a próxima dose informada para hoje ou uma data futura.
 Cadastrar apenas a aplicação não define uma próxima dose. Nesse caso aparece
 “Sem próxima dose informada”; nenhuma data é calculada automaticamente.
+
+## Cards e indicadores
+
+Vacinas, Medicamentos, Doenças e os complementos de Consultas usam cards com
+campos organizados e imagem lateral. O prontuário da consulta reúne datas,
+profissional, motivo, diagnóstico e observações no mesmo card.
+
+No Dashboard, cada pet tem seu próprio card. A barra da próxima dose usa verde
+(mais de sete dias), amarelo (de um a sete dias), âmbar (hoje), vermelho (data
+ultrapassada) ou fica apagada (sem data). O LED do card acompanha essa cor;
+na visão individual, a sombra também acompanha. Data ultrapassada orienta a
+conferir os registros e não confirma que a vacina deixou de ser aplicada.
+
+Login e cadastro mantêm LED no contorno externo e sombra verde. Os efeitos
+decorativos não bloqueiam campos ou botões e ficam mais lentos com movimento reduzido.
 
 ## Integração com o Xano
 

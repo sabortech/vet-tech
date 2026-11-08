@@ -1,0 +1,502 @@
+{
+  "checks": [
+    "cards rápidos visíveis em 136.1 ms com terceiro pet bloqueado",
+    "retorno imediato reaproveitou dados sem novas leituras",
+    "Atualizar executou novas leituras dos três pets",
+    "menu respondeu em 53.8 ms enquanto API estava bloqueada",
+    "3 cards completos, fallback de foto, fundo e LEDs futura/sem-data/ultrapassada sem animação",
+    "LED do contorno horário, cor da barra, apagado sem data, cliques livres e movimento reduzido",
+    "16 combinações de largura, tema e navegação sem overflow ou sobreposição",
+    "chat abre e fecha sem impedir a retomada das ações",
+    "filtro individual preserva a visão detalhada",
+    "LED acionado por Enter abre Vacinas do pet 1",
+    "LED sem data acionado por clique abre Vacinas do pet 2",
+    "ação Prontuário navega para a seção clínica",
+    "ação de agendamento abre fluxo existente",
+    "recuperação de erro",
+    "lista vazia oferece cadastro funcional"
+  ],
+  "geometry": [
+    {
+      "width": 1440,
+      "overflow": false,
+      "columns": "541px 541px",
+      "cards": [
+        {
+          "x": 300,
+          "y": 166,
+          "w": 541,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 859,
+          "y": 166,
+          "w": 541,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 300,
+          "y": 611.671875,
+          "w": 541,
+          "h": 580.5625,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": false
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "columns": "633px 633px",
+      "cards": [
+        {
+          "x": 116,
+          "y": 166,
+          "w": 633,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 767,
+          "y": 166,
+          "w": 633,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 116,
+          "y": 611.671875,
+          "w": 633,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": true
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "columns": "541px 541px",
+      "cards": [
+        {
+          "x": 300,
+          "y": 166,
+          "w": 541,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 859,
+          "y": 166,
+          "w": 541,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 300,
+          "y": 611.671875,
+          "w": 541,
+          "h": 580.5625,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": false
+    },
+    {
+      "width": 1440,
+      "overflow": false,
+      "columns": "633px 633px",
+      "cards": [
+        {
+          "x": 116,
+          "y": 166,
+          "w": 633,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 767,
+          "y": 166,
+          "w": 633,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 116,
+          "y": 611.671875,
+          "w": 633,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": true
+    },
+    {
+      "width": 1366,
+      "overflow": false,
+      "columns": "504px 504px",
+      "cards": [
+        {
+          "x": 300,
+          "y": 166,
+          "w": 504,
+          "h": 447.171875,
+          "overflow": false
+        },
+        {
+          "x": 822,
+          "y": 166,
+          "w": 504,
+          "h": 447.171875,
+          "overflow": false
+        },
+        {
+          "x": 300,
+          "y": 631.171875,
+          "w": 504,
+          "h": 635.359375,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": false
+    },
+    {
+      "width": 1366,
+      "overflow": false,
+      "columns": "596px 596px",
+      "cards": [
+        {
+          "x": 116,
+          "y": 166,
+          "w": 596,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 730,
+          "y": 166,
+          "w": 596,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 116,
+          "y": 611.671875,
+          "w": 596,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": true
+    },
+    {
+      "width": 1366,
+      "overflow": false,
+      "columns": "504px 504px",
+      "cards": [
+        {
+          "x": 300,
+          "y": 166,
+          "w": 504,
+          "h": 447.171875,
+          "overflow": false
+        },
+        {
+          "x": 822,
+          "y": 166,
+          "w": 504,
+          "h": 447.171875,
+          "overflow": false
+        },
+        {
+          "x": 300,
+          "y": 631.171875,
+          "w": 504,
+          "h": 635.359375,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": false
+    },
+    {
+      "width": 1366,
+      "overflow": false,
+      "columns": "596px 596px",
+      "cards": [
+        {
+          "x": 116,
+          "y": 166,
+          "w": 596,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 730,
+          "y": 166,
+          "w": 596,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 116,
+          "y": 611.671875,
+          "w": 596,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": true
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "columns": "476px",
+      "cards": [
+        {
+          "x": 276,
+          "y": 186,
+          "w": 476,
+          "h": 502.171875,
+          "overflow": false
+        },
+        {
+          "x": 276,
+          "y": 706.171875,
+          "w": 476,
+          "h": 494.78125,
+          "overflow": false
+        },
+        {
+          "x": 276,
+          "y": 1218.953125,
+          "w": 476,
+          "h": 726.359375,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": false
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "columns": "660px",
+      "cards": [
+        {
+          "x": 92,
+          "y": 142,
+          "w": 660,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 92,
+          "y": 587.671875,
+          "w": 660,
+          "h": 384.28125,
+          "overflow": false
+        },
+        {
+          "x": 92,
+          "y": 989.953125,
+          "w": 660,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": true
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "columns": "476px",
+      "cards": [
+        {
+          "x": 276,
+          "y": 186,
+          "w": 476,
+          "h": 502.171875,
+          "overflow": false
+        },
+        {
+          "x": 276,
+          "y": 706.171875,
+          "w": 476,
+          "h": 494.78125,
+          "overflow": false
+        },
+        {
+          "x": 276,
+          "y": 1218.953125,
+          "w": 476,
+          "h": 726.359375,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": false
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "columns": "660px",
+      "cards": [
+        {
+          "x": 92,
+          "y": 142,
+          "w": 660,
+          "h": 427.671875,
+          "overflow": false
+        },
+        {
+          "x": 92,
+          "y": 587.671875,
+          "w": 660,
+          "h": 384.28125,
+          "overflow": false
+        },
+        {
+          "x": 92,
+          "y": 989.953125,
+          "w": 660,
+          "h": 543.765625,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": true
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "columns": "358px",
+      "cards": [
+        {
+          "x": 16,
+          "y": 266,
+          "w": 358,
+          "h": 589.875,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 873.875,
+          "w": 358,
+          "h": 549.484375,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 1441.359375,
+          "w": 358,
+          "h": 802.828125,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": false
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "columns": "358px",
+      "cards": [
+        {
+          "x": 16,
+          "y": 266,
+          "w": 358,
+          "h": 589.875,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 873.875,
+          "w": 358,
+          "h": 549.484375,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 1441.359375,
+          "w": 358,
+          "h": 802.828125,
+          "overflow": false
+        }
+      ],
+      "theme": "light",
+      "collapsed": true
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "columns": "358px",
+      "cards": [
+        {
+          "x": 16,
+          "y": 266,
+          "w": 358,
+          "h": 589.875,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 873.875,
+          "w": 358,
+          "h": 549.484375,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 1441.359375,
+          "w": 358,
+          "h": 802.828125,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": false
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "columns": "358px",
+      "cards": [
+        {
+          "x": 16,
+          "y": 266,
+          "w": 358,
+          "h": 589.875,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 873.875,
+          "w": 358,
+          "h": 549.484375,
+          "overflow": false
+        },
+        {
+          "x": 16,
+          "y": 1441.359375,
+          "w": 358,
+          "h": 802.828125,
+          "overflow": false
+        }
+      ],
+      "theme": "dark",
+      "collapsed": true
+    }
+  ],
+  "javascript_errors": []
+}

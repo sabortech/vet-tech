@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: cápsula visível, sem overflow e sem interceptar ações",
+    "1440/dark: cápsula visível, sem overflow e sem interceptar ações",
+    "390/light: cápsula visível, sem overflow e sem interceptar ações",
+    "390/dark: cápsula visível, sem overflow e sem interceptar ações"
+  ],
+  "errors": []
+}

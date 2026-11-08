@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "1440/light: só lista, tartaruga à esquerda, sem overflow",
+    "1440/dark: só lista, tartaruga à esquerda, sem overflow",
+    "390/light: só lista, tartaruga à esquerda, sem overflow",
+    "390/dark: só lista, tartaruga à esquerda, sem overflow",
+    "troca, vazio/erro/atualizar, Meus Pets completo e histórico do navegador"
+  ],
+  "errors": []
+}

@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: raio 24px e mesmo fundo atrás dos cantos",
+    "1440/dark: raio 24px e mesmo fundo atrás dos cantos",
+    "390/light: raio 24px e mesmo fundo atrás dos cantos",
+    "390/dark: raio 24px e mesmo fundo atrás dos cantos"
+  ],
+  "errors": []
+}

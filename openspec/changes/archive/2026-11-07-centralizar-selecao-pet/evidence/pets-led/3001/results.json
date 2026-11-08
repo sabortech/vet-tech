@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "1440/light: dois LEDs, contornos e sem overflow",
+    "1440/dark: dois LEDs, contornos e sem overflow",
+    "390/light: dois LEDs, contornos e sem overflow",
+    "390/dark: dois LEDs, contornos e sem overflow"
+  ],
+  "errors": []
+}

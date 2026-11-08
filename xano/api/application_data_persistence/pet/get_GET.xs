@@ -25,6 +25,7 @@ query "pets/{pet_id}" verb=GET {
         "peso_atual"
         "cor_pelo"
         "num_microchip"
+        "foto"
       ]
     } as $pet
 

@@ -1,5 +1,5 @@
 import reflex as rx
-from vet_tech.components.date_input import date_hint
+from vet_tech.components.date_input import date_hint, calendar_panel, perimeter_led
 
 from vet_tech.components.sidebar import layout_com_menu
 from vet_tech.features.auth.state import State
@@ -132,8 +132,35 @@ def pet_field(icon: str, control: rx.Component) -> rx.Component:
     )
 
 
+def birth_date_picker() -> rx.Component:
+    return rx.dialog.root(
+        rx.dialog.trigger(
+            rx.el.button(
+                rx.text(rx.cond(State.pet_birth_date != "", State.birth_date_label, "Data de nascimento")),
+                rx.icon("calendar-days", size=17),
+                id="pet-birth-date", type="button", aria_label="Data de nascimento",
+                disabled=State.is_busy, class_name="pet-form__field pet-birth-date-trigger",
+            ),
+        ),
+        calendar_panel(
+            title="O começo de uma história", description="Escolha a data de nascimento do seu pet.",
+            eyebrow="Perfil do pet", current_prefix="Nascimento: ", current_label=State.birth_date_label,
+            month_name=State.birth_calendar_month_name, year=State.birth_calendar_year, years=State.birth_calendar_years,
+            days=State.birth_calendar_days, previous_month=State.birth_calendar_shift(-1), next_month=State.birth_calendar_shift(1),
+            choose_month=State.birth_calendar_choose_month, choose_year=State.birth_calendar_choose_year,
+            choose_day=State.birth_calendar_choose_day, legend="Datas futuras não estão disponíveis",
+            back_label="Voltar sem alterar", class_name="vet-date-dialog tutor-calendar-dialog pet-birth-calendar",
+            disabled=State.is_busy, close_action=State.birth_calendar_set_open(False),
+            extra_action=rx.el.button("Limpar data", type="button", on_click=State.birth_calendar_choose_day(""),
+                                      class_name="vet-date-back", disabled=State.is_busy),
+        ),
+        open=State.birth_calendar_open, on_open_change=State.birth_calendar_set_open,
+    )
+
+
 def pet_form() -> rx.Component:
     return rx.box(
+        perimeter_led("vet-date-led pets-card-led", "19"),
         rx.heading(
             "Cadastrar pet",
             as_="h2",
@@ -157,41 +184,10 @@ def pet_form() -> rx.Component:
                 on_change=State.set_pet_sex,
                 class_name="pet-form__field",
             )),
-            rx.vstack(pet_field("cake", rx.box(
-                rx.input(
-                    id="pet-birth-date",
-                    type="date",
-                    custom_attrs={"lang": "pt-BR"},
-                    aria_label="Data de nascimento",
-                    value=State.pet_birth_date,
-                    on_change=State.set_pet_birth_date,
-                    class_name="pet-form__field",
-                ),
-                rx.cond(
-                    State.pet_birth_date == "",
-                    rx.text(
-                        "Data de nascimento",
-                        class_name="pet-form__date-label",
-                        custom_attrs={"aria-hidden": "true"},
-                    ),
-                    rx.fragment(),
-                ),
-                rx.icon(
-                    "calendar-days",
-                    size=16,
-                    class_name="pet-form__calendar-icon",
-                    custom_attrs={"aria-hidden": "true"},
-                ),
-                class_name="pet-form__date-control",
-                custom_attrs={
-                    "data-has-value": rx.cond(
-                        State.pet_birth_date == "",
-                        "false",
-                        "true",
-                    ),
-                },
-            )),
-            date_hint(State.pet_birth_date), align="stretch", spacing="1"),
+            rx.vstack(
+                pet_field("cake", birth_date_picker()),
+                date_hint(State.pet_birth_date), align="stretch", spacing="1",
+            ),
             pet_field("weight", rx.input(
                 placeholder="Peso atual (opcional)",
                 aria_label="Peso atual (opcional)",
@@ -270,12 +266,15 @@ def pet_form() -> rx.Component:
             _PET_PHOTO_PREVIEW_SCRIPT,
             id="pet-photo-preview-handler",
         ),
-        class_name="pet-card pet-form",
+        class_name="pet-card pet-form pet-card--led",
+        position="relative",
+        isolation="isolate",
     )
 
 
 def pet_list() -> rx.Component:
     return rx.box(
+        perimeter_led("vet-date-led pets-card-led", "19"),
         rx.box(
             rx.heading(
                 "Meus pets",
@@ -320,19 +319,25 @@ def pet_list() -> rx.Component:
                                 class_name="pet-entry__details",
                             ),
                             rx.button(
-                                "Abrir ", pet["nome"],
+                                rx.cond(
+                                    (State.pet_target_id == pet["id"]) & State.is_loading_pet,
+                                    rx.fragment(rx.spinner(size="1"), "Carregando…"),
+                                    rx.cond(
+                                        State.selected_pet_id == pet["id"],
+                                        rx.fragment(rx.icon("check", size=16), "Pet selecionado"),
+                                        rx.fragment("Abrir ", pet["nome"]),
+                                    ),
+                                ),
                                 on_click=State.open_pet(pet["id"]),
-                                variant="outline",
-                                margin_top="0.5rem",
-                            ),
-                            rx.cond(
-                                (State.pet_target_id == pet['id']) & (State.is_loading_pet | State.clinic_loading),
-                                rx.hstack(rx.spinner(size='1'), rx.text('Carregando dados do pet…', size='1'),
-                                          role='status', aria_live='polite'),
-                            ),
-                            rx.cond(
-                                State.selected_pet_id == pet["id"],
-                                rx.text("Pet selecionado", size="1", color="#50753F"),
+                                variant=rx.cond(State.selected_pet_id == pet["id"], "solid", "outline"),
+                                class_name="pet-entry__action",
+                                aria_pressed=(State.selected_pet_id == pet["id"]).to(str),
+                                aria_label=rx.cond(
+                                    State.selected_pet_id == pet["id"],
+                                    "Pet selecionado: " + pet["nome"],
+                                    "Abrir " + pet["nome"],
+                                ),
+                                aria_busy=(State.pet_target_id == pet["id"]) & State.is_loading_pet,
                             ),
                             class_name="pet-entry",
                         ),
@@ -342,12 +347,34 @@ def pet_list() -> rx.Component:
                 rx.text("Você ainda não cadastrou pets."),
             ),
         ),
-        class_name="pet-card",
+        class_name="pet-card pet-card--led",
+        position="relative",
+        isolation="isolate",
+    )
+
+
+def pet_picker_view() -> rx.Component:
+    return rx.box(
+        rx.box(
+            rx.heading("Selecionar pet", as_="h1"),
+            rx.link(rx.icon("arrow-left", size=17), "Voltar a Meus Pets", href="/",
+                    class_name="pet-picker-back"),
+            class_name="profile-heading",
+        ),
+        rx.box(
+            rx.image(src="/optimized/espreitando.webp", alt="", aria_hidden="true",
+                     class_name="pet-picker-turtle"),
+            pet_list(),
+            class_name="pet-picker-layout",
+        ),
+        rx.cond(State.pet_message != "", rx.text(State.pet_message, role="status", class_name="pet-picker-message")),
+        class_name="profile-page pet-picker-page",
     )
 
 
 def profile_view() -> rx.Component:
     return layout_com_menu(
+        rx.cond(State.is_pet_picker_page, pet_picker_view(),
         rx.box(
             rx.box(
                 rx.heading("Perfil do tutor", as_="h1"),
@@ -363,7 +390,7 @@ def profile_view() -> rx.Component:
                 rx.box(
                     pet_list(),
                     rx.image(
-                        src="/mascote-perfil.png",
+                        src="/optimized/mascote-perfil.webp",
                         alt="",
                         class_name="pet-mascot",
                         custom_attrs={"aria-hidden": "true"},
@@ -373,64 +400,100 @@ def profile_view() -> rx.Component:
                 class_name="profile-grid",
             ),
             class_name="profile-page",
-        ),
-        pagina_ativa="meus_pets",
+        )),
+        pagina_ativa=rx.cond(State.is_pet_picker_page, "mudar_pet", "meus_pets"),
     )
 
 
-def pet_detail_row(label: str, key: str) -> rx.Component:
-    return rx.vstack(
-        rx.text(label, weight="bold", size="2"),
-        rx.text(rx.cond(State.selected_pet[key] != "", State.selected_pet[key], "Não informado")),
-        align="start",
-        spacing="1",
+def pet_selection_empty_state() -> rx.Component:
+    """Shared invitation for every clinical section without a pet context."""
+    return rx.box(
+        rx.box(
+            rx.box(perimeter_led("vet-date-led pet-selection-led", "20"), class_name="pet-selection-scene-outline"),
+            class_name="pet-selection-art-frame", aria_hidden="true",
+        ),
+        rx.vstack(
+            rx.badge(
+                rx.icon("heart", size=14), "Cada cuidado começa com uma escolha",
+                variant="soft", class_name="pet-selection-eyebrow",
+            ),
+            rx.heading("Vamos cuidar de quem você ama?", size="7", text_align="center"),
+            rx.text(
+                "Escolha seu companheiro em Meus Pets e acompanhe de perto cada cuidado.",
+                text_align="center", class_name="pet-selection-description",
+            ),
+            rx.button(
+                rx.icon("paw-print", size=18),
+                "Selecionar pet em Meus Pets",
+                rx.icon("arrow-right", size=18),
+                on_click=State.show_pet_picker,
+                size="3",
+            ),
+            align="center", spacing="4",
+            class_name="pet-selection-copy",
+        ),
+        class_name="pet-selection-empty",
+    )
+
+
+def pet_detail_row(label: str, key: str, icon: str) -> rx.Component:
+    return rx.box(
+        perimeter_led("vet-date-led pet-record-led", "16"),
+        rx.box(rx.icon(icon, size=22), class_name="pet-record-fact-icon"),
+        rx.text(label, class_name="pet-record-fact-label"),
+        rx.text(rx.cond(State.selected_pet[key] != "", State.selected_pet[key], "Não informado"),
+                class_name="pet-record-fact-value"),
+        class_name="pet-record-fact",
     )
 
 
 def pet_details() -> rx.Component:
-    """Pet-scoped area; future clinical sections use State.selected_pet_id."""
+    """Identity and registered facts of the authorized selected pet."""
     return rx.box(
         rx.cond(
             State.pet_target_id != "",
-            rx.vstack(
-                rx.button("Voltar à lista", on_click=State.close_pet, variant="outline"),
+            rx.cond(
+                State.is_loading_pet,
+                rx.hstack(rx.spinner(size="3"), rx.text("Carregando dados do pet…"), role="status", aria_live="polite"),
                 rx.cond(
-                    State.is_loading_pet,
-                    rx.hstack(rx.spinner(size='3'), rx.text("Carregando dados do pet…"), role="status", aria_live='polite'),
-                    rx.cond(
-                        State.selected_pet_id != "",
-                        rx.vstack(
-                            rx.heading(State.selected_pet["nome"], size="5"),
-                            rx.text(State.selected_pet["especie"], " · ", State.selected_pet["raca"]),
-                            rx.grid(
-                                pet_detail_row("Sexo", "sexo"),
-                                pet_detail_row("Nascimento", "data_nasc"),
-                                pet_detail_row("Peso atual", "peso_atual"),
-                                pet_detail_row("Pelagem", "cor_pelo"),
-                                pet_detail_row("Microchip", "num_microchip"),
-                                columns=rx.breakpoints(initial="1", sm="2"),
-                                spacing="4",
-                                width="100%",
+                    State.selected_pet_id != "",
+                    rx.vstack(
+                        rx.box(
+                            perimeter_led("vet-date-led pet-record-led", "18"),
+                            rx.box(
+                              perimeter_led("vet-date-led pet-record-led pet-record-photo-led", "50%"),
+                              rx.avatar(
+                                src=State.selected_pet.get("foto", ""),
+                                fallback="🐾",
+                                alt=State.selected_pet["nome"],
+                                class_name="pet-record-photo",
+                              ),
+                              class_name="pet-record-photo-frame",
                             ),
-                            align="stretch",
-                            spacing="3",
-                            width="100%",
+                            rx.box(
+                                rx.heading(State.selected_pet["nome"], size="8"),
+                                rx.text(State.selected_pet["especie"], " · ", State.selected_pet["raca"]),
+                                class_name="pet-record-identity",
+                            ),
+                            rx.image(src="/optimized/mascote02-sem-sombra.webp", loading="lazy", decoding="async", alt="", aria_hidden="true", class_name="pet-record-mascot"),
+                            class_name="pet-record-hero",
                         ),
-                        rx.button("Tentar novamente", on_click=State.retry_pet),
+                        rx.box(
+                            pet_detail_row("Sexo", "sexo", "venus-and-mars"),
+                            pet_detail_row("Nascimento", "data_nasc_legivel", "calendar-days"),
+                            pet_detail_row("Peso atual", "peso_atual", "weight"),
+                            pet_detail_row("Pelagem", "cor_pelo", "waves"),
+                            pet_detail_row("Microchip", "num_microchip", "cpu"),
+                            class_name="pet-record-facts",
+                        ),
+                        align="stretch", spacing="4", width="100%",
                     ),
+                    rx.button("Tentar novamente", on_click=State.retry_pet),
                 ),
-                width="100%",
-                align="stretch",
-                spacing="3",
             ),
-            rx.text("Escolha um pet na lista para abrir seus dados."),
+            rx.text("Selecione um pet em Meus Pets para abrir seus dados."),
         ),
-        rx.text(State.pet_detail_message, role="status", margin_top="0.5rem"),
-        id="pet-details",
-        width="100%",
-        padding="1rem",
-        border="1px solid #d9dedb",
-        border_radius="0.75rem",
-        aria_label="Dados do pet selecionado",
-        aria_busy=State.is_loading_pet,
+        rx.cond(State.pet_detail_message != "", rx.text(State.pet_detail_message, role="status", margin_top="1rem")),
+        id="pet-details", class_name="pet-record-details", width="100%",
+        aria_label="Dados do pet selecionado", aria_busy=State.is_loading_pet,
     )

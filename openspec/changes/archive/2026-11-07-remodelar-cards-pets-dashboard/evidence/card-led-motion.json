@@ -1,0 +1,14 @@
+[
+  {
+    "motion": "no-preference",
+    "before": -1.11,
+    "after": -6.38833,
+    "duration": "6s"
+  },
+  {
+    "motion": "reduce",
+    "before": -2.2495,
+    "after": -3.7495,
+    "duration": "20s"
+  }
+]

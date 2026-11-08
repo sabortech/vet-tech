@@ -86,7 +86,7 @@ def context_page(browser, width, theme='light', expanded=True):
 def verify_visuals(browser):
     baseline = json.loads((EVIDENCE / 'before-measurements.json').read_text(encoding='utf-8'))
     rows = []
-    expected_names = ['Dashboard', 'Prontuário', 'Vacinas', 'Medicamentos', 'Doenças', 'Consultas', 'Exames', 'Meus Pets', 'Configurações']
+    expected_names = ['Dashboard', 'Prontuário', 'Vacinas', 'Medicamentos', 'Doenças', 'Consultas', 'Exames', 'Meus Pets', 'Mudar pet', 'Configurações']
     for width in (1366, 1024, 390):
         for theme in ('light', 'dark'):
             for expanded in (True, False):
@@ -120,7 +120,7 @@ def verify_visuals(browser):
                         centers = sidebar.locator('.sidebar-navigation .sidebar-item__icon').evaluate_all('els => els.map(el => { const r=el.getBoundingClientRect(), p=el.closest(".sidebar").getBoundingClientRect(); return Math.abs(r.x+r.width/2-(p.x+p.width/2)); })')
                         assert max(centers) < 2, 'Rail icons misaligned'
                     if area == 'prontuario':
-                        for label in ('Novo pet', 'Mudar pet', 'Sair'):
+                        for label in ('Mudar pet', 'Sair'):
                             button = page.get_by_role('button', name=label, exact=True)
                             button.scroll_into_view_if_needed()
                             expect(button).to_be_in_viewport()
@@ -163,19 +163,7 @@ def verify_navigation(browser):
             set_expanded(page, False)
             set_expanded(page, True)
         assert stats() == calls, 'Menu toggle made HTTP requests'
-        menu_action(page, 'Novo pet')
-        expect(page.get_by_role('dialog')).to_be_visible()
-        expect(page.get_by_role('dialog').locator('input').first).to_be_focused()
-        before = page.url
-        page.get_by_role('button', name='Cancelar', exact=True).click()
-        expect(page.get_by_role('dialog')).not_to_be_visible()
-        assert page.url == before, 'Modal changed route'
-        expect(page.get_by_role('button', name='Novo pet', exact=True)).to_be_focused()
-        menu_action(page, 'Novo pet')
-        expect(page.get_by_role('dialog')).to_be_visible()
-        page.keyboard.press('Escape')
-        expect(page.get_by_role('dialog')).not_to_be_visible()
-        assert page.url == before
+        assert page.locator('#vet-tech-sidebar').get_by_role('button', name='Novo pet', exact=True).count() == 0
         navigate(page, 'Configurações')
         expect(page.locator('#settings-nome')).to_have_value('Tutor QA')
         page.locator('#settings-nome').fill('Rascunho QA')

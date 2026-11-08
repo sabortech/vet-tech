@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "oito telas sem Novo pet, seleção e guard de rascunho para troca/saída",
+    "menu constante, rolagem em tela baixa, Sair no rodapé e drawer móvel"
+  ],
+  "errors": []
+}

@@ -1,0 +1,9 @@
+───────────────────────────── Starting Reflex App ──────────────────────────────
+───────────────────────────────── App Running ──────────────────────────────────
+App running at: http://0.0.0.0:33707/
+Warning: Using Uvicorn for backend as it is installed. This behavior will change
+in 0.8.0 to use Granian by default.
+[2026-11-07 19:59:21 -0300] [131543] [WARNING] Worker (pid:131544) was sent SIGINT!
+
+Aborted!
+Info: Reflex app stopped.

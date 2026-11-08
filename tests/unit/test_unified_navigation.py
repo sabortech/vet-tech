@@ -12,6 +12,59 @@ from vet_tech.features.settings.state import SettingsState
 
 
 class UnifiedNavigationTests(unittest.IsolatedAsyncioTestCase):
+    def test_switch_and_close_pet_redirect_to_meus_pets_and_clear_context(self):
+        for handler in (State.show_pet_picker, State.close_pet):
+            state = make_state()
+            state.profile = 'tutor'
+            state.selected_pet = {'id': '7'}
+            state.pet_target_id = '7'
+            generation = state._pet_context_generation
+            event = handler.fn(state)
+            destination = '/?selecionar=pet' if handler == State.show_pet_picker else '/'
+            self.assertEqual(str(dict((str(k), v) for k, v in event.args)['path']), '"' + destination + '"')
+            self.assertEqual(state.selected_pet_id, '')
+            self.assertEqual(state.pet_target_id, '')
+            self.assertGreater(state._pet_context_generation, generation)
+
+    def test_pet_picker_mode_follows_url_instead_of_persistent_flag(self):
+        state = make_state()
+        state.pet_picker_open = False
+        state.router = RouterData(url=ReflexURL('http://localhost/?selecionar=pet'))
+        self.assertTrue(state.is_pet_picker_page)
+        self.assertFalse(state.is_pet_form_page)
+        state.pet_picker_open = True
+        state.router = RouterData(url=ReflexURL('http://localhost/'))
+        self.assertFalse(state.is_pet_picker_page)
+        self.assertTrue(state.is_pet_form_page)
+        state.router = RouterData(url=ReflexURL('http://localhost/prontuario'))
+        self.assertFalse(state.is_pet_form_page)
+
+    def test_settings_change_pet_waits_for_discard_and_rejects_veterinarian(self):
+        settings, _ = settings_tests.SettingsTests().make()
+        settings.nome = 'Rascunho'
+        SettingsState.request_action.fn(settings, 'change_pet')
+        self.assertTrue(settings.discard_open)
+        self.assertEqual(settings._pending, 'change_pet')
+        events = SettingsState.discard.fn(settings)
+        self.assertEqual(events[-1], State.show_pet_picker)
+        settings.account_profile = 'veterinario'
+        self.assertIsNone(SettingsState.request_action.fn(settings, 'change_pet'))
+        self.assertFalse(settings.discard_open)
+
+    async def test_open_pet_starts_loading_sets_scope_and_redirects_to_dashboard(self):
+        state = make_state()
+        state._auth_token = 'synthetic'
+        state.active_section = 'Vacinas'
+        events = [event async for event in State.open_pet.fn(state, '7')]
+        self.assertEqual(state.pet_target_id, '7')
+        self.assertTrue(state.is_loading_pet)
+        self.assertEqual(state.active_section, 'Início')
+        scope_event = events[-1][-2]
+        self.assertIn('set_dashboard_scope', str(scope_event.handler))
+        self.assertEqual(str(dict((str(k), v) for k, v in scope_event.args)['value']), '"7"')
+        redirect = events[-1][-1]
+        self.assertEqual(str(dict((str(k), v) for k, v in redirect.args)['path']), '"/dashboard"')
+
     async def test_query_selects_section_without_network_and_keeps_pet_cache(self):
         state = make_state()
         state.profile = 'tutor'

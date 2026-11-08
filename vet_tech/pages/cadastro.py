@@ -1,6 +1,7 @@
 from typing import Any
 
 import reflex as rx
+from vet_tech.components.date_input import perimeter_led
 
 from vet_tech.features.auth.state import State
 from vet_tech.components.professional_registration import professional_fields
@@ -131,7 +132,7 @@ def conteudo_cadastro() -> rx.Component:
 
     painel_formulario = rx.vstack(
         rx.image(
-            src="/mascote_logo.png",
+            src="/optimized/mascote_logo.webp",
             alt="Logo Vet Tech",
             width="75px",
             height="75px",
@@ -198,6 +199,7 @@ def conteudo_cadastro() -> rx.Component:
     )
 
     return rx.box(
+        perimeter_led("vet-date-led auth-card-led", "32"),
         rx.hstack(
             rx.box(
                 painel_formulario,
@@ -211,7 +213,7 @@ def conteudo_cadastro() -> rx.Component:
             ),
             rx.box(
                 rx.image(
-                    src="/mascote05.png",
+                    src="/optimized/mascote05.webp",
                     alt="Mascote Vet Tech segurando uma prancheta",
                     width="100%",
                     height="100%",
@@ -224,7 +226,7 @@ def conteudo_cadastro() -> rx.Component:
                 align_self="stretch",
                 position="relative",
                 background="#80A85C",
-                background_image="url('/fundo_mar.jpeg')",
+                background_image="url('/optimized/fundo_mar.webp')",
                 background_size="cover",
                 background_position="center",
                 background_repeat="no-repeat",
@@ -247,7 +249,8 @@ def conteudo_cadastro() -> rx.Component:
         overflow="hidden",
         border_radius="32px",
         background="var(--vt-surface)",
-        box_shadow="0 22px 65px rgba(20, 39, 24, 0.24)",
+        class_name="auth-led-card",
+        position="relative",
     )
 
 
@@ -261,7 +264,7 @@ def cadastro() -> rx.Component:
         justify_content="center",
         padding="16px",
         background_color="#72935B",
-        background_image="url('/fundo_mar.jpeg')",
+        background_image="url('/optimized/fundo_mar.webp')",
         background_size="cover",
         background_position="center",
         background_repeat="no-repeat",

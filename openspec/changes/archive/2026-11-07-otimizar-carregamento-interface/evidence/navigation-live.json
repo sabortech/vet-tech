@@ -1,0 +1,101 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Dashboard",
+      "destination": "/dashboard"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Prontuário",
+      "destination": "/prontuario"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Vacinas",
+      "destination": "/prontuario?secao=vacinas"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Medicamentos",
+      "destination": "/prontuario?secao=medicamentos"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Doenças",
+      "destination": "/prontuario?secao=doencas"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Consultas",
+      "destination": "/prontuario?secao=consultas"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Meus Pets",
+      "destination": "/"
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "menu": "Configurações",
+      "destination": "/configuracoes"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Dashboard",
+      "destination": "/dashboard"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Prontuário",
+      "destination": "/prontuario"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Vacinas",
+      "destination": "/prontuario?secao=vacinas"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Medicamentos",
+      "destination": "/prontuario?secao=medicamentos"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Doenças",
+      "destination": "/prontuario?secao=doencas"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Consultas",
+      "destination": "/prontuario?secao=consultas"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Meus Pets",
+      "destination": "/"
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "menu": "Configurações",
+      "destination": "/configuracoes"
+    }
+  ],
+  "errors": []
+}

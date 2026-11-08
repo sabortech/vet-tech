@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "Meus Pets/1440/light: mesma estampa e sem overflow",
+    "Meus Pets/1440/dark: mesma estampa e sem overflow",
+    "Meus Pets/390/light: mesma estampa e sem overflow",
+    "Meus Pets/390/dark: mesma estampa e sem overflow",
+    "Mudar pet/1440/light: mesma estampa e sem overflow",
+    "Mudar pet/1440/dark: mesma estampa e sem overflow",
+    "Mudar pet/390/light: mesma estampa e sem overflow",
+    "Mudar pet/390/dark: mesma estampa e sem overflow",
+    "Configurações/1440/light: mesma estampa e sem overflow",
+    "Configurações/1440/dark: mesma estampa e sem overflow",
+    "Configurações/390/light: mesma estampa e sem overflow",
+    "Configurações/390/dark: mesma estampa e sem overflow",
+    "Prontuário/1440/light: mesma estampa e sem overflow",
+    "Prontuário/1440/dark: mesma estampa e sem overflow",
+    "Prontuário/390/light: mesma estampa e sem overflow",
+    "Prontuário/390/dark: mesma estampa e sem overflow"
+  ],
+  "errors": []
+}

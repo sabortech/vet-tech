@@ -268,6 +268,8 @@ class SettingsState(rx.State):
         if self.saving:
             return
         allowed = {"account", "security", "preferences", "logout", "history", *self._destinations()}
+        if self.account_profile == "tutor":
+            allowed.add("change_pet")
         if action not in allowed:
             return
         if self.dirty:
@@ -292,6 +294,8 @@ class SettingsState(rx.State):
             return rx.call_script(_PASSWORD_RESET)
         if action == "logout":
             return AuthState.logout
+        if action == "change_pet":
+            return [NavigationState.close_drawer, AuthState.show_pet_picker]
         if action == "history":
             return rx.call_script("window.vetTechLeaveHistory?.();")
         return [NavigationState.close_drawer, rx.redirect(action)]

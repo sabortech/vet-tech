@@ -1,6 +1,6 @@
 """Agenda, booking wizard and structured clinical forms."""
 import reflex as rx
-from vet_tech.components.date_input import date_hint, calendar_panel
+from vet_tech.components.date_input import date_hint, calendar_panel, perimeter_led
 
 from vet_tech.features.auth.state import State
 
@@ -43,32 +43,34 @@ def options(rows, value, change, placeholder, control_id=None):
     )
 
 
-def booking_dialog() -> rx.Component:
-    day_grid = rx.grid(
-        *[rx.text(day, size="1", align="center", color="var(--vt-muted)") for day in ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")],
-        rx.foreach(State.booking_days, lambda day: rx.button(
-            day["label"], on_click=State.booking_choose_day(day["date"]),
-            disabled=(day["disabled"] == "sim") | State.booking_busy,
-            variant=rx.cond(State.booking_day == day["date"], "solid", "soft"),
-            aria_label=day["date"], height="38px", min_width="0",
-        )), columns="7", spacing="2", width="100%",
-    )
-    first = rx.vstack(
-        rx.hstack(
-            rx.icon_button(rx.icon("chevron-left"), aria_label="Mês anterior", on_click=State.booking_shift_month(-1)),
-            rx.text(State.booking_month, weight="bold"),
-            rx.icon_button(rx.icon("chevron-right"), aria_label="Próximo mês", on_click=State.booking_shift_month(1)),
-            justify="between", width="100%",
-        ), day_grid,
-        rx.text("Dia selecionado: ", State.booking_day),
-        rx.el.label("Horário (08h–17h)", html_for="booking-time"),
-        rx.input(id="booking-time", type="time", min="08:00", max="17:00", value=State.booking_time,
-                 on_change=State.set_booking_time, width="100%", disabled=State.booking_busy),
-        rx.button("Continuar", on_click=State.booking_next, width="100%"),
-        align="stretch", spacing="3", width="100%",
+def booking_dialog(show_trigger: bool = True) -> rx.Component:
+    first = calendar_panel(
+        title="Agendar consulta", description="Etapa 1 de 2 — escolha o dia e o horário para cuidar do seu pet.",
+        eyebrow="Um cuidado com data marcada", heading="Escolher dia e horário",
+        current_prefix="Dia selecionado: ", current_label=State.booking_date_label,
+        month_name=State.booking_month_name, year=State.booking_year, years=State.booking_years,
+        days=State.booking_days, previous_month=State.booking_shift_month(-1), next_month=State.booking_shift_month(1),
+        choose_month=State.booking_choose_month, choose_year=State.booking_choose_year,
+        choose_day=State.booking_choose_day, legend="Datas passadas não podem ser agendadas",
+        back_label="Cancelar", class_name="vet-date-dialog tutor-calendar-dialog tutor-booking-calendar",
+        disabled=State.booking_calendar_locked, close_action=State.booking_set_open(False),
+        extra_action=rx.vstack(
+            rx.el.label("Data selecionada", html_for="booking-selected-date"),
+            rx.input(
+                id="booking-selected-date", aria_label="Data selecionada",
+                value=rx.cond(State.booking_day != "", State.booking_date_label, ""),
+                placeholder="Selecione o dia no calendário", read_only=True, width="100%",
+            ),
+            rx.el.label("Horário (08h–17h)", html_for="booking-time"),
+            rx.input(id="booking-time", type="time", min="08:00", max="17:00", value=State.booking_time,
+                     on_change=State.set_booking_time, disabled=State.booking_calendar_locked, width="100%"),
+            rx.button("Continuar", type="button", on_click=State.booking_next, disabled=State.booking_calendar_locked, width="100%"),
+            rx.text(State.booking_message, role="status", color="var(--vt-error)"),
+            align="stretch", spacing="3", width="100%", margin_top="16px",
+        ),
     )
     second = rx.vstack(
-        rx.text(State.booking_day, " às ", State.booking_time, weight="bold"),
+        rx.text(State.booking_date_label, " às ", State.booking_time, weight="bold"),
         rx.cond(State.has_pets,
             rx.vstack(
                 rx.text("Pet"), options(State.pets, State.booking_pet, State.booking_choose_pet, "Escolha o pet"),
@@ -86,19 +88,87 @@ def booking_dialog() -> rx.Component:
         align="stretch", spacing="3", width="100%",
     )
     return rx.dialog.root(
-        rx.dialog.trigger(rx.button(rx.icon("calendar-plus", size=18), "Agendar consulta", size="3")),
-        rx.dialog.content(
-            rx.dialog.title("Agendar consulta"),
-            rx.dialog.description(rx.cond(State.booking_step == 1, "Etapa 1 de 2 — dia e horário", "Etapa 2 de 2 — pet e motivo")),
-            rx.cond(State.booking_step == 1, first, second),
-            rx.text(State.booking_message, role="status", margin_top="12px"),
-            rx.dialog.close(rx.button("Cancelar", variant="ghost", disabled=State.booking_busy, margin_top="12px")),
-            width="min(95vw, 540px)", max_height="90dvh", overflow_y="auto",
+        rx.dialog.trigger(rx.button(rx.icon("calendar-plus", size=18), "Agendar consulta", size="3")) if show_trigger else rx.fragment(),
+        rx.cond(
+            State.booking_step == 1,
+            first,
+            rx.dialog.content(
+                rx.dialog.title("Agendar consulta"),
+                rx.dialog.description("Etapa 2 de 2 — pet e motivo"),
+                second,
+                rx.text(State.booking_message, role="status", margin_top="12px"),
+                rx.dialog.close(rx.button("Cancelar", type="button", variant="ghost", disabled=State.booking_calendar_locked, margin_top="12px")),
+                width="min(95vw, 540px)", max_height="90dvh", overflow_y="auto",
+            ),
         ), open=State.booking_open, on_open_change=State.booking_set_open,
     )
 
 
-def record_card(row, group: str, show_origin=True):
+def vaccine_record_card(row, show_origin=True):
+    return rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+            rx.hstack(
+                rx.box(rx.icon("syringe", size=22), class_name="vaccine-record-icon"),
+                rx.box(
+                    rx.text("Registro de vacinação", class_name="vaccine-record-eyebrow"),
+                    rx.heading(row.get("vacina", "Vacina"), size="5"),
+                    rx.cond(row.get("origem_legivel", "") != "", rx.text(row.get("origem_legivel", ""), class_name="vaccine-record-origin")),
+                    min_width="0",
+                ),
+                align="center", spacing="3",
+            ),
+            rx.box(
+                *[rx.box(
+                    rx.icon(icon, size=19),
+                    rx.box(
+                        rx.text(label, class_name="vaccine-record-label"),
+                        rx.text(rx.cond(value != "", value, "Não informado"), class_name="vaccine-record-value"),
+                        min_width="0",
+                    ),
+                    class_name="vaccine-record-field",
+                ) for label, icon, value in (
+                    ("Data de aplicação", "calendar-days", row.get("data_aplicacao_legivel", "")),
+                    ("Veterinário", "stethoscope", row.get("veterinario_nome", row.get("veterinario_id", ""))),
+                    ("Lote", "tag", row.get("lote", "")),
+                    ("Consulta de origem", "file-text", row.get("consulta_id", "")),
+                )],
+                class_name="vaccine-record-fields",
+            ),
+            rx.box(
+                rx.icon("calendar-clock", size=20),
+                rx.box(
+                    rx.text("Próxima dose registrada", class_name="vaccine-record-label"),
+                    rx.text(rx.cond(row.get("data_prox_dose_legivel", "") != "", row.get("data_prox_dose_legivel", ""), "Não informada"), class_name="vaccine-record-value"),
+                ),
+                class_name="vaccine-record-next-dose",
+            ),
+            rx.cond(show_origin & (row.get("consulta_id", "") != ""),
+                rx.box(
+                    rx.button("Ver consulta de origem", rx.icon("arrow-right", size=17),
+                              on_click=State.show_consultation_detail(row.get("consulta_id", "")), variant="outline"),
+                    class_name="vaccine-record-footer",
+                ),
+            ),
+            class_name="vaccine-record-body",
+        ),
+        rx.box(
+               rx.box(rx.icon("syringe", size=112, stroke_width=1.5), class_name="vaccine-art-symbol"),
+               class_name="vaccine-record-art", aria_hidden="true",
+               style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundo.webp") + "')"}),
+        as_="article", class_name="vaccine-record-card",
+    )
+
+
+def clinical_status_label(value):
+    return rx.match(value, ("agendada", "Agendada"), ("em_atendimento", "Em atendimento"),
+        ("finalizada", "Finalizada"), ("cancelada", "Cancelada"), ("legado", "Registro anterior"),
+        ("ativa", "Ativa"), ("em_tratamento", "Em tratamento"), ("curada", "Curada"),
+        ("controlada", "Controlada"), ("solicitado", "Solicitado"), ("realizado", "Realizado"),
+        rx.cond(value != "", value, "Não informado"))
+
+
+def record_card(row, group: str, show_origin=True, compact=False):
     names = {"vacinas": "vacina", "medicamentos": "nome", "doencas": "nome", "exames": "tipo", "diagnosticos": "nome"}
     fields = {
         "vacinas": [("data_aplicacao_legivel", "Aplicação"), ("lote", "Lote"), ("data_prox_dose_legivel", "Próxima dose")],
@@ -107,6 +177,19 @@ def record_card(row, group: str, show_origin=True):
         "diagnosticos": [("estado", "Estado"), ("data_diagnostico_legivel", "Diagnóstico"), ("observacoes", "Observações")],
         "exames": [("status", "Estado"), ("data_solicitacao_legivel", "Solicitação"), ("data_realizacao_legivel", "Realização"), ("data_legivel", "Data do registro anterior"), ("resultado", "Resultado")],
     }
+    if compact:
+        icons = {"vacinas": "syringe", "medicamentos": "pill", "diagnosticos": "heart-pulse", "exames": "test-tubes"}
+        return rx.box(
+            rx.hstack(rx.box(rx.icon(icons.get(group, "clipboard-list"), size=22), class_name="medication-field-icon"),
+                rx.heading(row.get(names.get(group, "nome"), "Registro"), size="4"), align="center", spacing="3"),
+            rx.box(*[_medication_field(label,
+                clinical_status_label(row.get(key, "")) if key in ("estado", "status") else row.get(key, ""),
+                "calendar-days" if "data" in key else "file-text") for key, label in fields[group]],
+                _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
+                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                class_name="consultation-record-fields"),
+            class_name="consultation-record",
+        )
     return rx.card(rx.vstack(
         rx.text(row.get(names.get(group, "nome"), "Registro"), weight="bold"),
         *[rx.cond(row.get(key, "") != "", rx.text(label, ": ", row.get(key, ""), size="2"))
@@ -119,53 +202,297 @@ def record_card(row, group: str, show_origin=True):
         align="stretch", spacing="2"), width="100%")
 
 
+def _medication_field(label, value, icon):
+    return rx.box(
+        rx.box(rx.icon(icon, size=20), class_name="medication-field-icon"),
+        rx.box(
+            rx.text(label, class_name="medication-field-label"),
+            rx.text(rx.cond(value != "", value, "Não informado"), class_name="medication-field-value"),
+            min_width="0",
+        ),
+        class_name="medication-field",
+    )
+
+
+def medication_record_card(row, show_origin=True):
+    return rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+        rx.hstack(
+            rx.box(rx.icon("pill", size=42), class_name="medication-title-icon"),
+            rx.box(
+                rx.heading(row.get("nome", "Medicamento"), size="7"),
+                rx.text("Registro do prontuário", class_name="medication-eyebrow"),
+                min_width="0",
+            ), align="center", spacing="4",
+        ),
+        rx.box(
+            rx.box(
+                _medication_field("Dose", row.get("dose_legivel", ""), "pill"),
+                _medication_field("Frequência", row.get("frequencia", ""), "clock-3"),
+                _medication_field("Via", row.get("via", ""), "route"),
+                _medication_field("Tipo", row.get("tipo", ""), "tag"),
+                class_name="medication-group medication-dosage",
+            ),
+            rx.box(
+                rx.box(
+                    _medication_field("Início", row.get("data_inicio_legivel", ""), "calendar-days"),
+                    _medication_field("Fim", row.get("data_fim_legivel", ""), "calendar-check"),
+                    class_name="medication-group",
+                ),
+                rx.box(
+                    _medication_field("Consulta de origem", row.get("consulta_id", ""), "clipboard-list"),
+                    _medication_field("Veterinário", row.get("veterinario_nome", row.get("veterinario_id", "")), "user-round"),
+                    class_name="medication-group",
+                ),
+                class_name="medication-secondary",
+            ), class_name="medication-info-grid",
+        ),
+        rx.cond(show_origin & (row.get("consulta_id", "") != ""),
+            rx.box(rx.button("Ver consulta de origem", rx.icon("arrow-right", size=17),
+                      on_click=State.show_consultation_detail(row.get("consulta_id", "")),
+                      variant="outline", class_name="medication-origin-button"), class_name="vaccine-record-footer")),
+        class_name="vaccine-record-body medication-body",
+        ),
+        rx.box(
+            rx.box(rx.icon("pill", size=112, stroke_width=1.5), class_name="vaccine-art-symbol medication-art-symbol"),
+            class_name="medication-art",
+            aria_hidden="true",
+            style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundo_mar.webp") + "')"},
+        ),
+        as_="article", class_name="vaccine-record-card medication-card",
+    )
+
+
+
+def disease_record_card(row, show_origin=True, diagnosis=False):
+    state = row.get("estado", "")
+    label = rx.match(state, ("ativa", "Ativa"), ("em_tratamento", "Em tratamento"),
+                     ("curada", "Curada"), ("controlada", "Controlada"),
+                     rx.cond(state != "", state, "Não informado"))
+    return rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+            rx.hstack(
+                rx.box(rx.icon("heart-pulse", size=36), class_name="medication-title-icon"),
+                rx.box(
+                    rx.text("Diagnóstico desta consulta" if diagnosis else "Acompanhamento de saúde", class_name="disease-eyebrow"),
+                    rx.heading(row.get("nome", "Doença"), size="7"),
+                    rx.box(label, class_name="disease-status", custom_attrs={"data-state": state}),
+                    min_width="0",
+                ), align="center", spacing="4",
+            ),
+            rx.box(
+                _medication_field("Data do diagnóstico" if diagnosis else "Última evolução",
+                    row.get("data_diagnostico_legivel" if diagnosis else "data_evolucao_legivel", ""), "calendar-days"),
+                _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
+                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                class_name="disease-fields",
+            ),
+            rx.box(
+                rx.box(rx.icon("notebook-pen", size=20), class_name="medication-field-icon"),
+                rx.box(
+                    rx.text("Observações do diagnóstico" if diagnosis else "Descrição e acompanhamento", class_name="medication-field-label"),
+                    rx.text(rx.cond(row.get("observacoes" if diagnosis else "descricao", "") != "",
+                        row.get("observacoes" if diagnosis else "descricao", ""), "Não informado"),
+                            class_name="disease-description"),
+                    class_name="disease-field-content",
+                ),
+                class_name="disease-description-block",
+            ),
+            _medication_field("Consulta de origem", row.get("origem_legivel", ""), "clipboard-list"),
+            rx.cond(show_origin & (row.get("consulta_id", "") != ""),
+                rx.box(rx.button("Ver consulta de origem", rx.icon("arrow-right", size=17),
+                    on_click=State.show_consultation_detail(row.get("consulta_id", "")),
+                    variant="outline", class_name="medication-origin-button"), class_name="vaccine-record-footer")),
+            class_name="vaccine-record-body disease-body",
+        ),
+        rx.box(
+            rx.box(rx.icon("heart-pulse", size=112, stroke_width=1.5),
+                   class_name="vaccine-art-symbol disease-art-symbol"),
+            class_name="medication-art disease-art", aria_hidden="true",
+            style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundo_mar.webp") + "')"},
+        ),
+        as_="article", class_name="vaccine-record-card disease-card",
+    )
+
+
+def disease_records():
+    return rx.box(
+        rx.cond(State.history_rows.get("doencas", []).length() == 0,
+            rx.box(rx.icon("heart-pulse", size=32), rx.heading("Nenhuma doença registrada", size="5"),
+                   rx.text("As condições publicadas no prontuário deste pet aparecerão aqui."),
+                   class_name="medication-empty")),
+        rx.foreach(State.history_rows.get("doencas", []), lambda row: disease_record_card(row)),
+        class_name="medication-list disease-list",
+    )
+
+
+def medication_records():
+    return rx.box(
+        rx.cond(State.history_rows.get("medicamentos", []).length() == 0,
+            rx.box(rx.icon("pill", size=32), rx.heading("Nenhum medicamento registrado", size="5"),
+                   rx.text("Os medicamentos publicados no prontuário deste pet aparecerão aqui."),
+                   class_name="medication-empty")),
+        rx.foreach(State.history_rows.get("medicamentos", []), lambda row: medication_record_card(row)),
+        class_name="medication-list",
+    )
+
+
 def records(group: str):
+    if group == "doencas":
+        return disease_records()
+    if group == "medicamentos":
+        return medication_records()
     return rx.vstack(
         rx.cond(State.history_rows.get(group, []).length() == 0, rx.text("Nenhum registro publicado para este pet.")),
-        rx.foreach(State.history_rows.get(group, []), lambda row: record_card(row, group)),
+        rx.foreach(State.history_rows.get(group, []), lambda row: vaccine_record_card(row) if group == "vacinas" else record_card(row, group)),
         align="stretch", spacing="3", width="100%",
     )
 
 
+def consultation_card(row):
+    return rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+            rx.hstack(rx.box(rx.icon("calendar-days", size=32), class_name="medication-title-icon"),
+                rx.box(rx.text("Consulta " + row.get("id", ""), class_name="disease-eyebrow"),
+                    rx.heading(row.get("quando", "Não informado"), size="5"),
+                    rx.box(clinical_status_label(row.get("status", "")), class_name="disease-status"),
+                    min_width="0"), align="center", spacing="4"),
+            rx.box(
+                _medication_field("Motivo da consulta", row.get("motivo", ""), "notebook-pen"),
+                _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
+                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                class_name="consultation-list-fields"),
+            rx.cond((row.get("status", "") == "finalizada") | (row.get("status", "") == "legado"),
+                rx.box(rx.button("Ver prontuário", rx.icon("arrow-right", size=17),
+                    on_click=State.show_consultation_detail(row["id"]), variant="outline"),
+                    class_name="vaccine-record-footer")),
+            class_name="vaccine-record-body"),
+        rx.box(rx.box(rx.icon("calendar-days", size=112, stroke_width=1.5), class_name="vaccine-art-symbol"),
+            class_name="medication-art consultation-art", aria_hidden="true",
+            style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundo_mar.webp") + "')"}),
+        class_name="vaccine-record-card consultation-card",
+    )
+
+
+def _consultation_text(label, value, icon):
+    return rx.box(
+        rx.hstack(rx.icon(icon, size=20), rx.heading(label, size="4"), align="center", spacing="2"),
+        rx.text(rx.cond(value != "", value, "Não informado"), class_name="consultation-narrative"),
+        class_name="consultation-text-block",
+    )
+
+
+def exam_record_card(row, show_origin=True):
+    return rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+            rx.hstack(rx.box(rx.icon("test-tubes", size=36), class_name="medication-title-icon"),
+                rx.box(rx.text("Registro de exame", class_name="disease-eyebrow"),
+                    rx.heading(row.get("tipo", "Exame"), size="7"),
+                    rx.box(clinical_status_label(row.get("status", "")), class_name="disease-status"),
+                    min_width="0"), align="center", spacing="4"),
+            rx.box(
+                _medication_field("Solicitação", row.get("data_solicitacao_legivel", ""), "calendar-days"),
+                _medication_field("Realização", row.get("data_realizacao_legivel", ""), "calendar-check"),
+                _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
+                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                rx.cond(row.get("data_legivel", "") != "",
+                    _medication_field("Data do registro anterior", row.get("data_legivel", ""), "calendar-clock")),
+                class_name="disease-fields"),
+            rx.box(
+                rx.box(rx.icon("file-check", size=20), class_name="medication-field-icon"),
+                rx.box(rx.text("Resultado", class_name="medication-field-label"),
+                    rx.text(rx.cond(row.get("resultado", "") != "", row.get("resultado", ""), "Não informado"),
+                        class_name="disease-description"), class_name="disease-field-content"),
+                class_name="disease-description-block"),
+            _medication_field("Consulta de origem", row.get("origem_legivel", ""), "clipboard-list"),
+            rx.cond(show_origin & (row.get("consulta_id", "") != ""),
+                rx.box(rx.button("Ver consulta de origem", rx.icon("arrow-right", size=17),
+                    on_click=State.show_consultation_detail(row.get("consulta_id", "")),
+                    variant="outline"), class_name="vaccine-record-footer")),
+            class_name="vaccine-record-body disease-body"),
+        rx.box(rx.box(rx.icon("test-tubes", size=112, stroke_width=1.5), class_name="vaccine-art-symbol"),
+            class_name="medication-art exam-art", aria_hidden="true",
+            style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundinho.webp") + "')"}),
+        class_name="vaccine-record-card disease-card exam-card",
+    )
+
+
+def consultation_complement(row, group):
+    if group == "vacinas":
+        return vaccine_record_card(row, show_origin=False)
+    if group == "medicamentos":
+        return medication_record_card(row, show_origin=False)
+    if group == "diagnosticos":
+        return disease_record_card(row, show_origin=False, diagnosis=True)
+    if group == "exames":
+        return exam_record_card(row, show_origin=False)
+    return record_card(row, group, show_origin=False, compact=True)
+
+
 def consultation_detail():
-    return rx.vstack(
-        rx.hstack(
-            rx.button("Voltar à lista", on_click=State.set_detail_id(""), variant="outline"),
-            rx.cond((State.detail.get("status", "") == "finalizada") & State.consultation_pdf_available,
-                rx.button("Exportar PDF", on_click=State.request_consultation_pdf,
-                          loading=State.pdf_export_busy, disabled=State.pdf_export_busy,
-                          aria_label="Exportar PDF da consulta", variant="solid")),
-            wrap="wrap", spacing="3"),
-        rx.text(State.pdf_export_message, role="status", aria_live="polite"),
-        rx.heading("Prontuário da consulta", size="5"),
-        rx.text(State.detail.get("quando", "")),
-        *[rx.cond(State.detail.get(key, "") != "", rx.text(label, ": ", State.detail.get(key, "")))
-          for key, label in (("data_atendimento_legivel", "Data do atendimento"), ("iniciada_em_legivel", "Início real"),
-                             ("finalizada_em_legivel", "Fim real"), ("retorno_previsto_legivel", "Retorno previsto"))],
-        rx.text("Veterinário: ", State.detail.get("veterinario_id", "")),
-        rx.text("Motivo: ", State.detail.get("motivo", "")),
-        rx.text("Diagnóstico: ", State.detail.get("diagnostico", "")),
-        rx.text("Observações: ", State.detail.get("obs", "")),
-        *[rx.vstack(rx.heading(label, size="4"),
-             rx.foreach(State.detail_sections.get(group, []), lambda row: record_card(row, group)),
-             align="stretch", width="100%") for group, label in (("vacinas", "Vacinas"), ("medicamentos", "Medicamentos"),
-                 ("diagnosticos", "Doenças"), ("exames", "Exames"))],
-        align="stretch", spacing="4", width="100%",
+    return rx.box(
+        rx.cond(State.pdf_export_message != "",
+            rx.text(State.pdf_export_message, role="status", aria_live="polite")),
+        rx.box(
+            perimeter_led("vet-date-led vaccine-record-led", "18"),
+            rx.box(
+            rx.hstack(rx.box(rx.icon("clipboard-plus", size=32), class_name="medication-title-icon"),
+                rx.box(rx.text("Consulta " + State.detail_id, class_name="disease-eyebrow"),
+                    rx.heading("Prontuário da consulta", size="6"), min_width="0"),
+                rx.spacer(), rx.box(clinical_status_label(State.detail.get("status", "")), class_name="disease-status"),
+                align="center", spacing="3", wrap="wrap"),
+            rx.box(
+                _medication_field("Agendamento / registro", State.detail.get("quando", ""), "calendar-clock"),
+                *[_medication_field(label, State.detail.get(key, ""), icon) for key, label, icon in (
+                    ("data_atendimento_legivel", "Data do atendimento", "calendar-days"),
+                    ("iniciada_em_legivel", "Início real", "clock-3"),
+                    ("finalizada_em_legivel", "Fim real", "clock-3"),
+                    ("retorno_previsto_legivel", "Retorno previsto", "calendar-check"))],
+                _medication_field("Veterinário", rx.cond(State.detail.get("veterinario_nome", "") != "",
+                    State.detail.get("veterinario_nome", ""), State.detail.get("veterinario_id", "")), "stethoscope"),
+                class_name="consultation-metadata"),
+            rx.box(
+            _consultation_text("Motivo da consulta", State.detail.get("motivo", ""), "notebook-pen"),
+            _consultation_text("Diagnóstico", State.detail.get("diagnostico", ""), "heart-pulse"),
+            _consultation_text("Observações", State.detail.get("obs", ""), "file-text"),
+                class_name="consultation-narratives"),
+                class_name="consultation-summary-body"),
+            rx.box(
+                rx.box(rx.icon("clipboard-plus", size=112, stroke_width=1.5), class_name="vaccine-art-symbol"),
+                class_name="medication-art consultation-summary-art", aria_hidden="true",
+                style={"--record-background": "url('" + State.detail.get("fundo_card", "/optimized/fundinho.webp") + "')"}),
+            class_name="vaccine-record-card consultation-summary"),
+        *[rx.box(
+             rx.hstack(rx.box(rx.icon(icon, size=22), class_name="medication-field-icon"),
+                 rx.heading(label, size="5"), align="center", spacing="3", class_name="consultation-section-title"),
+             rx.cond(State.detail_sections.get(group, []).length() == 0,
+                 rx.text("Nenhum registro publicado nesta categoria.", class_name="consultation-section-empty")),
+             rx.box(rx.foreach(State.detail_sections.get(group, []),
+                 lambda row: consultation_complement(row, group)), class_name="consultation-complements"),
+             class_name="consultation-section") for group, label, icon in (
+                 ("vacinas", "Vacinas", "syringe"), ("medicamentos", "Medicamentos", "pill"),
+                 ("diagnosticos", "Doenças", "heart-pulse"), ("exames", "Exames", "test-tubes"))],
+        class_name="consultation-detail",
     )
 
 
 def tutor_consultations():
     return rx.vstack(
-        rx.cond(State.detail_id != "", consultation_detail(), rx.vstack(
-            rx.cond(State.consultation_rows.length() == 0, rx.text("Nenhuma consulta para este pet.")),
-            rx.foreach(State.consultation_rows, lambda row: rx.card(rx.vstack(
-                rx.hstack(rx.text(row["quando"], weight="bold"), rx.badge(row["status"]), wrap="wrap"),
-                rx.text(row.get("motivo", "")),
-                rx.text("Veterinário: ", row.get("veterinario_id", "")),
-                rx.cond((row["status"] == "finalizada") | (row["status"] == "legado"),
-                        rx.button("Ver prontuário", on_click=State.show_consultation_detail(row["id"]))),
-                align="stretch", spacing="2"), width="100%")),
-            align="stretch", width="100%", spacing="3")),
+        rx.cond(State.detail_id != "", consultation_detail(), rx.box(
+            rx.cond(State.consultation_rows.length() == 0,
+                rx.box(rx.icon("calendar-days", size=32), rx.heading("Nenhuma consulta para este pet", size="5"),
+                    rx.text("Os agendamentos e prontuários disponíveis aparecerão aqui."), class_name="medication-empty")),
+            rx.foreach(State.consultation_rows, consultation_card),
+            class_name="medication-list consultation-list")),
+        rx.box(
+        perimeter_led("vet-date-led vaccine-record-led", "18"),
+        rx.box(
+        rx.hstack(rx.icon("shield-check", size=21), rx.heading("Permissões e acessos", size="4"), align="center", spacing="2"),
+        rx.text("Acompanhe as autorizações e o histórico de acesso ao prontuário do seu pet.", class_name="consultation-section-empty"),
         rx.button('Carregar permissões e histórico de acessos', on_click=State.load_tutor_auxiliary(False),
                   disabled=State.auxiliary_loading, variant='outline'),
         rx.cond(State.auxiliary_loading, rx.hstack(rx.spinner(), rx.text('Carregando permissões e acessos…'), role='status')),
@@ -183,7 +510,13 @@ def tutor_consultations():
                               disabled=State.clinic_busy), wrap="wrap")),
                 rx.foreach(State.audit_rows, lambda row: rx.text(row.get("acao", ""), " — ", row.get("ocorrido_em_legivel", ""))),
                 align="stretch", spacing="3")), collapsible=True, width="100%")),
-        align="stretch", width="100%", spacing="4",
+        class_name="consultation-access"),
+        rx.box(
+            rx.box(rx.icon("shield-check", size=112, stroke_width=1.5), class_name="vaccine-art-symbol"),
+            class_name="medication-art consultation-access-art", aria_hidden="true",
+            style={"--record-background": "url('" + State.detail.get("fundo_card", "/optimized/fundinho.webp") + "')"}),
+        class_name="vaccine-record-card consultation-access-card"),
+        align="stretch", width="100%", spacing="4", class_name="consultations-content",
     )
 
 
@@ -393,7 +726,7 @@ def attendance_history_dialog(pet_id=None, button_label="Consultar histórico an
                 rx.dialog.title("Histórico anterior", class_name="attendance-history-title"),
                 rx.dialog.description("Cada cuidado faz parte dessa história. Consulte os registros publicados do pet.",
                                       class_name="attendance-history-description"),
-                rx.box(rx.image(src="/mascote_logo.png", alt="", aria_hidden=True),
+                rx.box(rx.image(src="/optimized/mascote_logo.webp", alt="", aria_hidden=True),
                        class_name="attendance-history-turtle", aria_hidden=True),
                 rx.dialog.close(rx.button(rx.icon("x", size=20), aria_label="Fechar histórico",
                                            variant="ghost", class_name="attendance-history-close")),

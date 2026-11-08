@@ -1,5 +1,6 @@
 """Configurações compartilhadas com identidade e menu específicos por perfil."""
 import reflex as rx
+from vet_tech.components.date_input import perimeter_led
 
 from vet_tech.components.sidebar import _EXISTING_ROUTES, layout_com_menu
 from vet_tech.features.auth.state import State
@@ -39,6 +40,7 @@ def feedback():
 
 def account():
     return rx.box(
+        perimeter_led("vet-date-led settings-card-led", "19"),
         rx.heading("Dados pessoais", as_="h2"),
         rx.text(rx.cond(Settings.account_profile == "veterinario", "Perfil: Veterinário", "Perfil: Tutor"), class_name="settings-profile"),
         rx.cond(Settings.loading, rx.text("Carregando seus dados...", role="status")),
@@ -65,7 +67,7 @@ def account():
                 on_submit=Settings.save, reset_on_submit=False, id="settings-account-form",
             ),
         ),
-        class_name="settings-card",
+        class_name="settings-card", position="relative", isolation="isolate",
     )
 
 
@@ -89,6 +91,7 @@ def password_field(label, name, autocomplete):
 
 def security():
     return rx.box(
+        perimeter_led("vet-date-led settings-card-led", "19"),
         rx.heading("Alterar senha", as_="h2"),
         rx.text("Confirme sua senha atual para definir uma nova.", class_name="settings-hint"),
         rx.form(
@@ -100,13 +103,14 @@ def security():
             on_submit=Settings.change_password, reset_on_submit=False, id="settings-password-form",
         ),
         rx.text("Após atualizar, você entrará novamente no sistema.", class_name="settings-hint"),
-        class_name="settings-card settings-card--security",
+        class_name="settings-card settings-card--security", position="relative", isolation="isolate",
     )
 
 
 def preferences():
     return rx.box(
         rx.box(
+            perimeter_led("vet-date-led settings-card-led", "19"),
             rx.heading("Aparência", as_="h2"),
             rx.box(
                 rx.box(rx.el.label("Modo escuro", html_for="theme-switch"), rx.text("Aplicar em todo o sistema, incluindo login, cadastro e menu lateral.", class_name="settings-hint")),
@@ -115,9 +119,10 @@ def preferences():
             ),
             rx.text("Lembrar minha preferência neste navegador.", class_name="settings-hint"),
             rx.text("", id="theme-feedback", role="status", class_name="settings-feedback settings-feedback--ok"),
-            class_name="settings-card",
+            class_name="settings-card", position="relative", isolation="isolate",
         ),
         rx.box(
+            perimeter_led("vet-date-led settings-card-led", "19"),
             rx.heading("Navegação", as_="h2"),
             rx.box(
                 rx.box(rx.el.label("Manter o menu lateral expandido", html_for="sidebar-switch"), rx.text("No celular, o menu continua abrindo como uma gaveta.", class_name="settings-hint")),
@@ -125,7 +130,7 @@ def preferences():
                 class_name="settings-preference",
             ),
             rx.text("Lembrar minha preferência neste navegador.", class_name="settings-hint"),
-            class_name="settings-card",
+            class_name="settings-card", position="relative", isolation="isolate",
         ), class_name="settings-preferences",
     )
 
@@ -156,7 +161,7 @@ def settings_view():
                     class_name=rx.cond(Settings.tab == value, "settings-tab settings-tab--active", "settings-tab"))
                 for value, label in (("account", "Minha conta"), ("security", "Segurança"), ("preferences", "Preferências"))
             ], role="tablist", custom_attrs={"aria-label": "Seções de configurações"}, class_name="settings-tabs"),
-                rx.image(src="/mascote-perfil.png", alt="", aria_hidden=True, class_name="settings-mascot"),
+                rx.image(src="/optimized/mascote-perfil.webp", alt="", aria_hidden=True, class_name="settings-mascot"),
                 class_name="settings-tab-row",
             ),
             rx.box(rx.match(Settings.tab, ("account", account()), ("security", security()), preferences()), id="settings-panel", role="tabpanel", custom_attrs={"aria-labelledby": "tab-" + Settings.tab}),

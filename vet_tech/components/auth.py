@@ -1,4 +1,5 @@
 import reflex as rx
+from vet_tech.components.date_input import perimeter_led
 
 from vet_tech.features.auth.state import State
 
@@ -109,7 +110,7 @@ def login_view() -> rx.Component:
 
     painel_formulario = rx.vstack(
         rx.image(
-            src="/mascote_logo.png",
+            src="/optimized/mascote_logo.webp",
             alt="Mascote Vet Tech",
             width="80px",
             height="80px",
@@ -215,7 +216,7 @@ def login_view() -> rx.Component:
             class_name="login-background",
             aria_hidden="true",
             inset="-18px",
-            background_image="url('/fundo02.jpeg')",
+            background_image="url('/optimized/fundo02.webp')",
             background_size="cover",
             background_position="center",
             background_repeat="no-repeat",
@@ -224,6 +225,7 @@ def login_view() -> rx.Component:
             pointer_events="none",
         ),
         rx.box(
+            perimeter_led("vet-date-led auth-card-led", "32"),
             rx.hstack(
                 rx.box(
                     painel_formulario,
@@ -239,7 +241,7 @@ def login_view() -> rx.Component:
                     width="48%",
                     height="100%",
                     background="#72935B",
-                    background_image="url('/fundo02.jpeg')",
+                    background_image="url('/optimized/fundo02.webp')",
                     background_size="cover",
                     background_position="center",
                     background_repeat="no-repeat",
@@ -260,7 +262,7 @@ def login_view() -> rx.Component:
             overflow="hidden",
             border_radius=["20px", "28px", "32px"],
             background="var(--vt-surface)",
-            box_shadow="0 22px 65px rgba(20, 39, 24, 0.24)",
+            class_name="auth-led-card",
             position="relative",
             z_index="1",
         ),

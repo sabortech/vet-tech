@@ -1,0 +1,13 @@
+{
+  "sequential_ms": 362.3,
+  "bounded_ms": 154.2,
+  "peak_concurrency": 4,
+  "pet_count": 6,
+  "asset_before_bytes": 7753623,
+  "asset_after_bytes": 423816,
+  "asset_reduction_percent": 94.5,
+  "clinical_history_requests_on_dashboard": {
+    "before": 2,
+    "after": 0
+  }
+}
