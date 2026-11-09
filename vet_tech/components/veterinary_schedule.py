@@ -61,6 +61,8 @@ def veterinary_actions(in_settings=False):
 def schedule_card(row, show_date=False):
     from vet_tech.components.clinical import attendance_history_dialog
     return rx.box(
+        consultation_status_led(row["status"], radius="13",
+            class_name="vet-date-led consultations-status-led vet-schedule-card-led"),
         rx.hstack(
             rx.box(
                 rx.cond(row["autorizado"] == "sim",
@@ -221,10 +223,10 @@ def consultation_card(row):
             rx.cond((row["status"] == "finalizada") & State.consultation_pdf_available,
                 rx.button(rx.icon("file-text", size=16), "Exportar PDF", id="agenda-pdf-" + row["id"],
                     on_click=State.open_agenda_consultation_pdf(row.get("pet_id", ""), row["id"]),
-                    aria_label="Exportar PDF da consulta", variant="outline")),
-            attendance_history_dialog(pet_id=row.get("pet_id", ""), button_label="Ver prontuário",
-                trigger_id="consultations-history-" + row["id"], button_class="consultations-history",
-                variant="outline", size="2", back_label="Voltar às consultas"), spacing="2", align="stretch",
+                    aria_label="Exportar PDF da consulta", variant="outline", class_name="consultations-record-action")),
+            rx.cond(row["status"] == "finalizada", attendance_history_dialog(pet_id=row.get("pet_id", ""), button_label="Ver Histórico anterior",
+                trigger_id="consultations-history-" + row["id"], button_class="consultations-history consultations-record-action",
+                variant="outline", size="2", back_label="Voltar às consultas")), spacing="2", align="stretch",
             class_name="consultations-card-actions")),
         class_name=rx.cond(State.consultation_selected == row["id"], "consultations-card is-selected", "consultations-card") + " consultations-card--" + row["status"],
         custom_attrs={"data-consultation-id": row["id"]},
