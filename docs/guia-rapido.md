@@ -76,3 +76,5 @@ validação do OpenSpec e navegação com os dois perfis.
 
 O merge do código não publica automaticamente os contratos no Xano.
 Os detalhes técnicos estão em [Verificação da integração](integration-verification.md).
+
+Para conferir o documento antes de baixar, veja [Como visualizar e baixar o prontuário em PDF](guia-exportar-pdf.md).

@@ -2341,3 +2341,38 @@ html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection
 
 .auth-card-led .vet-date-led-track { rx: 30px; ry: 30px; }
 @media (max-width: 767px) { .login-view .auth-card-led .vet-date-led-track { rx: 18px; ry: 18px; } }
+
+/* PDF preview follows the calendar panel and keeps the document scroll independent. */
+.pdf-preview-dialog { width: min(1080px, calc(100vw - 56px)) !important; max-width: 1080px !important; padding: 0 !important; }
+.pdf-preview-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: min(820px, calc(100dvh - 80px)); border-radius: 23px; overflow: hidden; }
+.pdf-preview-welcome { position: relative; padding: 30px 24px; background: var(--vt-icon-bg); border-right: 1px solid var(--vt-border); display: flex; flex-direction: column; min-width: 0; }
+.pdf-preview-heading { font-size: 30px !important; }
+.pdf-preview-mascot { position: absolute; width: 174px; height: 300px; object-fit: contain; right: -30px; top: 48%; transform: translateY(-25%); pointer-events: none; z-index: 2; filter: drop-shadow(-3px 5px 4px rgb(36 83 31 / 12%)); }
+.pdf-preview-caption { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 24px; font-size: 12px; color: var(--vt-muted); }
+.pdf-preview-main { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 22px 24px 18px 32px; background: var(--vt-surface); }
+.pdf-preview-toolbar { flex-shrink: 0; padding-bottom: 14px; min-width: 0; }
+.pdf-preview-patient { font-size: 12px; margin-top: 5px; color: var(--vt-muted); overflow-wrap: anywhere; }
+.pdf-preview-document { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; background: var(--vt-field-bg); border: 1px solid var(--vt-border); border-radius: 14px; overflow: hidden; }
+.pdf-preview-pages { width: 100%; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px; scrollbar-gutter: stable; overscroll-behavior: contain; }
+.pdf-preview-pages[hidden] { display: none; }
+.pdf-preview-pages figure { position: relative; width: 100%; margin: 0 0 16px; background: white; box-shadow: 0 3px 14px #0002; }
+.pdf-preview-pages canvas { display: block; width: 100%; height: 100%; }
+.pdf-preview-page-number { position: absolute; bottom: 4px; right: 6px; font-size: 10px; color: #526055; background: #ffffffdd; border-radius: 4px; padding: 2px 5px; }
+.pdf-preview-actions { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; padding-top: 18px; }
+.pdf-preview-loading, .pdf-preview-error { display: flex; flex: 1; align-items: center; justify-content: center; gap: 14px; padding: 30px; color: var(--vt-muted); }
+.pdf-preview-error { flex-direction: column; text-align: center; }
+.pdf-preview-feedback { font-size: 12px; color: var(--vt-muted); padding-top: 10px; overflow-wrap: anywhere; }
+@media (max-width: 680px) {
+ .pdf-preview-dialog { width: calc(100vw - 24px) !important; }
+ .pdf-preview-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: calc(100dvh - 44px); }
+ .pdf-preview-welcome { padding: 18px 110px 18px 18px; border-right: 0; border-bottom: 1px solid var(--vt-border); }
+ .pdf-preview-heading { font-size: 22px !important; margin: 8px 0 !important; }
+ .pdf-preview-welcome .vet-date-description { font-size: 12px; line-height: 1.45; }
+ .pdf-preview-caption { display: none; }
+ .pdf-preview-mascot { width: 100px; height: 158px; right: 2px; top: auto; bottom: -10px; transform: none; }
+ .pdf-preview-main { padding: 14px 12px 12px; }
+ .pdf-preview-toolbar { padding-bottom: 10px; }
+ .pdf-preview-pages { padding: 8px; }
+ .pdf-preview-actions { padding-top: 12px; }
+ .pdf-preview-actions > button { flex: 1; }
+}

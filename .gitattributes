@@ -1,1 +1,2 @@
 *.pdf binary
+assets/pdf-viewer/*.mjs linguist-vendored=true

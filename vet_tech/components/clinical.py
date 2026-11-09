@@ -435,8 +435,6 @@ def consultation_complement(row, group):
 
 def consultation_detail():
     return rx.box(
-        rx.cond(State.pdf_export_message != "",
-            rx.text(State.pdf_export_message, role="status", aria_live="polite")),
         rx.box(
             perimeter_led("vet-date-led vaccine-record-led", "18"),
             rx.box(
@@ -798,6 +796,7 @@ def attendance_patient():
 
 
 def attendance_content():
+    from vet_tech.components.consultation_pdf import consultation_pdf_dialog
     from vet_tech.components.veterinary_schedule import consultation_status_led
     return rx.box(rx.el.link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"), rx.vstack(
         consultation_status_led(State.clinical_status, radius="23", class_name="vet-date-led consultations-status-led attendance-form-led"),
@@ -856,8 +855,14 @@ def attendance_content():
                               loading=State.clinic_busy, class_name="attendance-button"),
                     justify="between", gap="14px", class_name="attendance-actions",
                 ), align="stretch", spacing="6", width="100%"),
-                rx.text("Atendimento finalizado. Os registros publicados estão disponíveis ao tutor.")),
+                rx.vstack(
+                    rx.text("Atendimento finalizado. Os registros publicados estão disponíveis ao tutor."),
+                    rx.cond((State.clinical_status == "finalizada") & State.consultation_pdf_available,
+                        rx.button(rx.icon("file-text", size=18), "Exportar PDF", id="attendance-pdf-trigger",
+                                  on_click=State.open_consultation_pdf, aria_label="Exportar PDF da consulta")),
+                    align="start", spacing="4")),
             align="stretch", width="100%", spacing="4")),
+        consultation_pdf_dialog(),
         attendance_calendar(),
         rx.alert_dialog.root(rx.alert_dialog.content(
             rx.alert_dialog.title("Descartar alterações não salvas?"),

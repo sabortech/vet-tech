@@ -1,0 +1,13 @@
+{
+  "origins": 4,
+  "downloads": 4,
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "widths": [
+    1280,
+    390
+  ],
+  "javascript_errors": []
+}

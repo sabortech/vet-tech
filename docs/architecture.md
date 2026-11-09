@@ -388,3 +388,9 @@ preservados, inclusive para edição futura; fotos remotas dos pets não mudam.
 O app serve os assets gerados diretamente, sem conversão em runtime. O
 manifesto registra dimensões e bytes. A política de retries e os TTLs
 clínicos não foram alterados por esta otimização.
+
+### Prévia e exportação de consultas
+
+`components/consultation_pdf.py` concentra o diálogo comum aos perfis tutor e veterinário, com um único exemplar por página relevante. Os acionadores do cabeçalho tutor, confirmação do atendimento e cartões profissionais usam o mesmo estado clínico e DTO. O estado serializado guarda título, estados de carregamento e token de instância; bytes de PDF, assinatura do DTO e operação permanecem privados. Um evento efêmero entrega os bytes ao PDF.js local, sem URL pública ou armazenamento no navegador. Fechar/desmontar invalida a geração e limpa os campos da prévia. ReportLab gera a prévia em thread com os limites existentes; a confirmação revalida acesso e conteúdo e reutiliza os bytes privados quando iguais. O visualizador renderiza páginas progressivamente e destrói o documento ao fechar.
+
+GET de prévia e POST de exportação são operações distintas e auditadas; a função `Clinical/consultation_document` em `xano/function/clinical/` monta somente o recorte da consulta publicada após autorização do chamador. O médico permanece na confirmação após finalizar para poder baixar, sem redirecionar e recarregar a agenda; o catálogo de edição não é carregado para atendimentos finalizados. Deduplicação limita a uma leitura por painel aberto e uma exportação pendente, sem cache global de dados clínicos.

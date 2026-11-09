@@ -1,0 +1,233 @@
+{
+  "workspace": 167758,
+  "mode": "development-synthetic",
+  "checks": [
+    {
+      "name": "refresh_pdf_fixture_session_ta",
+      "passed": true
+    },
+    {
+      "name": "refresh_pdf_fixture_session_tb",
+      "passed": true
+    },
+    {
+      "name": "refresh_pdf_fixture_session_va",
+      "passed": true
+    },
+    {
+      "name": "refresh_pdf_fixture_session_vb",
+      "passed": true
+    },
+    {
+      "name": "pdf_fixture_access",
+      "passed": true
+    },
+    {
+      "name": "export_finalized_owned",
+      "passed": true
+    },
+    {
+      "name": "all_complement_categories",
+      "passed": true
+    },
+    {
+      "name": "joined_diagnosis_name",
+      "passed": true
+    },
+    {
+      "name": "no_draft_or_consolidated",
+      "passed": true
+    },
+    {
+      "name": "deny_foreign_tutor",
+      "passed": true
+    },
+    {
+      "name": "deny_wrong_pet",
+      "passed": true
+    },
+    {
+      "name": "deny_foreign_pet",
+      "passed": true
+    },
+    {
+      "name": "deny_wrong_profile",
+      "passed": true
+    },
+    {
+      "name": "deny_missing_id",
+      "passed": true
+    },
+    {
+      "name": "deny_anonymous",
+      "passed": true
+    },
+    {
+      "name": "deny_status_agendada",
+      "passed": true
+    },
+    {
+      "name": "deny_status_em_atendimento",
+      "passed": true
+    },
+    {
+      "name": "deny_status_cancelada",
+      "passed": true
+    },
+    {
+      "name": "deny_status_None",
+      "passed": true
+    },
+    {
+      "name": "retry_same_audit",
+      "passed": true
+    },
+    {
+      "name": "deny_reused_key_for_other_consultation",
+      "passed": true
+    },
+    {
+      "name": "concurrent_failures_have_no_data",
+      "passed": true
+    },
+    {
+      "name": "concurrent_retry_succeeds",
+      "passed": true
+    },
+    {
+      "name": "read_pdf_audit",
+      "passed": true
+    },
+    {
+      "name": "idempotency_one_log",
+      "passed": true
+    },
+    {
+      "name": "audit_actor_and_target",
+      "passed": true
+    },
+    {
+      "name": "preview_tutor",
+      "passed": true
+    },
+    {
+      "name": "preview_audited_each_open_tutor",
+      "passed": true
+    },
+    {
+      "name": "preview_matches_export_tutor",
+      "passed": true
+    },
+    {
+      "name": "preview_veterinario",
+      "passed": true
+    },
+    {
+      "name": "preview_audited_each_open_veterinario",
+      "passed": true
+    },
+    {
+      "name": "preview_matches_export_veterinario",
+      "passed": true
+    },
+    {
+      "name": "actor_profile_operation_namespace",
+      "passed": true
+    },
+    {
+      "name": "vet_retry_same_audit",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_tutor_agendada",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_veterinario_agendada",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_tutor_em_atendimento",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_veterinario_em_atendimento",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_tutor_cancelada",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_veterinario_cancelada",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_tutor_None",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_veterinario_None",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_other_actor_tutor",
+      "passed": true
+    },
+    {
+      "name": "preview_deny_other_actor_veterinario",
+      "passed": true
+    },
+    {
+      "name": "pdf_consents",
+      "passed": true
+    },
+    {
+      "name": "pdf_activate_consent",
+      "passed": true
+    },
+    {
+      "name": "pdf_revoke_consent",
+      "passed": true
+    },
+    {
+      "name": "pdf_revoked_GET",
+      "passed": true
+    },
+    {
+      "name": "pdf_revoked_POST",
+      "passed": true
+    },
+    {
+      "name": "pdf_restore_consent",
+      "passed": true
+    },
+    {
+      "name": "audit_write_failure_is_exception",
+      "passed": true
+    },
+    {
+      "name": "audit_failure_preserves_original",
+      "passed": true
+    },
+    {
+      "name": "audit_failure_does_not_insert",
+      "passed": true
+    },
+    {
+      "name": "audit_has_no_user_delete",
+      "passed": true
+    },
+    {
+      "name": "remote_data_pdf_matches",
+      "passed": true
+    },
+    {
+      "name": "remote_pdf_has_confirmed_audit",
+      "passed": true
+    }
+  ],
+  "passed": 56,
+  "failed": 0,
+  "tables_changed": false
+}

@@ -86,6 +86,10 @@ def schedule_card(row, show_date=False):
                    row["status_label"], class_name="vet-schedule-status"),
             rx.cond(row["autorizado"] == "sim",
                 rx.hstack(
+                    rx.cond((row["status"] == "finalizada") & State.consultation_pdf_available,
+                        rx.button(rx.icon("file-text", size=14), "Exportar PDF", id="agenda-pdf-" + row["id"],
+                                  on_click=State.open_agenda_consultation_pdf(row.get("pet_id", ""), row["id"]),
+                                  aria_label="Exportar PDF da consulta", variant="soft", size="1")),
                     attendance_history_dialog(pet_id=row.get("pet_id", ""), button_label="Histórico",
                         trigger_id="agenda-history-" + row["id"], button_class="vet-schedule-history-button",
                         variant="soft", size="1", back_label="Voltar às consultas" if show_date else "Voltar à agenda"),
@@ -214,6 +218,10 @@ def consultation_card(row):
             rx.cond((row["status"] == "agendada") | (row["status"] == "em_atendimento"), rx.button(
                 rx.cond(row["status"] == "em_atendimento", "Retomar atendimento", "Iniciar atendimento"),
                 on_click=State.start_consultation(row["id"]), disabled=State.clinic_busy, class_name="consultations-start")),
+            rx.cond((row["status"] == "finalizada") & State.consultation_pdf_available,
+                rx.button(rx.icon("file-text", size=16), "Exportar PDF", id="agenda-pdf-" + row["id"],
+                    on_click=State.open_agenda_consultation_pdf(row.get("pet_id", ""), row["id"]),
+                    aria_label="Exportar PDF da consulta", variant="outline")),
             attendance_history_dialog(pet_id=row.get("pet_id", ""), button_label="Ver prontuário",
                 trigger_id="consultations-history-" + row["id"], button_class="consultations-history",
                 variant="outline", size="2", back_label="Voltar às consultas"), spacing="2", align="stretch",

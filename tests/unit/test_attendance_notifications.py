@@ -49,9 +49,8 @@ class AttendanceNotificationTests(unittest.IsolatedAsyncioTestCase):
             self.assertFalse(state.clinical_dirty)
             self.assertFalse(state.clinic_busy)
             if finalize:
-                self.assertEqual(state.vet_section, 'Horários')
-                self.assertEqual(state.agenda_day, '2026-11-03')
-                self.assertIn('/?secao=horarios', str(events))
+                self.assertEqual(state.clinical_status, 'finalizada')
+                self.assertNotIn('redirect', str(events))
             else:
                 self.assertNotIn('/?secao=horarios', str(events))
 
@@ -67,7 +66,7 @@ class AttendanceNotificationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(state.agenda_rows[0]['status'], 'finalizada')
         self.assertEqual(state.agenda_rows[1]['status'], 'agendada')
         self.assertEqual(state.upcoming_rows, [{'id': '44'}])
-        self.assertEqual(state.agenda_page, 1)
+        self.assertEqual(state.agenda_page, 3)
 
     def test_notifications_target_bottom_left(self):
         for finalized in (False, True):
@@ -109,8 +108,8 @@ class AttendanceNotificationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(request.call_count, 1)
             self.assertEqual(request.call_args.args[0], 'GET')
             if finalized:
-                self.assertIn('/?secao=horarios', str(events))
-                self.assertEqual(state.agenda_day, '2026-11-03')
+                self.assertNotIn('redirect', str(events))
+                self.assertEqual(state.clinical_status, 'finalizada')
             else:
                 self.assertNotIn('/?secao=horarios', str(events))
 

@@ -47,3 +47,27 @@ Na tela de detalhe, Exportar PDF aparece apenas para consulta finalizada. O bot�
 Para testar o navegador, copiar `tests/integration/consultation_pdf_preview.py` para um projeto Reflex isolado em `/tmp`, com assets da aplicação e `VET_TECH_SOURCE_ROOT` apontando para este checkout. Rodar em produção na porta escolhida; executar `consultation_pdf_browser.py` com `--url`, `--chromium` e `--output`. Usa somente dados sintéticos, incluindo falha de auditoria simulada. Para desligar a ação no rollback, retirar o botão/evento da publicação local; os logs e registros Xano permanecem intactos. A importação de regressão/rollback do componente sem o botão foi validada pela compilação anterior à integração.
 
 Rollback sem remover código: definir `VET_TECH_CONSULTATION_PDF_ENABLED=false` no servidor e reiniciar a aplicação. Isso oculta o botão e bloqueia a solicitação no servidor; não modifica registros clínicos, PDFs já baixados ou logs Xano. O padrão é habilitado. O teste unitário verifica que a desativação não chama o Xano nem altera os dados da consulta.
+
+## Prévia compartilhada e exportação profissional
+
+Todos os acessos de Exportar PDF da consulta abrem um painel no padrão do seletor de data, com tartaruga espreitando ao lado, páginas reais do PDF roláveis e Baixar PDF no rodapé. Abrir gera o PDF para visualização após a leitura autorizada, sem download automático. PDF.js local renderiza somente páginas próximas da área visível e libera documento/canvases ao fechar. Não há edição.
+
+Contratos adicionais no grupo `vettech-clinical`:
+
+- `GET /tutor/pets/{pet_id}/consultas/{consulta_id}/previa-pdf`
+- `GET /veterinario/pets/{pet_id}/consultas/{consulta_id}/previa-pdf`
+- `POST /veterinario/pets/{pet_id}/consultas/{consulta_id}/exportar`, corpo `{"operacao":"<uuid-v4>"}`.
+
+GET autoriza e audita `visualizar_previa_pdf`; devolve o recorte publicado e `auditoria_id`, sem emitir PDF. POST autoriza novamente e audita `exportar_consulta`. A chave profissional inclui `veterinario` e o ID do ator; a chave tutor anterior permanece compatível. O ator profissional fica em `log_acesso.veterinario_id`; o autor do prontuário é recuperado pela consulta vinculada, sem trocar a autoria clínica. Leituras e exportação profissional usam `clinical_lock` e `Clinical/assert_access` na mesma transação. Sem consentimento ativo ou em falha de auditoria não há documento liberado.
+
+O médico encontra a ação na confirmação do atendimento finalizado e no cartão de consulta finalizada da agenda/listagem. A conclusão permanece na tela de atendimento, com Voltar às consultas disponível. O painel usa alvo próprio, sem exigir selecionar um pet no perfil tutor. O endpoint de prévia e a função `Clinical/consultation_document` devem estar publicados antes de usar a nova interface; erro de endpoint não dispara fallback para exportação direta.
+
+O frontend faz um GET por abertura e um POST por confirmação; cliques repetidos enquanto a mesma prévia está aberta não duplicam GET. Fechar, rolar ou mudar tema não consulta o Xano. Não há polling/prefetch nem recarga de histórico/agenda. O PDF é gerado uma vez para a prévia e seus bytes ficam em campo privado somente enquanto o painel está aberto; a confirmação revalida o DTO e reutiliza o mesmo arquivo se não mudou. Reabrir atendimento finalizado dispensa catálogo de doenças usado para editar. No backend, a função compartilhada filtra complementos por pet e consulta no banco e obtém os nomes de diagnósticos por join; não lê o histórico completo do pet, condições consolidadas ou catálogo global de doenças.
+
+Mudança de conteúdo entre prévia e download atualiza as informações e exige novo clique. Fechar o painel, trocar pet/consulta/perfil/rota ou encerrar sessão invalida operações e limpa a prévia. Respostas atrasadas são descartadas. Negativa de acesso limpa os dados apresentados. Retry de falha de exportação preserva a operação até o sucesso; outra emissão explícita gera UUID novo. Mensagens não expõem erros internos.
+
+Verificação: `test_consultation_pdf_preview.py` mede o orçamento de chamadas e isolamento; `test_clinical_state.py` conserva as regressões de PDF e `test_attendance_notifications.py` verifica conclusão sem redirecionamento. O harness `consultation_pdf_smoke.py` inclui prévia de ambos os perfis, comparação com o download, idempotência e revogação/restauração de consentimento nas fixtures sintéticas. O harness de navegador existente cobre os quatro acionadores, teclado, temas e 390/1280 px. Nunca executar fixtures em produção nem versionar ledgers privados.
+
+O visualizador usa PDF.js 6.5.438, módulos/worker locais em `assets/pdf-viewer/`, licença Apache-2.0 preservada. O módulo é importado sob demanda, sem CDN, URL pública de prontuário ou base64 no State serializado. O CSS global recebeu uma nova versão na URL para invalidar a folha antiga observada no navegador.
+
+Publicação da prévia compartilhada concluída no workspace 167758 após autorização: 56 checks de backend e verificação em `localhost:3000` nos dois perfis com contas fictícias passaram. Ver `openspec/changes/archive/2026-11-09-unificar-previa-pdf-tutor-veterinario/verification.md`. Um painel que estava aberto em erro pode usar Tentar novamente; não é necessário reiniciar a aplicação para disponibilizar os novos endpoints.

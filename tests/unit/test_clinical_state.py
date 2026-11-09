@@ -230,6 +230,11 @@ class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
     def prepare(self):
         state=session();state.selected_pet={'id':'7'};state.active_section='Consultas'
         state.detail_id='42';state.detail={'id':'42','status':'finalizada'}
+        from test_consultation_pdf import export_payload
+        from vet_tech.features.clinical.consultation_pdf import map_consultation_document
+        State.open_consultation_pdf.fn(state)
+        state._set_pdf_preview(map_consultation_document(export_payload(), 7, 42))
+        state.pdf_preview_loading = False
         State.request_consultation_pdf.fn(state)
         return state
 
@@ -260,7 +265,7 @@ class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
                 state=self.prepare()
                 with self.locks(state),patch(TARGET,new_callable=AsyncMock,side_effect=XanoRequestError('clinical-secret',status_code=code)):
                     events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
-                self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+                self.assertFalse(any('download' in str(e.handler) for e in events));self.assertFalse(state.pdf_export_busy)
                 self.assertNotIn('clinical-secret',state.pdf_export_message)
 
     async def test_missing_audit_or_renderer_failure_never_downloads(self):
@@ -271,7 +276,7 @@ class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
             state=self.prepare()
             with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=payload),patch('vet_tech.features.clinical.state.render_consultation_pdf',side_effect=RuntimeError('clinical-secret')) as renderer:
                 events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
-            self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+            self.assertFalse(any('download' in str(e.handler) for e in events));self.assertFalse(state.pdf_export_busy)
             self.assertNotIn('clinical-secret',state.pdf_export_message)
             if missing_audit:renderer.assert_not_called()
 
@@ -291,7 +296,11 @@ class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
                     else:
                         State.set_detail_id.fn(state,'')
                         if change=='away-and-back':
-                            state.detail_id='42';State.request_consultation_pdf.fn(state)
+                            state.detail_id='42'
+                            State.open_consultation_pdf.fn(state)
+                            state.pdf_preview_loading = False
+                            state.pdf_preview_ready = True
+                            State.request_consultation_pdf.fn(state)
                     release.set();events=await pending
                 self.assertEqual(events,[]);renderer.assert_not_called()
                 if change=='away-and-back':self.assertTrue(state.pdf_export_busy)
@@ -314,7 +323,7 @@ class ConsultationPDFStateTests(unittest.IsolatedAsyncioTestCase):
         state=self.prepare()
         with self.locks(state),patch(TARGET,new_callable=AsyncMock,return_value=export_payload()),patch('vet_tech.features.clinical.state.RENDER_TIMEOUT_SECONDS',.001),patch('vet_tech.features.clinical.state.render_consultation_pdf',side_effect=lambda _:time.sleep(.03)):
             events=await consume(State.generate_consultation_pdf.fn(state,state._pdf_generation))
-        self.assertEqual(events,[]);self.assertFalse(state.pdf_export_busy)
+        self.assertFalse(any('download' in str(e.handler) for e in events));self.assertFalse(state.pdf_export_busy)
         for status in ['legado','em_atendimento','agendada']:
             state._invalidate_pdf_export();state.detail={'status':status}
             self.assertIsNone(State.request_consultation_pdf.fn(state));self.assertFalse(state.pdf_export_busy)

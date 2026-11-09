@@ -84,9 +84,9 @@ def _cover(canvas, doc, document):
     title=_paragraph('Prontuário da consulta\nveterinária',heading=True,size=19)
     title.style.alignment=1
     tw,th=title.wrap(w-2*MARGIN,90);title.drawOn(canvas,MARGIN,h*.37-th)
-    _draw_image(canvas,'mascote-canto.png',w-185,-5,220)
     canvas.setStrokeColor(LINE);canvas.setLineWidth(.6)
     canvas.line(MARGIN,147,w-MARGIN,147)
+    _draw_image(canvas,'mascote-canto.png',w-264,-5,264)
     # Very long names remain complete in the paginated identification table.
     cover_name=document.pet_name if len(document.pet_name)<=100 else f'Pet nº {document.pet_id}'
     name=_paragraph(cover_name,heading=True,size=12);_,nh=name.wrap(w-2*MARGIN-100,60)
