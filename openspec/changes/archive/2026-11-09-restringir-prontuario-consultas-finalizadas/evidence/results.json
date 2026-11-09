@@ -1,0 +1,66 @@
+{
+  "cases": [
+    {
+      "status": "agendada",
+      "ver_prontuario": false,
+      "passed": true
+    },
+    {
+      "status": "em_atendimento",
+      "ver_prontuario": false,
+      "passed": true
+    },
+    {
+      "status": "finalizada",
+      "ver_prontuario": true,
+      "passed": true
+    },
+    {
+      "status": "cancelada",
+      "ver_prontuario": false,
+      "passed": true
+    },
+    {
+      "status": "desconhecida",
+      "ver_prontuario": false,
+      "passed": true
+    },
+    {
+      "status": "finalizada sem autorização",
+      "ver_prontuario": false,
+      "passed": true
+    }
+  ],
+  "start_resume_preserved": true,
+  "geometry": [
+    {
+      "viewport": 1280,
+      "width": 192,
+      "height": 40,
+      "equal_size": true,
+      "single_line": true
+    },
+    {
+      "viewport": 1100,
+      "width": 192,
+      "height": 40,
+      "equal_size": true,
+      "single_line": true
+    },
+    {
+      "viewport": 768,
+      "width": 192,
+      "height": 40,
+      "equal_size": true,
+      "single_line": true
+    },
+    {
+      "viewport": 390,
+      "width": 308,
+      "height": 40,
+      "equal_size": true,
+      "single_line": true
+    }
+  ],
+  "javascript_errors": []
+}

@@ -1498,7 +1498,7 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 .consultations-filter { min-width:165px; }
 .consultations-columns { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:start; }
 .consultations-list { min-width:0; }
-.consultations-card { display:grid; grid-template-columns:minmax(180px,1fr) minmax(150px,.75fr) 170px; gap:16px; align-items:center; border:1px solid var(--vt-border); background:var(--vt-surface); border-radius:17px; padding:18px; margin-bottom:12px; box-shadow:0 2px 4px #1429130c; transition:background .16s,border-color .16s; }
+.consultations-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,.75fr) 192px; gap:16px; align-items:center; border:1px solid var(--vt-border); background:var(--vt-surface); border-radius:17px; padding:18px; margin-bottom:12px; box-shadow:0 2px 4px #1429130c; transition:background .16s,border-color .16s; }
 .consultations-card.is-selected, .consultations-summary:is(.consultations-summary--agendada, .consultations-summary--em_atendimento, .consultations-summary--finalizada) { background:color-mix(in srgb, var(--vt-surface) 88%, var(--consultation-tint)); border-color:var(--consultation-accent); }
 .consultations-patient-button { display:flex; gap:14px; align-items:center; min-width:0; text-align:left; background:none; color:inherit; border:0; padding:0; font-family:inherit; cursor:pointer; border-radius:10px!important; }
 .consultations-patient-button:disabled { cursor:default; }
@@ -1520,10 +1520,11 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 .consultations-summary-empty, .consultations-empty { display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:30px 12px; }
 .consultations-empty { background:var(--vt-surface); border:1px dashed var(--vt-border); border-radius:17px; }
 .consultations-page button:focus-visible { outline:3px solid #87a873; outline-offset:4px; }
-@media(max-width:1250px) { .consultations-columns { grid-template-columns:minmax(0,1fr) 270px; gap:14px; } .consultations-card { grid-template-columns:minmax(0,1fr) 160px; gap:12px; } .consultations-card-details { grid-column:1; padding-left:0; } .consultations-card-actions { grid-column:2; grid-row:1 / span 2; } }
+@media(max-width:1250px) { .consultations-columns { grid-template-columns:minmax(0,1fr) 270px; gap:14px; } .consultations-card { grid-template-columns:minmax(0,1fr) 192px; gap:12px; } .consultations-card-details { grid-column:1; padding-left:0; } .consultations-card-actions { grid-column:2; grid-row:1 / span 2; } }
 @media(max-width:950px) { .consultations-columns { grid-template-columns:1fr; } .consultations-summary { width:100%; } .consultations-facts { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 @media(max-width:540px) { .consultations-toolbar { padding:10px; gap:10px; } .consultations-tabs { width:100%; flex-basis:100%; gap:2px; } .consultations-tab { font-size:12px; padding:9px 11px; flex:1; } .consultations-search { width:100%; max-width:none; } .consultations-filter { width:100%; } .consultations-card { grid-template-columns:1fr; padding:16px; } .consultations-card-actions { grid-column:1; grid-row:auto; } .consultations-card-details { grid-column:1; } .consultations-facts { grid-template-columns:1fr 1fr; } }
 .consultations-card-actions .rt-Button { height:auto; min-height:36px; padding:8px 12px; font-size:13px; line-height:1.35; white-space:normal; text-align:center; }
+.consultations-card-actions .consultations-record-action { width:100%; height:40px; min-height:40px; white-space:nowrap; flex-shrink:0; }
 .consultations-baby-turtle { width:96px; height:108px; }
 /* Controles de consulta com contorno único e cantos pill. */
 .consultations-toolbar .consultations-search { border-radius:999px!important; min-height:40px; }
@@ -1568,7 +1569,11 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 .consultations-avatar:has(img) .consultations-avatar-paw { display:none; }
 
 /* Horários usa os mesmos tokens de situação de Consultas. */
-.vet-schedule-card { border-left-color:var(--consultation-accent); }
+.vet-schedule-card { position:relative; border-left-width:1px; border-left-color:var(--consultation-accent); }
+.vet-schedule-card-led .vet-date-led-track { animation-duration:8s; }
+@media (prefers-reduced-motion: reduce) {
+  .vet-schedule-card-led .vet-date-led-track { animation-duration:20s; }
+}
 .vet-schedule-card.vet-schedule-card--em_atendimento { border-left-color:#fde047; }
 .vet-schedule-card .vet-schedule-pet-name { color:var(--consultation-accent); }
 .vet-schedule-card .vet-schedule-status { background:color-mix(in srgb, var(--vt-surface) 80%, var(--consultation-tint)); color:var(--consultation-accent); border-color:var(--consultation-accent); }
