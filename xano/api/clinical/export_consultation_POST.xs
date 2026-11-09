@@ -27,25 +27,8 @@ query "tutor/pets/{pet_id}/consultas/{consulta_id}/exportar" verb=POST {
         function.run "Clinical/assert_owner" {
           input = {pet_id: $input.pet_id, tutor_id: $auth.id}
         } as $owned
-        db.query consulta {
-          where = $db.consulta.id == $input.consulta_id && $db.consulta.pet_id == $owned.id
-          output = ["id", "pet_id", "veterinario_id", "status"]
-          return = {type: "single"}
-        } as $consult
-        precondition ($consult != null) {
-          error_type = "notfound"
-          error = "Consulta não disponível."
-        }
-        precondition ($consult.status == "finalizada") {
-          error_type = "inputerror"
-          error = "Somente consultas finalizadas podem ser exportadas."
-        }
-        function.run "Clinical/history" {
-          input = {pet_id: $owned.id}
-        } as $history
-        api.lambda {
-          code = "const c=$var.history.consultas.find(r=>r.id===$input.consulta_id&&r.pet_id===$input.pet_id&&r.status==='finalizada'); if(!c)throw new Error('Consulta não disponível.'); const result={consulta:c,pet:{id:$var.owned.id,nome:$var.owned.nome}}; for(const k of ['vacinas','medicamentos','diagnosticos','exames'])result[k]=$var.history[k].filter(r=>r.consulta_id===c.id&&r.pet_id===c.pet_id); return result;"
-          timeout = 5
+        function.run "Clinical/consultation_document" {
+          input = {pet_id: $owned.id, consulta_id: $input.consulta_id, pet_nome: $owned.nome}
         } as $document
         db.query log_acesso {
           where = $db.log_acesso.operacao == $operation_key
@@ -57,7 +40,7 @@ query "tutor/pets/{pet_id}/consultas/{consulta_id}/exportar" verb=POST {
         }
         conditional {
           if ($existing != null) {
-            precondition ($existing.pet_id == $owned.id && $existing.consulta_id == $consult.id && $existing.tutor_id == $auth.id && $existing.acao == "exportar_consulta") {
+            precondition ($existing.pet_id == $owned.id && $existing.consulta_id == $input.consulta_id && $existing.tutor_id == $auth.id && $existing.acao == "exportar_consulta") {
               error_type = "inputerror"
               error = "A operação já foi usada com dados diferentes."
             }
@@ -69,7 +52,7 @@ query "tutor/pets/{pet_id}/consultas/{consulta_id}/exportar" verb=POST {
             // The existing unique index on operacao arbitrates concurrent inserts.
             // A losing request fails closed; its retry revalidates and reads this log.
             function.run "Clinical/audit" {
-              input = {pet_id: $owned.id, consulta_id: $consult.id, tutor_id: $auth.id, veterinario_id: $consult.veterinario_id, acao: "exportar_consulta", operacao: $operation_key}
+              input = {pet_id: $owned.id, consulta_id: $input.consulta_id, tutor_id: $auth.id, veterinario_id: $document.consulta.veterinario_id, acao: "exportar_consulta", operacao: $operation_key}
             } as $created_audit
             var.update $audit_id {
               value = $created_audit

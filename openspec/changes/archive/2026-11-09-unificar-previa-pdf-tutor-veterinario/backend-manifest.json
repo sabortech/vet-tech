@@ -1,0 +1,36 @@
+{
+  "profile": "Davi Diniz",
+  "workspace": 167758,
+  "records": false,
+  "tables_changed": false,
+  "files": [
+    {
+      "path": "xano/function/clinical/consultation_document.xs",
+      "sha256": "d1fa43fccd14bd954c151f442b00c847ed0315bd86a0c05c43c247d3f63ec7dd"
+    },
+    {
+      "path": "xano/api/clinical/tutor_preview_consultation_GET.xs",
+      "sha256": "7e79eab420a7ef63a64f4a3d956791dcdfa2a4355adb82f1bbfb110e96553240"
+    },
+    {
+      "path": "xano/api/clinical/vet_preview_consultation_GET.xs",
+      "sha256": "df844ae66063764cd0e2f08e9f60a9ab787dbe5ea51d05465d83002c9be80689"
+    },
+    {
+      "path": "xano/api/clinical/export_consultation_POST.xs",
+      "sha256": "8934c07580df19b45914bbc8926ce6027d482733ac14e7e7be06ca97ed537cc9"
+    },
+    {
+      "path": "xano/api/clinical/vet_export_consultation_POST.xs",
+      "sha256": "617074dbd7320fc78cb0f1f990090fa770415640e32ba336996e85db4dc9bb99"
+    }
+  ],
+  "published": true,
+  "remote_ids": {
+    "function": 358819,
+    "tutor_preview": 4120445,
+    "vet_preview": 4120447,
+    "tutor_export": 4116747,
+    "vet_export": 4120446
+  }
+}

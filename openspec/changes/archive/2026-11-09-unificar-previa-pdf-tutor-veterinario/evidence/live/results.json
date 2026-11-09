@@ -1,0 +1,9 @@
+{
+  "api": "Xano publicado",
+  "application": "localhost:3000",
+  "synthetic_fixture": true,
+  "pages": 3,
+  "preview": true,
+  "download": true,
+  "javascript_errors": []
+}

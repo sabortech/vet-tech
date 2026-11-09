@@ -31,7 +31,8 @@ def _records_header(title: str, description: str) -> rx.Component:
                       disabled=State.clinic_loading | State.is_loading_pet | (State.selected_pet_id == ""),
                       class_name="vaccines-refresh", aria_label="Atualizar registros do pet"),
             *([rx.cond((State.detail_id != "") & (State.detail.get("status", "") == "finalizada") & State.consultation_pdf_available,
-                rx.button(rx.icon("download", size=17), "Exportar PDF", on_click=State.request_consultation_pdf,
+                rx.button(rx.icon("download", size=17), "Exportar PDF", on_click=State.open_consultation_pdf,
+                    id="consultation-pdf-trigger",
                     loading=State.pdf_export_busy, disabled=State.pdf_export_busy,
                     aria_label="Exportar PDF da consulta", class_name="consultation-header-export"))]
               if title == "Consultas" else []),
@@ -42,6 +43,7 @@ def _records_header(title: str, description: str) -> rx.Component:
 
 
 def tutor_area() -> rx.Component:
+    from vet_tech.components.consultation_pdf import consultation_pdf_dialog
     return layout_com_menu(
         rx.box(
             rx.cond(
@@ -91,6 +93,7 @@ def tutor_area() -> rx.Component:
                 ),
             ),
             rx.cond(State.pet_message != "", rx.text(State.pet_message, role="status", margin_top="1rem")),
+            consultation_pdf_dialog(),
             as_="main", id="main-content", width="100%", min_width="0",
             overflow_wrap="anywhere",
             class_name=rx.cond((State.active_section == "Início") & (State.pet_target_id != ""), "pet-record-page", rx.cond((State.active_section == "Vacinas") & (State.pet_target_id != ""), "tutor-vaccines-page", rx.cond((State.active_section == "Medicamentos") & (State.pet_target_id != ""), "tutor-medications-page", ""))),
@@ -100,8 +103,9 @@ def tutor_area() -> rx.Component:
 
 def veterinarian_area() -> rx.Component:
     from vet_tech.components.veterinary_schedule import veterinary_navigation, veterinary_actions
+    from vet_tech.components.consultation_pdf import consultation_pdf_dialog
     return layout_com_menu(
-        rx.box(veterinary_content(), as_="main", id="main-content", class_name="vet-schedule",
+        rx.box(veterinary_content(), consultation_pdf_dialog(), as_="main", id="main-content", class_name="vet-schedule",
                on_mount=State.enter_veterinary_agenda, width="100%", min_width="0"),
         pagina_ativa="horarios", actions=veterinary_actions(), navigation=veterinary_navigation(),
     )

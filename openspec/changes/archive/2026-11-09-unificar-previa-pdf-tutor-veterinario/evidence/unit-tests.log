@@ -1,0 +1,9 @@
+......................DeprecationWarning: RouterData.page has been deprecated in version 0.8.1. Use
+RouterData.url instead. It will be completely removed in 1.0.
+(vet_tech/features/clinical/state.py:1399)
+...............Executing <Task finished name='Task-96' coro=<AuthStateTests.test_login_validation_and_rejection_release_form() done, defined at /home/usuario/vet-tech/tests/unit/test_auth_state.py:232> result=None created at /usr/lib/python3.13/asyncio/runners.py:100> took 0.118 seconds
+..................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 343 tests in 10.409s
+
+OK
