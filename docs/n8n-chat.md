@@ -22,6 +22,14 @@ alterar `.env`; as variáveis são carregadas no launcher ou no ambiente do serv
 O login do app continua funcionando se a configuração do chat estiver ausente;
 nesse caso o chat retorna erro genérico, sem respostas locais simulando IA.
 
+Use a URL de produção `/webhook/` para o aplicativo. A URL `/webhook-test/`
+depende do registro temporário de teste no editor do n8n e não substitui o
+endpoint de produção. Em 11/11/2026, o endpoint de teste configurado localmente
+retornou HTTP 404 (webhook não registrado), enquanto o equivalente de produção
+respondeu com contrato válido usando o mesmo segredo. A configuração local foi
+corrigida pelo usuário. Após alterar `.env`, carregue o ambiente novamente no
+processo do aplicativo; o teste direto não atualiza um servidor já iniciado.
+
 ## Contrato
 
 POST HTTPS configurado, `Content-Type: application/json`, `X-VetTech-Secret` e,
@@ -66,6 +74,32 @@ clínicas autenticadas ou o tratamento remoto de expiração de sessão abaixo.
 
 ## Publicação do workflow
 
+### Verificação operacional em 11/11/2026
+
+Após a correção da URL local pelo usuário para produção, o smoke
+`scripts/n8n_chat_smoke.py` confirmou sucesso pelo cliente real (7,8 segundos).
+Os 15 testes de `test_n8n_client` e `test_support_chat_state` passaram. A ferramenta
+também foi verificada com configuração inválida: retornou `CONFIGURATION_ERROR`,
+metadados seguros e código de saída 1.
+
+A instância de produção já disponível em `http://localhost:3000`, com página de
+login acessível, passou no `n8n_bridge_smoke.py` usando Chrome headless:
+navegador → Reflex → cliente n8n → navegador, com sucesso verdadeiro do workflow.
+Não foi necessário reiniciar a instância. O smoke aguarda a hidratação da ponte
+e a animação de abertura do painel; resposta de erro do workflow falha o teste.
+
+```powershell
+.venv/Scripts/python.exe -m unittest tests.unit.test_n8n_client tests.unit.test_support_chat_state -q
+.venv/Scripts/python.exe tests/integration/n8n_bridge_smoke.py --url http://localhost:3000 --chromium "C:/Program Files/Google/Chrome/Application/chrome.exe"
+```
+
+As chamadas reais usaram somente pergunta genérica de visitante. Não validam
+consultas clínicas autenticadas nem tratamento remoto de expiração de sessão.
+Não houve alteração no código da aplicação ou implementação do chat entre tutor
+e veterinário. O `.env` permaneceu ignorado pelo Git e nenhuma credencial foi
+incluída nas evidências. Para repetir, adapte a porta e o executável do navegador
+ao ambiente em uso.
+
 Na implementação inicial, havia relato de versão antiga em produção que
 ignorava o token e de versão nova em rascunho. Antes de validar consultas
 clínicas, confirmar que a versão publicada verifica o token e respeita permissões.
@@ -92,6 +126,19 @@ clínico desnecessário. O modelo deve receber só os campos necessários; o seg
 e o token não devem entrar no contexto da IA.
 
 ## Verificação
+
+Teste real e independente do servidor local, com pergunta genérica de visitante
+(pode executar o workflow e consumir IA):
+
+```powershell
+.venv/Scripts/python.exe scripts/n8n_chat_smoke.py
+```
+
+Em ambientes Unix, use `.venv/bin/python`. A ferramenta carrega o `.env` da raiz,
+respeitando variáveis já definidas no processo, reutiliza o cliente real e imprime
+somente sucesso, código de erro seguro e duração. Código de saída zero exige
+resposta válida do workflow; falhas retornam código diferente de zero. Não imprime
+URL privada, mensagem, resposta, IDs, tokens ou segredo.
 
 ```bash
 .venv/bin/python -m unittest tests.unit.test_n8n_client tests.unit.test_support_chat_state -q
