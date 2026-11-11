@@ -16,8 +16,11 @@ def main():
         page=browser.new_page(viewport={'width':1366,'height':900})
         page.add_init_script("window.bridgeResponses=[];window.addEventListener('vettech:chat-response',e=>bridgeResponses.push({ok:e.detail.ok,request_id:e.detail.request_id,conversation_id:e.detail.conversation_id}));")
         page.goto(args.url+'/login',wait_until='domcontentloaded')
-        page.wait_for_function("document.getElementById('vettech-mascote')?.classList.contains('assets-ready') && window.__vetTechChat")
+        page.wait_for_function("document.getElementById('vettech-mascote')?.classList.contains('assets-ready') && window.__vetTechChat && window.__vetTechChatReady")
         page.locator('#vettech-mascote').click()
+        dialog=page.get_by_role('dialog',name='Assistente Vet Tech')
+        expect(dialog).to_be_visible()
+        dialog.evaluate('el => Promise.all(el.getAnimations().map(a => a.finished))')
         page.get_by_role('textbox',name='Digite sua pergunta').fill('Olá! Como uso o Vet Tech?')
         page.get_by_role('button',name='Enviar mensagem',exact=True).click()
         page.wait_for_function('bridgeResponses.length > 0',timeout=65000)
@@ -25,6 +28,7 @@ def main():
         assert page.locator('#vettech-chat-payload').input_value()==''
         print('Ponte real navegador -> Reflex -> cliente n8n -> navegador: OK')
         print('Resposta de sucesso do workflow:',page.evaluate('bridgeResponses[0].ok === true'))
+        assert page.evaluate('bridgeResponses[0].ok === true'), 'O workflow não retornou sucesso'
         browser.close()
 
 
