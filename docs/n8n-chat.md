@@ -32,6 +32,12 @@ processo do aplicativo; o teste direto não atualiza um servidor já iniciado.
 
 ## Contrato
 
+O encaminhamento opcional para conversa humana é descrito em
+[`chat-veterinario.md`](chat-veterinario.md). Respostas sem `handoff` continuam
+compatíveis; a criação do chamado exige sinal estruturado validado, pet próprio
+e confirmação do tutor. A conversa encaminhada persiste separadamente do
+histórico temporário do bot.
+
 POST HTTPS configurado, `Content-Type: application/json`, `X-VetTech-Secret` e,
 somente para pessoa autenticada, `X-VetTech-User-Token`. Sem redirects, retries
 automáticos ou logs de payloads/credenciais. Timeout total: 60 segundos; a UI tem
@@ -73,6 +79,35 @@ Essa verificação usou uma pergunta genérica de visitante. Não comprova consu
 clínicas autenticadas ou o tratamento remoto de expiração de sessão abaixo.
 
 ## Publicação do workflow
+
+### Encaminhamento estruturado em 11/11/2026
+
+O workflow `Vet Tech — Assistente de suporte` foi atualizado via MCP e publicado
+na versão `b00b335f-f6e9-4f38-ad62-19dd124a9da3`. Somente dois nós foram alterados:
+o assistente do tutor e a normalização da resposta. As APIs Xano já publicadas
+foram preservadas. O delta reproduzível está em `scripts/n8n_support_handoff.json`;
+a cópia anterior completa fica somente no diretório privado de verificação.
+
+O assistente do tutor devolve internamente JSON com `reply` e `handoff`.
+A normalização só aceita a proposta quando a requisição declara tutor autenticado
+e a identidade desse perfil foi confirmada pelo Xano. Preserva os IDs e o contrato
+externo existente. O motivo é fixo e genérico, evitando IDs, segredos e dados
+clínicos nesse campo. Contrato interno inválido retorna falha controlada.
+
+```json
+{"handoff":{"type":"veterinary","reason":"Solicitação de orientação veterinária após conversa com o assistente."}}
+```
+
+Sem proposta, o campo externo é omitido. O webhook publicado passou em quatro
+cenários com fixtures sintéticas: conversa comum do tutor, proposta para tutor,
+ausência de proposta para visitante e ausência para veterinário. O n8n apenas
+propõe: pet próprio e consentimento são confirmados no aplicativo; a criação
+autenticada ocorre no backend existente. Mensagens humanas não voltam ao bot.
+
+```powershell
+node --test tests/unit/n8n_support_handoff.test.cjs
+.venv/Scripts/python.exe tests/integration/n8n_handoff_smoke.py --run support-chat-20261111
+```
 
 ### Verificação operacional em 11/11/2026
 

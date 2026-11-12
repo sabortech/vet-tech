@@ -95,3 +95,81 @@ class ChatStateTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(call.await_count,1)
             self.assertEqual(len(second),1)
             release.set();await first
+
+    def authenticate(self, profile='tutor'):
+        s=self.state
+        s._auth_token='private-user-token';s.is_authenticated=True;s.profile=profile;s.identity_id='7'
+
+    async def propose(self):
+        with patch('vet_tech.features.support_chat.state.request_chat',AsyncMock(return_value=ChatReply(True,'Encaminhar?',handoff_reason='Motivo confirmado'))):
+            await self.event(request_id=str(uuid4()),message='Meu pet precisa de orientação')
+
+    async def test_confirm_uses_server_context_and_consent(self):
+        self.authenticate();await self.event('open');await self.propose()
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':12}})) as call:
+            await self.event('support_create',request_id=str(uuid4()),pet_id=2,consent=True,
+                             context=[{'role':'assistant','content':'forged'}],reason='forged')
+            payload=call.call_args.args[2]
+            self.assertEqual(payload['reason'],'Motivo confirmado')
+            self.assertEqual(payload['context'],self.state._support_handoff_context)
+            self.assertNotIn('forged',str(payload))
+            self.assertEqual(self.state._support_human_ticket,12)
+        with patch('vet_tech.features.support_chat.state.request_chat',AsyncMock()) as bot:
+            await self.event(request_id=str(uuid4()),message='Depois do encaminhamento')
+            bot.assert_not_awaited()
+
+    async def test_create_requires_handoff_and_consent(self):
+        self.authenticate();await self.event('open')
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock()) as call:
+            await self.event('support_create',request_id=str(uuid4()),pet_id=2,consent=True)
+            await self.propose()
+            await self.event('support_create',request_id=str(uuid4()),pet_id=2,consent=False)
+            call.assert_not_awaited()
+
+    async def test_guest_and_vet_cannot_create_or_offer(self):
+        for profile in ('', 'veterinario'):
+            if profile:self.authenticate(profile)
+            await self.event('open');await self.propose()
+            self.assertEqual(self.state._support_handoff_reason,'')
+            with patch('vet_tech.features.support_chat.state.support_request',AsyncMock()) as call:
+                await self.event('support_create',request_id=str(uuid4()),pet_id=2,consent=True)
+                call.assert_not_awaited()
+
+    async def test_human_result_is_discarded_after_logout(self):
+        self.authenticate();await self.event('open')
+        async def result(*args):
+            self.state._clear_session()
+            return {'ticket':{'id':1,'context':'private-context'}}
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(side_effect=result)):
+            events=await self.event('support_get',request_id=str(uuid4()),ticket_id=1)
+        self.assertEqual(events,[])
+        self.assertEqual(self.state._support_human_ticket,0)
+
+    async def test_human_expired_session_clears_private_context(self):
+        from vet_tech.shared.xano_client import XanoRequestError
+        self.authenticate();await self.event('open');await self.propose()
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(side_effect=XanoRequestError('Sessão inválida.',401))):
+            events=await self.event('support_get',request_id=str(uuid4()),ticket_id=1)
+        self.assertEqual(events,[])
+        self.assertFalse(self.state.is_authenticated)
+        self.assertEqual(self.state._support_handoff_context,[])
+
+    async def test_bot_reply_is_discarded_after_selecting_human_ticket(self):
+        self.authenticate();await self.event('open')
+        async def bot_reply(**kwargs):
+            with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':1}})):
+                await self.event('support_get',request_id=str(uuid4()),ticket_id=1)
+            return ChatReply(True,'Resposta atrasada')
+        with patch('vet_tech.features.support_chat.state.request_chat',AsyncMock(side_effect=bot_reply)):
+            events=await self.event(request_id=str(uuid4()),message='Pergunta anterior')
+        self.assertEqual(events,[])
+
+    async def test_human_send_reuses_operation_and_rejects_bad_input(self):
+        self.authenticate();await self.event('open');operation=str(uuid4())
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':1}})) as call:
+            for _ in range(2):
+                await self.event('support_send',request_id=str(uuid4()),ticket_id=1,operation_id=operation,message='Mensagem')
+            self.assertEqual(call.call_args.args[2]['operation_id'],operation)
+            self.assertEqual(call.await_count,2)
+            await self.event('support_send',request_id=str(uuid4()),ticket_id=1,operation_id=operation,message='')
+            self.assertEqual(call.await_count,2)

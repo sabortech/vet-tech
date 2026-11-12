@@ -67,6 +67,9 @@ Atualmente, o histórico médico de pets está fragmentado entre cadernetas de p
 
 ### Dentro do escopo
 Aplicação web com:
+- chat textual tutor–veterinário após encaminhamento do assistente, com chamado,
+  fila compartilhada, histórico persistente e consentimento de compartilhamento
+  separado da autorização de prontuário (ver `docs/chat-veterinario.md`);
 - cadastro de tutores, veterinários e clínicas;
 - perfil completo do pet;
 - registro de consultas, exames, vacinas, medicamentos e doenças;

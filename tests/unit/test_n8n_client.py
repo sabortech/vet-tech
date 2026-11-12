@@ -43,6 +43,23 @@ class N8nClientTests(unittest.IsolatedAsyncioTestCase):
         result=await self.call(handler,user={'authenticated':False,'name':'forged','role':'tutor'})
         self.assertTrue(result.ok)
 
+    async def test_structured_handoff_and_backward_compatibility(self):
+        for extra, reason in [({}, ''), ({'handoff': None}, ''),
+                ({'handoff': {'type': 'veterinary', 'reason': ' Precisa de orientação ' }}, 'Precisa de orientação')]:
+            result = await self.call(lambda _: httpx.Response(200, json=body(**extra)))
+            self.assertTrue(result.ok)
+            self.assertEqual(result.handoff_reason, reason)
+
+    async def test_invalid_handoff_is_rejected(self):
+        for handoff in [True, 'veterinary', {}, {'type': 'other', 'reason': 'motivo'},
+                {'type': 'veterinary', 'reason': ''}, {'type': 'veterinary', 'reason': 'x'*1001},
+                {'type': 'veterinary', 'reason': ENV['N8N_CHAT_WEBHOOK_SECRET']},
+                {'type': 'veterinary', 'reason': 'motivo', 'pet_id': 9}]:
+            with self.subTest(kind=type(handoff).__name__):
+                result = await self.call(lambda _: httpx.Response(200, json=body(handoff=handoff)))
+                self.assertFalse(result.ok)
+                self.assertEqual(result.handoff_reason, '')
+
     async def test_authenticated_token_only_in_header_and_previous_history(self):
         history=[{'role':'user','content':'Pergunta anterior'},{'role':'assistant','content':'Resposta anterior'}]
         def handler(req):

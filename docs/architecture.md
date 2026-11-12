@@ -181,6 +181,19 @@ de workspace.
 
 ### Assistente n8n
 
+O chat humano continua no domínio `features/support_chat/`; o transporte
+autenticado está em `shared/support_client.py`. A ponte global usa as ações
+`support_*` e só repassa campos operacionais permitidos. Contexto confirmado,
+identidade, token e credencial de criação ficam privados no servidor Reflex.
+O Xano verifica propriedade/participação novamente e serializa transições em
+`Support/operate`, no grupo `vettech-support`. O agregado `support_ticket`
+mantém contexto, mensagens e eventos; `support_lock` protege concorrência.
+Não se introduz serviço alternativo, autorização clínica ou consulta automática.
+O painel usa os controles existentes e consulta o atendimento ativo a cada dez
+segundos, suspendendo consultas quando fechado. Falhas de leitura usam espera
+de 15 segundos antes de nova leitura; escritas exigem retry manual idempotente.
+Ver `docs/chat-veterinario.md` para contrato, operação e verificação.
+
 `features/support_chat/state.py` fornece o mixin de conversa do State existente;
 `shared/n8n_client.py` contém transporte HTTP e validação de contrato. O wrapper
 global publica um formulário Reflex oculto, sem credenciais, e os assets mantêm
