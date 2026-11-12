@@ -16,7 +16,7 @@ class ConsultationsTests(unittest.IsolatedAsyncioTestCase):
             'diagnosticos':[{'nome':'Alergia a penicilina','estado':'ativa'}],
             'vacinas':[{'vacina':'Antiga','data_aplicacao':'2020-01-01'}, {'vacina':'Recente','data_aplicacao':'2026-01-01'}],
             'consultas':[{'data_atendimento':'2020-01-01'}, {'data_atendimento':'2026-02-01'}]})
-        self.assertEqual(data['peso'], '0')
+        self.assertEqual(data['peso'], '0 Kg')
         self.assertIn('Alergia alimentar · controlada',data['alergias'])
         self.assertIn('penicilina',data['alergias'])
         self.assertIn('Dermatite alérgica',data['alergias'])

@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request, xano_request_batch
+from vet_tech.shared.measurements import weight_label
 from vet_tech.shared.dates import calendar_date, date_label, instant_datetime
 
 GROUP = "vettech-clinical"
@@ -235,7 +236,7 @@ def project_pet(row: dict[str, Any], today: date | None = None) -> DashboardPet:
         "especie": str(row.get("especie_nome") or "Espécie não informada"),
         "raca": str(row.get("raca_nome") or ("SRD" if not row.get("raca_id") else "Raça não informada")),
         "idade": _age_label(row.get("data_nasc"), current),
-        "peso": str(row["peso_atual"]) if row.get("peso_atual") is not None else "",
+        "peso": weight_label(row.get("peso_atual"), missing=""),
         "foto": photo,
         "indicador_vacina": indicator,
         "proxima_vacina": ({

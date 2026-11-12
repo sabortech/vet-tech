@@ -44,6 +44,16 @@ class ClinicalProjectionTests(unittest.TestCase):
         self.assertNotIn("rascunho", result[0])
         self.assertNotIn("diagnostico", result[0])
 
+    def test_tutor_consultations_include_professional_name_without_draft(self):
+        rows = [{"id": i, "status": status, "veterinario_id": 8,
+                 "veterinario_nome": "Dra. Exemplo", "diagnostico": "private"}
+                for i, status in enumerate(("agendada", "em_atendimento", "finalizada"), 1)]
+        result = execute("xano/api/clinical/tutor_consultations_GET.xs", {}, {"rows": rows})
+        self.assertEqual([r["veterinario_nome"] for r in result], ["Dra. Exemplo"] * 3)
+        self.assertNotIn("diagnostico", result[0])
+        self.assertNotIn("diagnostico", result[1])
+        self.assertEqual(result[2]["diagnostico"], "private")
+
     def test_agenda_uses_local_day_and_redacts_revoked_pet(self):
         rows = {"reservations": [
             {"id": 1, "pet_id": 5, "status": "agendada", "agendada_para": 1893544200000, "motivo": "private"}],

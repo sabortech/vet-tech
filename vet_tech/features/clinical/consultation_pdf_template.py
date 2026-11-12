@@ -138,7 +138,7 @@ def render_consultation_pdf(document: ConsultationDocument) -> bytes:
         story=[Spacer(1,1),PageBreak(),_paragraph('Prontuário da consulta veterinária',heading=True,size=19),
             _paragraph('Identificação',heading=True),
             _table([('Pet',document.pet_name),('Consulta',f'{document.consultation_id} · Finalizada · {dict(document.fields)["Data do atendimento"]}'),
-                    ('Veterinário',f'ID {document.veterinarian_id}')]),Spacer(1,10),_paragraph('Consulta',heading=True),
+                    ('Veterinário',document.veterinarian_name)]),Spacer(1,10),_paragraph('Consulta',heading=True),
             _table(document.fields)]
         if document.sections:
             story.extend([Spacer(1,10),_paragraph('Registros vinculados',heading=True)])

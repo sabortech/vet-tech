@@ -44,6 +44,8 @@ class ConsultationDocument:
     fields: tuple[tuple[str, str], ...]
     sections: tuple[tuple[str, tuple[tuple[tuple[str, str], ...], ...]], ...]
 
+    veterinarian_name: str = "Nome não informado"
+
     @property
     def filename(self) -> str:
         return f"vettech-consulta-{self.consultation_id}.pdf"
@@ -113,8 +115,8 @@ def map_consultation_document(payload: Any, pet_id: Any, consultation_id: Any) -
             included.append(((str(item.get(date_key) or ""), positive_id(item.get("id"))), tuple(projection)))
         if included:
             sections.append((label, tuple(r for _, r in sorted(included, key=lambda pair: pair[0]))))
-    document = ConsultationDocument(consultation_id, pet_id, text(pet.get("nome")), veterinarian_id, tuple(fields), tuple(sections))
-    length = len(document.pet_name) + sum(len(v) for _, v in document.fields)
+    document = ConsultationDocument(consultation_id, pet_id, text(pet.get("nome")), veterinarian_id, tuple(fields), tuple(sections), text(row.get("veterinario_nome") or "Nome não informado"))
+    length = len(document.pet_name) + len(document.veterinarian_name) + sum(len(v) for _, v in document.fields)
     length += sum(len(v) for _, records in document.sections for record in records for _, v in record)
     if length > MAX_CHARACTERS:
         raise ConsultationPDFError("A consulta excede o limite de exportação.")

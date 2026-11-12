@@ -34,19 +34,19 @@ def tutor_clinical_content(content: rx.Component) -> rx.Component:
     )
 
 
-def options(rows, value, change, placeholder, control_id=None):
+def options(rows, value, change, placeholder, control_id=None, disabled=None):
     trigger_props = {"id": control_id} if control_id is not None else {}
     return rx.select.root(
-        rx.select.trigger(placeholder=placeholder, width="100%", **trigger_props),
+        rx.select.trigger(placeholder=placeholder, aria_label=placeholder, width="100%", **trigger_props),
         rx.select.content(rx.foreach(rows, lambda row: rx.select.item(row["nome"], value=row["id"]))),
-        value=value, on_change=change, disabled=State.clinic_busy, width="100%",
+        value=value, on_change=change, disabled=State.clinic_busy if disabled is None else disabled, width="100%",
     )
 
 
 def booking_dialog(show_trigger: bool = True) -> rx.Component:
     first = calendar_panel(
-        title="Agendar consulta", description="Etapa 1 de 2 — escolha o dia e o horário para cuidar do seu pet.",
-        eyebrow="Um cuidado com data marcada", heading="Escolher dia e horário",
+        title="Agendar consulta", description="Etapa 1 de 2 — escolha o pet, o veterinário, o dia e o horário.",
+        eyebrow="Um cuidado com data marcada", heading="Escolher atendimento",
         current_prefix="Dia selecionado: ", current_label=State.booking_date_label,
         month_name=State.booking_month_name, year=State.booking_year, years=State.booking_years,
         days=State.booking_days, previous_month=State.booking_shift_month(-1), next_month=State.booking_shift_month(1),
@@ -55,6 +55,14 @@ def booking_dialog(show_trigger: bool = True) -> rx.Component:
         back_label="Cancelar", class_name="vet-date-dialog tutor-calendar-dialog tutor-booking-calendar",
         disabled=State.booking_calendar_locked, close_action=State.booking_set_open(False),
         extra_action=rx.vstack(
+            rx.el.label("Pet", html_for="booking-pet"),
+            options(State.pets, State.booking_pet, State.booking_choose_pet, "Escolha o pet",
+                    control_id="booking-pet", disabled=State.booking_calendar_locked),
+            rx.el.label("Veterinário", html_for="booking-professional"),
+            options(State.booking_professionals, State.booking_professional,
+                    State.set_booking_professional, "Escolha o veterinário",
+                    control_id="booking-professional",
+                    disabled=State.booking_calendar_locked | (State.booking_pet == "") | (State.booking_professionals.length() == 0)),
             rx.el.label("Data selecionada", html_for="booking-selected-date"),
             rx.input(
                 id="booking-selected-date", aria_label="Data selecionada",
@@ -73,17 +81,16 @@ def booking_dialog(show_trigger: bool = True) -> rx.Component:
         rx.text(State.booking_date_label, " às ", State.booking_time, weight="bold"),
         rx.cond(State.has_pets,
             rx.vstack(
-                rx.text("Pet"), options(State.pets, State.booking_pet, State.booking_choose_pet, "Escolha o pet"),
+                rx.text("Pet: ", State.booking_pet_name),
+                rx.text("Veterinário: ", State.booking_professional_name),
                 rx.el.label("Motivo", html_for="booking-reason"),
                 rx.text_area(id="booking-reason", value=State.booking_reason, on_change=State.set_booking_reason,
                              placeholder="Descreva o motivo da consulta", width="100%", disabled=State.booking_busy),
-                rx.text("Veterinário"), options(State.booking_professionals, State.booking_professional,
-                                              State.set_booking_professional, "Escolha o profissional"),
                 rx.callout("Ao confirmar, você libera previamente o histórico deste pet ao veterinário escolhido. Você pode revogar o acesso em Consultas.", icon="shield-check"),
                 rx.button("Confirmar agendamento", on_click=State.booking_submit,
                           loading=State.booking_busy, width="100%"), align="stretch", width="100%", spacing="3",
             ),
-            rx.text("Cadastre um pet em Novo pet antes de confirmar um agendamento.")),
+            rx.text("Cadastre um pet em Meus Pets antes de confirmar um agendamento.")),
         rx.button("Voltar", on_click=State.booking_back, variant="outline", disabled=State.booking_busy),
         align="stretch", spacing="3", width="100%",
     )
@@ -94,7 +101,7 @@ def booking_dialog(show_trigger: bool = True) -> rx.Component:
             first,
             rx.dialog.content(
                 rx.dialog.title("Agendar consulta"),
-                rx.dialog.description("Etapa 2 de 2 — pet e motivo"),
+                rx.dialog.description("Etapa 2 de 2 — motivo e confirmação"),
                 second,
                 rx.text(State.booking_message, role="status", margin_top="12px"),
                 rx.dialog.close(rx.button("Cancelar", type="button", variant="ghost", disabled=State.booking_calendar_locked, margin_top="12px")),
@@ -113,6 +120,7 @@ def vaccine_record_card(row, show_origin=True):
                 rx.box(
                     rx.text("Registro de vacinação", class_name="vaccine-record-eyebrow"),
                     rx.heading(row.get("vacina", "Vacina"), size="5"),
+                    rx.cond(row.get("care_label", "") != "", rx.box(row.get("care_label", ""), class_name="disease-status care-status")),
                     rx.cond(row.get("origem_legivel", "") != "", rx.text(row.get("origem_legivel", ""), class_name="vaccine-record-origin")),
                     min_width="0",
                 ),
@@ -129,7 +137,7 @@ def vaccine_record_card(row, show_origin=True):
                     class_name="vaccine-record-field",
                 ) for label, icon, value in (
                     ("Data de aplicação", "calendar-days", row.get("data_aplicacao_legivel", "")),
-                    ("Veterinário", "stethoscope", row.get("veterinario_nome", row.get("veterinario_id", ""))),
+                    ("Veterinário", "stethoscope", row.get("veterinario_nome", "Nome não informado")),
                     ("Lote", "tag", row.get("lote", "")),
                     ("Consulta de origem", "file-text", row.get("consulta_id", "")),
                 )],
@@ -186,7 +194,7 @@ def record_card(row, group: str, show_origin=True, compact=False):
                 clinical_status_label(row.get(key, "")) if key in ("estado", "status") else row.get(key, ""),
                 "calendar-days" if "data" in key else "file-text") for key, label in fields[group]],
                 _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
-                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                    row.get("veterinario_nome", ""), "Nome não informado"), "stethoscope"),
                 class_name="consultation-record-fields"),
             class_name="consultation-record",
         )
@@ -196,7 +204,7 @@ def record_card(row, group: str, show_origin=True, compact=False):
           for key, label in fields[group]],
         rx.text(row.get("origem_legivel", ""), size="1"),
         rx.cond(row.get("veterinario_id", "") != "",
-                rx.text("Veterinário: ", row.get("veterinario_nome", row.get("veterinario_id", "")), size="2")),
+                rx.text("Veterinário: ", row.get("veterinario_nome", "Nome não informado"), size="2")),
         rx.cond(show_origin & (row.get("consulta_id", "") != ""),
                 rx.button("Ver consulta de origem", on_click=State.show_consultation_detail(row.get("consulta_id", "")), variant="outline")),
         align="stretch", spacing="2"), width="100%")
@@ -222,6 +230,7 @@ def medication_record_card(row, show_origin=True):
             rx.box(rx.icon("pill", size=42), class_name="medication-title-icon"),
             rx.box(
                 rx.heading(row.get("nome", "Medicamento"), size="7"),
+                rx.cond(row.get("care_label", "") != "", rx.box(row.get("care_label", ""), class_name="disease-status care-status")),
                 rx.text("Registro do prontuário", class_name="medication-eyebrow"),
                 min_width="0",
             ), align="center", spacing="4",
@@ -242,7 +251,7 @@ def medication_record_card(row, show_origin=True):
                 ),
                 rx.box(
                     _medication_field("Consulta de origem", row.get("consulta_id", ""), "clipboard-list"),
-                    _medication_field("Veterinário", row.get("veterinario_nome", row.get("veterinario_id", "")), "user-round"),
+                    _medication_field("Veterinário", row.get("veterinario_nome", "Nome não informado"), "user-round"),
                     class_name="medication-group",
                 ),
                 class_name="medication-secondary",
@@ -286,7 +295,7 @@ def disease_record_card(row, show_origin=True, diagnosis=False):
                 _medication_field("Data do diagnóstico" if diagnosis else "Última evolução",
                     row.get("data_diagnostico_legivel" if diagnosis else "data_evolucao_legivel", ""), "calendar-days"),
                 _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
-                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                    row.get("veterinario_nome", ""), "Nome não informado"), "stethoscope"),
                 class_name="disease-fields",
             ),
             rx.box(
@@ -355,15 +364,19 @@ def consultation_card(row):
     return rx.box(
         perimeter_led("vet-date-led vaccine-record-led", "18"),
         rx.box(
+            rx.heading("Consulta: " + row.get("id", ""), as_="h3", size="5", class_name="consultation-card-title"),
             rx.hstack(rx.box(rx.icon("calendar-days", size=32), class_name="medication-title-icon"),
-                rx.box(rx.text("Consulta " + row.get("id", ""), class_name="disease-eyebrow"),
-                    rx.heading(row.get("quando", "Não informado"), size="5"),
+                rx.box(
+                    rx.box(
+                        _medication_field("Data", row.get("consulta_data_legivel", "Não informado"), "calendar-days"),
+                        _medication_field("Horário", row.get("consulta_hora_legivel", "Não informado"), "clock-3"),
+                        class_name="consultation-date-time"),
                     rx.box(clinical_status_label(row.get("status", "")), class_name="disease-status"),
                     min_width="0"), align="center", spacing="4"),
             rx.box(
                 _medication_field("Motivo da consulta", row.get("motivo", ""), "notebook-pen"),
                 _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
-                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                    row.get("veterinario_nome", ""), "Nome não informado"), "stethoscope"),
                 class_name="consultation-list-fields"),
             rx.cond((row.get("status", "") == "finalizada") | (row.get("status", "") == "legado"),
                 rx.box(rx.button("Ver prontuário", rx.icon("arrow-right", size=17),
@@ -374,6 +387,7 @@ def consultation_card(row):
             class_name="medication-art consultation-art", aria_hidden="true",
             style={"--record-background": "url('" + row.get("fundo_card", "/optimized/fundo_mar.webp") + "')"}),
         class_name="vaccine-record-card consultation-card",
+        custom_attrs={"data-status": row.get("status", "")},
     )
 
 
@@ -398,7 +412,7 @@ def exam_record_card(row, show_origin=True):
                 _medication_field("Solicitação", row.get("data_solicitacao_legivel", ""), "calendar-days"),
                 _medication_field("Realização", row.get("data_realizacao_legivel", ""), "calendar-check"),
                 _medication_field("Veterinário", rx.cond(row.get("veterinario_nome", "") != "",
-                    row.get("veterinario_nome", ""), row.get("veterinario_id", "")), "stethoscope"),
+                    row.get("veterinario_nome", ""), "Nome não informado"), "stethoscope"),
                 rx.cond(row.get("data_legivel", "") != "",
                     _medication_field("Data do registro anterior", row.get("data_legivel", ""), "calendar-clock")),
                 class_name="disease-fields"),
@@ -423,14 +437,16 @@ def exam_record_card(row, show_origin=True):
 
 def consultation_complement(row, group):
     if group == "vacinas":
-        return vaccine_record_card(row, show_origin=False)
-    if group == "medicamentos":
-        return medication_record_card(row, show_origin=False)
-    if group == "diagnosticos":
-        return disease_record_card(row, show_origin=False, diagnosis=True)
-    if group == "exames":
-        return exam_record_card(row, show_origin=False)
-    return record_card(row, group, show_origin=False, compact=True)
+        card = vaccine_record_card(row, show_origin=False)
+    elif group == "medicamentos":
+        card = medication_record_card(row, show_origin=False)
+    elif group == "diagnosticos":
+        card = disease_record_card(row, show_origin=False, diagnosis=True)
+    elif group == "exames":
+        card = exam_record_card(row, show_origin=False)
+    else:
+        card = record_card(row, group, show_origin=False, compact=True)
+    return rx.box(card, class_name="consultation-care", custom_attrs={"data-care-tone": row.get("care_tone", "neutral")})
 
 
 def consultation_detail():
@@ -451,7 +467,7 @@ def consultation_detail():
                     ("finalizada_em_legivel", "Fim real", "clock-3"),
                     ("retorno_previsto_legivel", "Retorno previsto", "calendar-check"))],
                 _medication_field("Veterinário", rx.cond(State.detail.get("veterinario_nome", "") != "",
-                    State.detail.get("veterinario_nome", ""), State.detail.get("veterinario_id", "")), "stethoscope"),
+                    State.detail.get("veterinario_nome", ""), "Nome não informado"), "stethoscope"),
                 class_name="consultation-metadata"),
             rx.box(
             _consultation_text("Motivo da consulta", State.detail.get("motivo", ""), "notebook-pen"),
@@ -502,7 +518,7 @@ def tutor_consultations():
                 rx.button('Atualizar permissões e acessos', on_click=State.load_tutor_auxiliary(True),
                           disabled=State.auxiliary_loading, variant='outline'),
                 rx.foreach(State.access_rows, lambda row: rx.hstack(
-                    rx.text("Veterinário ", row["veterinario_id"], " — ", row["status"]),
+                    rx.text("Veterinário ", row.get("veterinario_nome", "Nome não informado"), " — ", row["status"]),
                     rx.button(rx.cond(row["status"] == "ativo", "Revogar", "Reativar"),
                               on_click=State.change_consent(row["id"], rx.cond(row["status"] == "ativo", "revogado", "ativo")),
                               disabled=State.clinic_busy), wrap="wrap")),
@@ -782,7 +798,6 @@ def attendance_patient():
                 ),
                 rx.flex(*[
                     rx.hstack(rx.icon(icon, size=15), rx.text(label, ": ", info.get(key, "Não informado")),
-                              *([rx.cond(info.get(key, "Não informado") != "Não informado", rx.text("kg"))] if key == "peso" else []),
                               spacing="1", align="center", class_name="attendance-chip")
                     for key, label, icon in (("sexo", "Sexo", "venus-and-mars"),
                                              ("nascimento", "Nascimento", "calendar-days"),

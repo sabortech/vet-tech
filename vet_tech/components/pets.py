@@ -189,8 +189,8 @@ def pet_form() -> rx.Component:
                 date_hint(State.pet_birth_date), align="stretch", spacing="1",
             ),
             pet_field("weight", rx.input(
-                placeholder="Peso atual (opcional)",
-                aria_label="Peso atual (opcional)",
+                placeholder="Peso atual em Kg (opcional)",
+                aria_label="Peso atual em Kg (opcional)",
                 type="number",
                 min="0",
                 step="1",
@@ -405,6 +405,60 @@ def profile_view() -> rx.Component:
     )
 
 
+def booking_pet_choice_dialog() -> rx.Component:
+    """Prepare a consultation through the existing pet selection or registration."""
+    return rx.dialog.root(
+        rx.dialog.trigger(rx.button(
+            rx.icon("calendar-plus", size=18), "Gostaria de agendar uma consulta?",
+            variant="outline", size="3", class_name="pet-booking-invitation",
+        )),
+        rx.dialog.content(
+            perimeter_led("vet-date-led pet-booking-choice-led", "25"),
+            rx.dialog.close(rx.button(rx.icon("x", size=20), aria_label="Fechar opções de agendamento",
+                                      variant="ghost", class_name="pet-booking-choice-close")),
+            rx.image(src="/optimized/espreitando.webp", alt="", aria_hidden="true",
+                     class_name="pet-booking-choice-turtle"),
+            rx.box(
+                rx.box(
+                    rx.box(
+                        rx.badge(rx.icon("heart", size=14), "O próximo cuidado começa aqui", variant="soft"),
+                        rx.dialog.title("Vamos agendar uma consulta?", class_name="pet-booking-choice-title"),
+                        rx.dialog.description("Primeiro, escolha quem vai receber esse carinho.",
+                                              class_name="pet-booking-choice-description"),
+                        class_name="pet-booking-choice-copy",
+                    ),
+                    class_name="pet-booking-choice-header",
+                ),
+                rx.box(
+                    rx.dialog.close(rx.el.button(
+                        rx.box(rx.icon("paw-print", size=28), class_name="pet-booking-choice-icon"),
+                        rx.text("Meu pet já está cadastrado", class_name="pet-booking-choice-card-title"),
+                        rx.text("Encontre seu companheiro na lista e continue para cuidar dele.",
+                                class_name="pet-booking-choice-card-description"),
+                        rx.box(rx.text("Ir para Mudar pet"), rx.icon("arrow-right", size=18),
+                               class_name="pet-booking-choice-action"),
+                        on_click=State.show_pet_picker, class_name="pet-booking-choice-card", type="button",
+                    )),
+                    rx.dialog.close(rx.el.button(
+                        rx.box(rx.icon("circle-plus", size=28), class_name="pet-booking-choice-icon"),
+                        rx.text("Quero cadastrar um novo pet", class_name="pet-booking-choice-card-title"),
+                        rx.text("Apresente seu pet para a gente e comece o histórico de cuidados.",
+                                class_name="pet-booking-choice-card-description"),
+                        rx.box(rx.text("Cadastrar em Meus Pets"), rx.icon("arrow-right", size=18),
+                               class_name="pet-booking-choice-action"),
+                        on_click=rx.redirect("/"), class_name="pet-booking-choice-card pet-booking-choice-card--new", type="button",
+                    )),
+                    class_name="pet-booking-choice-grid",
+                ),
+                rx.text("Depois de escolher ou cadastrar, você poderá agendar a consulta do seu pet.",
+                        class_name="pet-booking-choice-note"),
+            class_name="pet-booking-choice-body"),
+            class_name="pet-booking-choice-dialog",
+            width="min(860px, calc(100vw - 48px))", max_width="860px", padding="0",
+        ),
+    )
+
+
 def pet_selection_empty_state() -> rx.Component:
     """Shared invitation for every clinical section without a pet context."""
     return rx.box(
@@ -429,6 +483,7 @@ def pet_selection_empty_state() -> rx.Component:
                 on_click=State.show_pet_picker,
                 size="3",
             ),
+            booking_pet_choice_dialog(),
             align="center", spacing="4",
             class_name="pet-selection-copy",
         ),
@@ -441,7 +496,7 @@ def pet_detail_row(label: str, key: str, icon: str) -> rx.Component:
         perimeter_led("vet-date-led pet-record-led", "16"),
         rx.box(rx.icon(icon, size=22), class_name="pet-record-fact-icon"),
         rx.text(label, class_name="pet-record-fact-label"),
-        rx.text(rx.cond(State.selected_pet[key] != "", State.selected_pet[key], "Não informado"),
+        rx.text(rx.cond(State.selected_pet[key] != "", State.selected_pet[key] + " Kg" if key == "peso_atual" else State.selected_pet[key], "Não informado"),
                 class_name="pet-record-fact-value"),
         class_name="pet-record-fact",
     )

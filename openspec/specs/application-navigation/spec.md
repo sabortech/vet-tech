@@ -144,3 +144,40 @@ O sistema SHALL disponibilizar Prontuário, Vacinas, Medicamentos, Doenças e Co
 #### Scenario: Áreas futuras continuam indisponíveis
 - **WHEN** o tutor aciona Exames ou outra área ainda sem tela implementada
 - **THEN** permanece na tela atual e não recebe erro 404
+
+### Requirement: Convite de agendamento sem pet selecionado
+Todas as seções clínicas que compartilham a orientação sem pet SHALL exibir “Gostaria de agendar uma consulta?” abaixo do botão existente. O convite SHALL abrir um painel com tartaruga e dois cards lado a lado em telas largas, adaptados sem corte em telas estreitas, nos temas claro e escuro.
+
+#### Scenario: Abrir painel de escolha
+- **WHEN** o tutor clica no convite sem pet selecionado
+- **THEN** vê opções de selecionar pet existente em Mudar pet e cadastrar novo em Meus Pets
+
+#### Scenario: Selecionar pet existente
+- **WHEN** o tutor clica no card de pet existente
+- **THEN** navega à lista de Mudar pet pelo fluxo existente
+
+#### Scenario: Cadastrar pet
+- **WHEN** o tutor clica no card de novo pet
+- **THEN** navega a Meus Pets com o formulário de cadastro existente
+
+#### Scenario: Cancelar orientação
+- **WHEN** o tutor fecha o painel ou usa Escape
+- **THEN** permanece na seção sem selecionar pet ou criar consulta
+
+### Requirement: Painel de orientação com cards sem transbordamento
+O painel SHALL apresentar dois cards retangulares com cantos suaves em telas largas, texto com quebra, sem sobreposição ou rolagem horizontal. A tartaruga SHALL espreitar na borda do LED. Em telas estreitas o conteúdo SHALL permanecer acessível com cards empilhados.
+
+#### Scenario: Painel em desktop ou celular
+- **WHEN** o tutor abre a orientação
+- **THEN** todos os textos, ações e cards permanecem visíveis sem transbordamento horizontal
+
+### Requirement: Ações interativas têm realce luminoso contextual
+Controles selecionáveis habilitados SHALL ganhar sombra luminosa mais forte sob hover ou foco de teclado, usando cor de status/ação quando disponível e verde padrão nos demais casos. Controles desabilitados ou somente leitura SHALL permanecer sem o novo realce.
+
+#### Scenario: Ação com cor de situação
+- **WHEN** o usuário aponta ou foca um controle dentro de contexto com cor de status
+- **THEN** o halo acompanha a cor temática daquele contexto
+
+#### Scenario: Controle desabilitado
+- **WHEN** o ponteiro passa sobre controle desabilitado ou somente leitura
+- **THEN** o novo halo não é aplicado
