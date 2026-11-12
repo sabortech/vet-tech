@@ -65,7 +65,7 @@ class ClinicalStateTests(unittest.IsolatedAsyncioTestCase):
         from vet_tech.features.clinical.state import pet_summary
         state = session("veterinario")
         state.clinical_pet_info = pet_summary({"nome": "Synthetic", "peso_atual": 0, "data_nasc": "2020-01-02"})
-        self.assertEqual(state.clinical_pet_info["peso"], "0")
+        self.assertEqual(state.clinical_pet_info["peso"], "0 Kg")
         self.assertEqual(state.clinical_pet_info["nascimento"], "02/01/2020")
         state._clinic_error(XanoRequestError("Expired", status_code=401))
         self.assertEqual(state.clinical_pet_info, {})
@@ -219,7 +219,8 @@ class ClinicalStateTests(unittest.IsolatedAsyncioTestCase):
         state.history_rows = {"consultas": [{"id": "7"}], "vacinas": [
             {"id": "12", "consulta_id": "7"}, {"id": "13", "consulta_id": "8"}]}
         State.show_consultation_detail.fn(state, "7")
-        self.assertEqual(state.detail_sections["vacinas"], [{"id": "12", "consulta_id": "7"}])
+        self.assertEqual([(row["id"], row["consulta_id"]) for row in state.detail_sections["vacinas"]], [("12", "7")])
+        self.assertEqual(state.detail_sections["vacinas"][0]["care_tone"], "neutral")
 
 
 if __name__ == "__main__":

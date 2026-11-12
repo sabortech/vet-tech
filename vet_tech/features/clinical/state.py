@@ -18,7 +18,8 @@ import reflex as rx
 
 from vet_tech.shared.xano_client import XanoRequestError, xano_request, xano_request_batch
 from vet_tech.features.navigation.state import CLINICAL_SECTIONS
-from vet_tech.shared.dates import date_label, instant_label, instant_datetime
+from vet_tech.shared.measurements import weight_label
+from vet_tech.shared.dates import calendar_date, date_label, instant_label, instant_datetime
 from .consultation_pdf import ConsultationPDFError, map_consultation_document, positive_id, pdf_export_enabled
 from .consultation_pdf_template import render_consultation_pdf, RENDER_TIMEOUT_SECONDS
 
@@ -81,12 +82,40 @@ def display_date(value) -> str:
     return date_label(value) or "Não informado"
 
 
+def care_status(row: dict, group: str, day: date) -> dict[str, str]:
+    """Presentation only; dates never confirm medication administration."""
+    tone, label = "neutral", "Situação não informada"
+    if group == "vacinas":
+        applied, next_dose = calendar_date(row.get("data_aplicacao")), calendar_date(row.get("data_prox_dose"))
+        if applied and applied > day:
+            tone, label = "red", "Aplicação prevista — sem confirmação de aplicação"
+        elif applied:
+            tone, label = "green", "Aplicada — próxima dose não informada"
+            if next_dose and next_dose >= applied:
+                days = (next_dose - day).days
+                tone = "red" if days < 0 else "yellow" if days <= 7 else "green"
+                label = "Aplicada — " + ("data da próxima dose ultrapassada" if days < 0 else "próxima dose hoje" if days == 0 else "próxima dose nos próximos 7 dias" if days <= 7 else "próxima dose futura")
+    elif group == "medicamentos":
+        start, end = calendar_date(row.get("data_inicio")), calendar_date(row.get("data_fim"))
+        if start and (end is None and row.get("tipo") == "continuo" or end is not None and end >= start):
+            tone, label = ("red", "A iniciar — conforme prescrição") if start > day else ("green", "Período prescrito encerrado") if end and end < day else ("yellow", "Dentro do período prescrito")
+    elif group == "exames":
+        tone, label = {"solicitado": ("red", "Solicitado"), "realizado": ("green", "Realizado")}.get(row.get("status"), (tone, label))
+    elif group in ("diagnosticos", "doencas"):
+        tone, label = {"ativa": ("red", "Ativa"), "em_tratamento": ("yellow", "Em tratamento"), "controlada": ("yellow", "Controlada"), "curada": ("green", "Curada")}.get(row.get("estado"), (tone, label))
+    return {**row, "care_tone": tone, "care_label": label}
+
+
 def cards(rows: list[dict]) -> list[dict[str, str]]:
     result = []
     for row in rows:
         item = {str(k): "" if v is None else str(v) for k, v in row.items()}
+        item["veterinario_nome"] = str(row.get("veterinario_nome") or "").strip() or "Nome não informado"
         item["quando"] = (instant_label(row["agendada_para"]) if row.get("agendada_para")
                           else date_label(row.get("data_atendimento") or row.get("data"))) or "Não informado"
+        scheduled = instant_datetime(row.get("agendada_para"))
+        item["consulta_data_legivel"] = scheduled.strftime("%d/%m/%Y") if scheduled else item["quando"]
+        item["consulta_hora_legivel"] = scheduled.strftime("%H:%M") if scheduled else "Não informado"
         item["pet_nome"] = str(row.get("pet_nome") or ("Pet " + str(row.get("pet_id", ""))))
         item["autorizado"] = "sim" if row.get("autorizado", True) else "nao"
         item["status"] = str(row.get("status") or "legado")
@@ -127,7 +156,7 @@ def consultation_days(rows: list[dict[str, str]], current_day: str) -> list[Cons
 def pet_summary(row: dict) -> dict[str, str]:
     return {**patient_photo(row), "nome": str(row.get("nome") or "Pet"), "sexo": str(row.get("sexo") or "Não informado"),
             "nascimento": display_date(row.get("data_nasc")),
-            "peso": str(row["peso_atual"]) if row.get("peso_atual") is not None else "Não informado"}
+            "peso": weight_label(row.get("peso_atual"))}
 
 
 def consultation_summary(pet: dict, history: dict) -> dict[str, str]:
@@ -171,8 +200,10 @@ class ClinicalMixin(rx.State, mixin=True):
 
     @rx.event
     def set_booking_professional(self, value: str):
-        if not self.booking_busy and not self._booking_uncertain:
+        if (not self.booking_busy and not self._booking_uncertain
+                and any(row["id"] == value for row in self.booking_professionals)):
             self.booking_professional = value
+            self.booking_message = ""
 
     @rx.event
     def set_detail_id(self, value: str):
@@ -647,6 +678,14 @@ class ClinicalMixin(rx.State, mixin=True):
             self.booking_day = value
             self.booking_message = ""
 
+    @rx.var
+    def booking_pet_name(self) -> str:
+        return next((row["nome"] for row in self.pets if row["id"] == self.booking_pet), "Pet não selecionado")
+
+    @rx.var
+    def booking_professional_name(self) -> str:
+        return next((row["nome"] for row in self.booking_professionals if row["id"] == self.booking_professional), "Veterinário não selecionado")
+
     @rx.event
     def booking_next(self):
         if not self.booking_open or self.booking_calendar_locked:
@@ -657,6 +696,10 @@ class ClinicalMixin(rx.State, mixin=True):
                 raise ValueError
         except ValueError:
             self.booking_message = "Escolha dia e horário futuros entre 08h e 17h."
+            return
+        if (not any(row["id"] == self.booking_pet for row in self.pets)
+                or not any(row["id"] == self.booking_professional for row in self.booking_professionals)):
+            self.booking_message = "Escolha o pet e um veterinário para o atendimento."
             return
         self.booking_step = 2
         self.booking_message = ""
@@ -1146,7 +1189,8 @@ class ClinicalMixin(rx.State, mixin=True):
         self._invalidate_pdf_export()
         self.detail_id = value
         self.detail = next((dict(r) for r in self.history_rows.get("consultas", []) if r["id"] == value), {})
-        self.detail_sections = {key: [dict(r) for r in rows if r.get("consulta_id") == value]
+        day = date.fromisoformat(today())
+        self.detail_sections = {key: [care_status(r, key, day) for r in rows if r.get("consulta_id") == value]
                                 for key, rows in self.history_rows.items() if key != "consultas"}
         self.active_section = "Consultas"
 

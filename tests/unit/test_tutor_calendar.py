@@ -59,6 +59,10 @@ class TutorCalendarTests(unittest.TestCase):
         s = tutor()
         s.booking_open = True
         s.booking_day = '2099-04-03'
+        s.pets = [{'id': '1', 'nome': 'Jessy'}]
+        s.booking_pet = '1'
+        s.booking_professionals = [{'id': '2', 'nome': 'Dra. Ana'}]
+        s.booking_professional = '2'
         for hour in ('07:59', '17:01', ''):
             s.booking_time = hour
             State.booking_next.fn(s)

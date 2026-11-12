@@ -10,3 +10,6 @@ reflex.log
 .env
 .env.*
 !.env.example
+
+# Runtime logs from local visual verification
+openspec/changes/**/evidence/*.log

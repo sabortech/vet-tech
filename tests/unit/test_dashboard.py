@@ -140,7 +140,7 @@ class DashboardProjectionTests(unittest.TestCase):
         }
         projected = project_pet(row, date(2025, 2, 28))
         self.assertEqual(projected["idade"], "1 ano")
-        self.assertEqual(projected["peso"], "0")
+        self.assertEqual(projected["peso"], "0 Kg")
         self.assertEqual(projected["foto"], "https://example.invalid/luna.png")
         self.assertEqual(projected["raca"], "SRD")
         self.assertEqual(projected["proxima_vacina"], {"nome": "", "data": ""})
