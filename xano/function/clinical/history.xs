@@ -4,8 +4,16 @@ function "Clinical/history" {
   }
   stack {
     db.query consulta {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.consulta.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.consulta.pet_id == $input.pet_id
-      output = ["id", "pet_id", "veterinario_id", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto", "versao"]
+      output = ["id", "pet_id", "veterinario_id", "veterinario_nome", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto", "versao"]
       sort = {
         consulta.data_atendimento: "desc"
       }
@@ -14,29 +22,61 @@ function "Clinical/history" {
       }
     } as $consultations
     db.query vacina {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.vacina.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.vacina.pet_id == $input.pet_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "vacina", "lote", "data_aplicacao", "data_prox_dose"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "vacina", "lote", "data_aplicacao", "data_prox_dose"]
       return = {
         type: "list"
       }
     } as $vacina
     db.query medicamento {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.medicamento.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.medicamento.pet_id == $input.pet_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "nome", "dosagem", "dose", "unidade", "frequencia", "via", "tipo", "data_inicio", "data_fim"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "nome", "dosagem", "dose", "unidade", "frequencia", "via", "tipo", "data_inicio", "data_fim"]
       return = {
         type: "list"
       }
     } as $medicamento
     db.query exame {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.exame.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.exame.pet_id == $input.pet_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "tipo", "status", "data_solicitacao", "data_realizacao", "data", "resultado"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "tipo", "status", "data_solicitacao", "data_realizacao", "data", "resultado"]
       return = {
         type: "list"
       }
     } as $exame
     db.query consulta_doenca {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.consulta_doenca.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.consulta_doenca.pet_id == $input.pet_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "doenca_id", "data_diagnostico", "estado", "observacoes", "publicado_em"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "doenca_id", "data_diagnostico", "estado", "observacoes", "publicado_em"]
       return = {
         type: "list"
       }
@@ -56,7 +96,7 @@ function "Clinical/history" {
       }
     } as $doenca
     api.lambda {
-      code = "const consultations=$var.consultations.filter(x=>x.status==='finalizada'||!x.status);\nconst ids=new Set(consultations.map(x=>x.id));\nconst visible=rows=>rows.filter(x=>!x.consulta_id||ids.has(x.consulta_id));\nconst vaccines=visible($var.vacina), medications=visible($var.medicamento), exams=visible($var.exame), evolutions=visible($var.consulta_doenca);\nconst diseases=new Map($var.doenca.map(x=>[x.id,x]));\nconst evolutionById=new Map(evolutions.map(x=>[x.id,x]));\nconst conditions=$var.pet_doenca.filter(x=>evolutionById.has(x.consulta_doenca_id)).map(x=>({...x,nome:diseases.get(x.doenca_id)?.nome||'Doença',consulta_id:evolutionById.get(x.consulta_doenca_id).consulta_id,veterinario_id:evolutionById.get(x.consulta_doenca_id).veterinario_id}));\nconst legacy=$var.doenca.filter(x=>x.pet_id===$input.pet_id).map(x=>({...x,legado:true}));\nreturn {consultas:consultations,vacinas:vaccines,medicamentos:medications,exames:exams,diagnosticos:evolutions.map(x=>({...x,nome:diseases.get(x.doenca_id)?.nome||'Doença'})),doencas:[...conditions,...legacy]};"
+      code = "const consultations=$var.consultations.filter(x=>x.status==='finalizada'||!x.status);\nconst ids=new Set(consultations.map(x=>x.id));\nconst visible=rows=>rows.filter(x=>!x.consulta_id||ids.has(x.consulta_id));\nconst vaccines=visible($var.vacina), medications=visible($var.medicamento), exams=visible($var.exame), evolutions=visible($var.consulta_doenca);\nconst diseases=new Map($var.doenca.map(x=>[x.id,x]));\nconst evolutionById=new Map(evolutions.map(x=>[x.id,x]));\nconst conditions=$var.pet_doenca.filter(x=>evolutionById.has(x.consulta_doenca_id)).map(x=>({...x,nome:diseases.get(x.doenca_id)?.nome||'Doença',consulta_id:evolutionById.get(x.consulta_doenca_id).consulta_id,veterinario_id:evolutionById.get(x.consulta_doenca_id).veterinario_id,veterinario_nome:evolutionById.get(x.consulta_doenca_id).veterinario_nome}));\nconst legacy=$var.doenca.filter(x=>x.pet_id===$input.pet_id).map(x=>({...x,legado:true}));\nreturn {consultas:consultations,vacinas:vaccines,medicamentos:medications,exames:exams,diagnosticos:evolutions.map(x=>({...x,nome:diseases.get(x.doenca_id)?.nome||'Doença'})),doencas:[...conditions,...legacy]};"
       timeout = 5
     } as $history
   }

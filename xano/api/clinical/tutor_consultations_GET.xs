@@ -11,8 +11,16 @@ query "tutor/consultas" verb=GET {
       }
     } as $owned
     db.query consulta {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.consulta.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.consulta.pet_id == $owned.id
-      output = ["id", "pet_id", "veterinario_id", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto", "versao"]
+      output = ["id", "pet_id", "veterinario_id", "veterinario_nome", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto", "versao"]
       sort = {
         consulta.agendada_para: "asc"
       }
@@ -21,7 +29,7 @@ query "tutor/consultas" verb=GET {
       }
     } as $rows
     api.lambda {
-      code = "return $var.rows.map(r=>r.status===\"finalizada\"||!r.status?r:{id:r.id,pet_id:r.pet_id,veterinario_id:r.veterinario_id,status:r.status,agendada_para:r.agendada_para,motivo:r.motivo});"
+      code = "return $var.rows.map(r=>r.status===\"finalizada\"||!r.status?r:{id:r.id,pet_id:r.pet_id,veterinario_id:r.veterinario_id,veterinario_nome:r.veterinario_nome,status:r.status,agendada_para:r.agendada_para,motivo:r.motivo});"
       timeout = 5
     } as $reply
   }

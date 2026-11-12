@@ -1,0 +1,11 @@
+{
+  "layout": "desktop/mobile and light/dark without horizontal overflow",
+  "card_radius": "18px",
+  "interaction_filters": {
+    "red-action": "drop-shadow(color(srgb 1 0.321569 0.321569 / 0.6) 0px 0px 3px) drop-shadow(color(srgb 1 0.321569 0.321569 / 0.38) 0px 0px 10px)",
+    "disabled-action": "none",
+    "readonly-field": "none"
+  },
+  "keyboard_focus": "halo visible",
+  "scope": "local visual fixture with production CSS"
+}

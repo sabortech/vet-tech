@@ -1484,7 +1484,7 @@ html .attendance-date-select-menu .vet-date-select-option[data-highlighted] { ba
 .attendance-page .rt-SelectTrigger[data-placeholder] { color: var(--vet-muted); }
 
 /* Global command shape, including portals and inline-styled buttons. */
-:is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not(.dashboard-selected-pet):not(.dashboard-pet-vaccines):not(.tutor-calendar-dialog button):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
+:is(button, input[type="button"], input[type="submit"], input[type="reset"], a.rt-Button, [role="button"]):not(#vettech-mascote):not(.pet-booking-choice-card):not(.dashboard-selected-pet):not(.dashboard-pet-vaccines):not(.tutor-calendar-dialog button):not([role="switch"]):not([role="checkbox"]):not([role="radio"]) {
   border-radius: var(--vt-radius-pill, 999px) !important;
 }
 
@@ -2192,7 +2192,55 @@ html[data-vt-theme="dark"] .medication-art { background-image: linear-gradient(#
 .consultation-detail { display: flex; flex-direction: column; gap: 22px; }
 .consultation-card { min-width: 0; overflow-wrap: anywhere; }
 .consultation-card .medication-title-icon { width: 64px; height: 64px; border-radius: 18px; }
+.consultation-card-title { margin: 0 0 20px; color: var(--vt-text); font-weight: 700; }
+.consultation-date-time { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.consultation-date-time .medication-field { align-items: center; }
+.consultation-date-time .medication-field > :not(.medication-field-icon) { display: flex; flex-direction: column; gap: 2px; }
+.consultation-date-time :is(.medication-field-label, .medication-field-value) { margin: 0; }
+.consultation-date-time .medication-field-value { font-size: 20px; font-weight: 700; }
+/* Only unpublished tutor consultations receive a status palette. */
+.consultation-card[data-status="agendada"] { --consultation-card-color: #ff5252; --consultation-card-accent: #b42318; }
+.consultation-card[data-status="em_atendimento"] { --consultation-card-color: #facc15; --consultation-card-accent: #805000; }
+html[data-vt-theme="dark"] .consultation-card[data-status="agendada"] { --consultation-card-accent: #ff8a80; }
+html[data-vt-theme="dark"] .consultation-card[data-status="em_atendimento"] { --consultation-card-accent: #facc15; }
+.vaccine-record-card.consultation-card:is([data-status="agendada"], [data-status="em_atendimento"]) {
+  --vt-led-color: var(--consultation-card-color);
+  --vt-led-glow: drop-shadow(0 0 2px var(--vt-led-color)) drop-shadow(0 0 6px color-mix(in srgb, var(--vt-led-color) 40%, transparent));
+  --vt-green: var(--consultation-card-accent);
+  --vt-icon-bg: color-mix(in srgb, var(--vt-surface) 84%, var(--consultation-card-color));
+  --vt-border: color-mix(in srgb, var(--vt-surface) 55%, var(--consultation-card-color));
+  background: color-mix(in srgb, var(--vt-surface) 90%, var(--consultation-card-color));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--vt-led-color) 18%, transparent),
+              0 5px 18px -4px color-mix(in srgb, var(--vt-led-color) 32%, transparent),
+              0 0 24px -8px color-mix(in srgb, var(--vt-led-color) 22%, transparent);
+}
+.consultation-card:is([data-status="agendada"], [data-status="em_atendimento"]) :is(.medication-field-icon, .disease-status) { color: var(--consultation-card-accent); }
+html .consultation-card:is([data-status="agendada"], [data-status="em_atendimento"]) .vaccine-art-symbol {
+  background: color-mix(in srgb, var(--vt-surface) 65%, transparent);
+  color: var(--consultation-card-accent);
+  border-color: var(--vt-border);
+  box-shadow: 0 14px 40px color-mix(in srgb, var(--consultation-card-color) 15%, transparent), inset 0 0 0 10px color-mix(in srgb, var(--consultation-card-color) 10%, transparent);
+}
+.consultation-card:is([data-status="agendada"], [data-status="em_atendimento"]) .vaccine-art-symbol > svg { filter: drop-shadow(0 4px 2px color-mix(in srgb, var(--consultation-card-color) 10%, transparent)); }
 .consultation-list-fields { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; margin-top: 28px; }
+.consultation-card .vaccine-record-footer { margin-top: 16px; }
+.consultation-care { min-width: 0; --care-color: #94a3b8; --care-accent: #475569; }
+.consultation-care[data-care-tone="red"] { --care-color: #ff5252; --care-accent: #b42318; }
+.consultation-care[data-care-tone="yellow"] { --care-color: #facc15; --care-accent: #805000; }
+.consultation-care[data-care-tone="green"] { --care-color: #69ca49; --care-accent: #276426; }
+html[data-vt-theme="dark"] .consultation-care { --care-accent: var(--care-color); }
+.consultation-detail .consultation-care > .vaccine-record-card {
+  --vt-led-color: var(--care-color);
+  --vt-led-glow: drop-shadow(0 0 2px var(--care-color)) drop-shadow(0 0 6px color-mix(in srgb, var(--care-color) 40%, transparent));
+  --vt-green: var(--care-accent);
+  --vt-icon-bg: color-mix(in srgb, var(--vt-surface) 84%, var(--care-color));
+  --vt-border: color-mix(in srgb, var(--vt-surface) 55%, var(--care-color));
+  background: color-mix(in srgb, var(--vt-surface) 93%, var(--care-color));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--care-color) 18%, transparent), 0 5px 18px -4px color-mix(in srgb, var(--care-color) 32%, transparent), 0 0 24px -8px color-mix(in srgb, var(--care-color) 22%, transparent);
+}
+.consultation-care .disease-status { color: var(--care-accent); border-color: var(--vt-border); }
+html .consultation-care .vaccine-art-symbol { color: var(--care-accent); background: color-mix(in srgb, var(--vt-surface) 65%, transparent); border-color: var(--vt-border); box-shadow: inset 0 0 0 10px color-mix(in srgb, var(--care-color) 10%, transparent); }
+.consultation-care .vaccine-art-symbol > svg { filter: none; }
 .consultation-art { min-height: 280px; }
 .consultations-content .medication-field-label, .consultations-content .medication-field-value { display: block; }
 .consultations-content .medication-field-value { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -2380,4 +2428,65 @@ html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection
  .pdf-preview-pages { padding: 8px; }
  .pdf-preview-actions { padding-top: 12px; }
  .pdf-preview-actions > button { flex: 1; }
+}
+
+
+/* Consultation preparation: fixed card geometry, independent of theme buttons. */
+.pet-booking-choice-dialog {
+  position:relative; max-height:calc(100dvh - 48px); overflow:visible!important;
+  border:1px solid var(--vt-border); border-radius:26px!important;
+  background:var(--vt-surface); color:var(--vt-text);
+  box-shadow:0 24px 90px rgb(0 0 0 / 28%);
+}
+.pet-booking-choice-body { padding:36px; max-height:calc(100dvh - 50px); overflow-y:auto; overflow-x:hidden; border-radius:25px; }
+.pet-booking-choice-close { position:absolute; top:12px; right:12px; z-index:4; color:var(--vt-muted); }
+.pet-booking-choice-header { padding-right:30px; margin-bottom:28px; }
+.pet-booking-choice-copy { min-width:0; }
+.pet-booking-choice-title { font-size:clamp(25px, 3vw, 32px); line-height:1.2; letter-spacing:-.035em; margin:16px 0 12px; }
+.pet-booking-choice-description { color:var(--vt-muted); line-height:1.6; }
+.pet-booking-choice-turtle { position:absolute; z-index:3; left:-125px; top:115px; width:160px; height:235px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 8px 9px rgb(0 0 0 / 18%)); }
+.pet-booking-choice-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:22px; min-width:0; }
+.pet-booking-choice-card {
+  box-sizing:border-box; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;
+  gap:18px; width:100%; max-width:100%; height:auto; min-height:290px; min-width:0; padding:26px;
+  white-space:normal; overflow-wrap:anywhere; text-align:left; font:inherit;
+  color:var(--vt-text); background:var(--vt-icon-bg);
+  border:1px solid var(--vt-border); border-radius:18px; cursor:pointer;
+  box-shadow:0 8px 24px rgb(30 70 30 / 8%); transition:box-shadow .18s ease, border-color .18s ease;
+}
+.pet-booking-choice-card--new { background:var(--vt-field-bg); }
+.pet-booking-choice-card:hover { border-color:var(--vt-green); box-shadow:0 0 0 1px var(--vt-green), 0 0 28px color-mix(in srgb, var(--vt-green) 38%, transparent); }
+.pet-booking-choice-card:focus-visible, .pet-booking-choice-close:focus-visible { outline:3px solid var(--vt-focus); outline-offset:4px; }
+.pet-booking-choice-icon { display:flex; align-items:center; justify-content:center; width:54px; height:54px; flex-shrink:0; border-radius:14px; background:var(--vt-surface); color:var(--vt-green); }
+.pet-booking-choice-card > * { max-width:100%; min-width:0; margin:0; white-space:normal; }
+.pet-booking-choice-card-title { font-size:20px; font-weight:700; line-height:1.3; }
+.pet-booking-choice-card-description { color:var(--vt-muted); font-size:14px; font-weight:400; line-height:1.6; }
+.pet-booking-choice-action { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; margin-top:auto!important; padding-top:8px; color:var(--vt-green); font-size:14px; font-weight:600; }
+.pet-booking-choice-action svg { flex-shrink:0; }
+.pet-booking-choice-note { margin-top:24px; color:var(--vt-muted); font-size:13px; line-height:1.6; text-align:center; }
+@media(max-width:1100px) { .pet-booking-choice-turtle { left:-50px; top:55px; width:85px; height:135px; } }
+@media(max-width:620px) {
+  .pet-booking-choice-body { padding:28px 24px; }
+  .pet-booking-choice-header { padding-right:8px; }
+  .pet-booking-choice-turtle { left:-20px; top:48px; width:48px; height:88px; }
+  .pet-booking-choice-grid { grid-template-columns:1fr; gap:16px; }
+  .pet-booking-choice-card { min-height:250px; padding:22px; }
+}
+@media(prefers-reduced-motion:reduce) { .pet-booking-choice-card { transition:none; } }
+
+/* Interaction light follows the nearest clinical/status/action color. */
+:where(button, a[href], input:not([type="hidden"]), textarea, select,
+       [role="button"], [role="option"], [role="tab"], [role="checkbox"],
+       [role="radio"], [role="switch"], summary) {
+  --interaction-light: var(--care-color, var(--consultation-accent, var(--dose-led, var(--vt-led-color, var(--vt-green)))));
+}
+/* Explicit action colors take priority over the surrounding status. */
+:where(button, a[href], input, textarea, select, [role="button"])[data-accent-color] {
+  --interaction-light: var(--accent-9, var(--vt-green));
+}
+:where(button, a[href], input:not([type="hidden"]), textarea, select,
+       [role="button"], [role="option"], [role="tab"], [role="checkbox"],
+       [role="radio"], [role="switch"], summary):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([data-disabled]):not([readonly]):not([aria-readonly="true"]):not([tabindex="-1"][aria-hidden="true"]):is(:hover, :focus-visible) {
+  filter:drop-shadow(0 0 3px color-mix(in srgb, var(--interaction-light) 60%, transparent))
+         drop-shadow(0 0 10px color-mix(in srgb, var(--interaction-light) 38%, transparent));
 }

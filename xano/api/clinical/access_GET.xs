@@ -11,8 +11,16 @@ query "tutor/pets/{pet_id}/acessos" verb=GET {
       }
     } as $owned
     db.query acesso_autorizado {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.acesso_autorizado.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.acesso_autorizado.pet_id == $owned.id
-      output = ["id", "pet_id", "veterinario_id", "status", "concedido_em", "revogado_em"]
+      output = ["id", "pet_id", "veterinario_id", "veterinario_nome", "status", "concedido_em", "revogado_em"]
       return = {
         type: "list"
       }

@@ -11,8 +11,16 @@ query "tutor/pets/{pet_id}/auditoria" verb=GET {
       }
     } as $owned
     db.query log_acesso {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.log_acesso.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.log_acesso.pet_id == $owned.id
-      output = ["id", "veterinario_id", "tutor_id", "consulta_id", "acao", "ocorrido_em", "data_hora"]
+      output = ["id", "veterinario_id", "veterinario_nome", "tutor_id", "consulta_id", "acao", "ocorrido_em", "data_hora"]
       sort = {
         log_acesso.ocorrido_em: "desc"
       }

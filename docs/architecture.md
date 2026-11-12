@@ -65,7 +65,7 @@ atual seja reescrita antes de continuar o desenvolvimento.
   fuso America/Sao_Paulo. `components/date_input.py` confirma a data selecionada
   em formato brasileiro e compartilha o painel de calendário com seletores de mês/ano
   e LED SVG entre agenda, atendimento, agendamento do tutor e nascimento do pet.
-  O agendamento integra dia e horário na primeira etapa e bloqueia dias passados;
+  O agendamento integra pet, veterinário compatível, dia e horário na primeira etapa e bloqueia dias passados;
   a data escolhida é espelhada em um campo somente leitura junto ao horário,
   sem preencher automaticamente a hora da consulta;
   o nascimento mantém seu rascunho ISO, bloqueia dias futuros e permite limpar
@@ -135,7 +135,7 @@ sem cortar os textos. O fundo local
 O filtro do Dashboard é independente de
 `selected_pet_id`; somente uma ação explícita de agendamento ou navegação para o
 prontuário define o pet de contexto da ação. As projeções derivam idade e mensagens
-de acompanhamento dos registros consultados, sem inferir unidade do peso, saúde
+de acompanhamento dos registros consultados, com peso cadastrado apresentado em Kg, sem inferir saúde
 geral ou cuidados completos. Falhas de leitura permanecem distintas do estado vazio.
 O endpoint fonte está em `xano/api/clinical/tutor/dashboard_GET.xs`, no grupo
 `Clinical`, e precisa estar publicado no ambiente Xano usado pela aplicação.
@@ -255,7 +255,7 @@ O Prontuário selecionado compõe um hero com foto circular de borda neutra
 fina, nome, espécie/raça e mascote existente, seguido por cinco cartões de
 sexo, nascimento, peso, pelagem e microchip. A projeção autorizada acrescenta
 foto validada e nascimento legível mantendo a data bruta e valores zero.
-Peso mantém a unidade conforme o registro, sem inferência. CSS pet-record-*
+Peso cadastrado usa Kg, conforme a convenção do atendimento; valores ausentes ficam como “Não informado”, sem unidade solta. CSS pet-record-*
 limita a apresentação ao Prontuário, com tema escuro e composição móvel;
 loading, erro, voltar, agendar e atualizar usam os fluxos existentes.
 
@@ -407,3 +407,9 @@ clínicos não foram alterados por esta otimização.
 `components/consultation_pdf.py` concentra o diálogo comum aos perfis tutor e veterinário, com um único exemplar por página relevante. Os acionadores do cabeçalho tutor, confirmação do atendimento e cartões profissionais usam o mesmo estado clínico e DTO. O estado serializado guarda título, estados de carregamento e token de instância; bytes de PDF, assinatura do DTO e operação permanecem privados. Um evento efêmero entrega os bytes ao PDF.js local, sem URL pública ou armazenamento no navegador. Fechar/desmontar invalida a geração e limpa os campos da prévia. ReportLab gera a prévia em thread com os limites existentes; a confirmação revalida acesso e conteúdo e reutiliza os bytes privados quando iguais. O visualizador renderiza páginas progressivamente e destrói o documento ao fechar.
 
 GET de prévia e POST de exportação são operações distintas e auditadas; a função `Clinical/consultation_document` em `xano/function/clinical/` monta somente o recorte da consulta publicada após autorização do chamador. O médico permanece na confirmação após finalizar para poder baixar, sem redirecionar e recarregar a agenda; o catálogo de edição não é carregado para atendimentos finalizados. Deduplicação limita a uma leitura por painel aberto e uma exportação pendente, sem cache global de dados clínicos.
+
+O agendamento do tutor apresenta pet e veterinário no painel inicial do calendário. Trocar o pet limpa o profissional e atualiza os médicos compatíveis; respostas antigas são descartadas. A segunda etapa resume os nomes e solicita motivo e confirmação com aviso de acesso prévio. O vínculo é por consulta, permitindo pets com médicos diferentes e novos médicos em consultas futuras, conforme autorização do tutor.
+
+A orientação clínica sem pet inclui o convite “Gostaria de agendar uma consulta?” abaixo da seleção existente. O diálogo local em `components/pets.py` reutiliza a tartaruga e oferece dois cards: Mudar pet pelo handler existente ou cadastro em Meus Pets (`/`). Não cria sessão, consulta ou nova leitura; os cards ficam em duas colunas e se empilham em telas estreitas.
+
+O painel de orientação mantém a tartaruga na borda externa junto ao LED, conteúdo rolável internamente e cards HTML retangulares de raio 18px, excluídos do arredondamento global de botões. O realce dos controles habilitados usa `--interaction-light`, priorizando cor explícita da ação, status clínico, consulta, prazo de vacina e verde padrão. Hover e foco usam halo por drop-shadow para preservar sombras existentes; controles desabilitados e somente leitura não recebem o halo.

@@ -7,8 +7,16 @@ function "Clinical/consultation_document" {
   }
   stack {
     db.query consulta {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.consulta.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.consulta.id == $input.consulta_id && $db.consulta.pet_id == $input.pet_id
-      output = ["id", "pet_id", "veterinario_id", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto"]
+      output = ["id", "pet_id", "veterinario_id", "veterinario_nome", "status", "agendada_para", "iniciada_em", "finalizada_em", "motivo", "data_atendimento", "data", "diagnostico", "obs", "retorno_previsto"]
       return = {type: "single"}
     } as $consult
     precondition ($consult != null) {
@@ -20,31 +28,62 @@ function "Clinical/consultation_document" {
       error = "Somente consultas finalizadas podem ser exportadas."
     }
     db.query vacina {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.vacina.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.vacina.pet_id == $input.pet_id && $db.vacina.consulta_id == $input.consulta_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "vacina", "lote", "data_aplicacao", "data_prox_dose"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "vacina", "lote", "data_aplicacao", "data_prox_dose"]
       return = {
         type: "list"
       }
     } as $vacina
     db.query medicamento {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.medicamento.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.medicamento.pet_id == $input.pet_id && $db.medicamento.consulta_id == $input.consulta_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "nome", "dosagem", "dose", "unidade", "frequencia", "via", "tipo", "data_inicio", "data_fim"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "nome", "dosagem", "dose", "unidade", "frequencia", "via", "tipo", "data_inicio", "data_fim"]
       return = {
         type: "list"
       }
     } as $medicamento
     db.query exame {
+      join = {
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.exame.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome}
       where = $db.exame.pet_id == $input.pet_id && $db.exame.consulta_id == $input.consulta_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "tipo", "status", "data_solicitacao", "data_realizacao", "data", "resultado"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "tipo", "status", "data_solicitacao", "data_realizacao", "data", "resultado"]
       return = {
         type: "list"
       }
     } as $exame
     db.query consulta_doenca {
-      join = {doenca: {table: "doenca", where: $db.consulta_doenca.doenca_id == $db.doenca.id}}
-      eval = {nome: $db.doenca.nome}
+      join = {
+        doenca: {table: "doenca", where: $db.consulta_doenca.doenca_id == $db.doenca.id}
+        veterinario: {
+          table: "veterinario"
+          type: "left"
+          where: $db.consulta_doenca.veterinario_id == $db.veterinario.id
+        }
+      }
+      eval = {veterinario_nome: $db.veterinario.nome, nome: $db.doenca.nome}
       where = $db.consulta_doenca.pet_id == $input.pet_id && $db.consulta_doenca.consulta_id == $input.consulta_id
-      output = ["id", "pet_id", "consulta_id", "veterinario_id", "doenca_id", "data_diagnostico", "estado", "observacoes", "publicado_em", "nome"]
+      output = ["id", "pet_id", "consulta_id", "veterinario_id", "veterinario_nome", "doenca_id", "data_diagnostico", "estado", "observacoes", "publicado_em", "nome"]
       return = {
         type: "list"
       }
