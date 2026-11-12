@@ -19,6 +19,7 @@ class ChatReply:
     ok: bool
     reply: str
     error_code: str = ""
+    handoff_reason: str = ""
 
     @property
     def session_invalid(self) -> bool:
@@ -78,7 +79,17 @@ def _parse(response: httpx.Response, request_id: str, conversation_id: str,
             or any(secret and secret in reply for secret in secrets)):
         return failure()
     if response.status_code == 200 and body.get("ok") is True and body.get("error") is None:
-        return ChatReply(True, reply.strip())
+        handoff = body.get("handoff")
+        reason = ""
+        if handoff is not None:
+            if (not isinstance(handoff, dict) or set(handoff) != {"type", "reason"}
+                    or handoff.get("type") != "veterinary"
+                    or not isinstance(handoff.get("reason"), str)
+                    or not 1 <= len(handoff["reason"].strip()) <= 1000
+                    or any(secret and secret in handoff["reason"] for secret in secrets)):
+                return failure()
+            reason = handoff["reason"].strip()
+        return ChatReply(True, reply.strip(), handoff_reason=reason)
     error = body.get("error")
     if body.get("ok") is not False or not isinstance(error, dict):
         return failure()

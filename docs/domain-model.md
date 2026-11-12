@@ -10,6 +10,42 @@ a validação sintática isolada não comprova autorização ou rollback.
 O VetTech é um sistema que atende clínicas veterinárias, veterinários e tutores de pets, com o objetivo de centralizar o histórico de saúde dos animais.
 
 ## Regras do Sistema
+
+### Chamado de atendimento por chat
+
+`support_ticket` pertence a exatamente um tutor e um pet e tem no máximo um
+veterinário responsável. `conversation_id` é único: repetir encaminhamento da
+mesma conversa recupera o chamado, sem criar outro. Estados: `aguardando`,
+`em_atendimento` e `encerrado`. Não há vínculo automático com consulta clínica.
+
+O contexto do bot confirmado fica em `context`, separado das mensagens humanas
+append-only em `messages`. Cada mensagem contém operação UUID, autor/perfil,
+texto e timestamp confirmado pelo servidor. `events` preserva criação, assunção,
+envios e encerramento com sequência, ator e horário; eventos de envio não
+duplicam o texto da mensagem. São internos ao agregado, sem CRUD público de
+edição ou exclusão. Avisos internos derivam desses eventos persistentes.
+
+`support_lock` é exclusivamente técnico: a chave única é inserida e removida na
+mesma transação para serializar criação por conversa e operações por chamado.
+Não contém histórico nem concede acesso clínico. A propriedade atual do pet é
+revalidada em cada operação; mudança de tutor não transfere conversas antigas.
+
+```mermaid
+erDiagram
+    TUTOR ||--o{ SUPPORT_TICKET : solicita
+    PET ||--o{ SUPPORT_TICKET : contexto
+    VETERINARIO |o--o{ SUPPORT_TICKET : assume
+    SUPPORT_TICKET {
+        int tutor_id FK
+        int pet_id FK
+        int veterinario_id FK
+        text conversation_id UK
+        text status
+        json context
+        json messages
+        json events
+    }
+```
  
 Cada tutor se cadastra no sistema informando nome, CPF, e-mail, telefone, endereço e senha. Um tutor pode possuir um ou mais pets. 
 

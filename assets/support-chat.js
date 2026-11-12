@@ -52,6 +52,156 @@
   let pending = false, lastQuestion = '', errorRow, responseTimer, generation = 0;
   let conversation = [], history = [], sessionKey = session().key;
   let conversationId = '', activeRequest = null;
+  let supportPending = null, humanTicket = null, supportTimer, supportPanel, supportStatus;
+  let supportRetry = null, offeredHandoff = false;
+  let renderedSupportVersion = '';
+  let supportListVisible = false;
+  let supportRetryAt = 0;
+  const seenSupportEvents = new Set();
+  const supportNotices = new Map();
+  function supportMode(mode) {
+    if(!dialog)return;
+    bannerVideo.parentElement.style.display=mode?'none':'';
+    dialog.querySelector('.vt-chat-chips').style.display=mode?'none':'';
+    supportPanel.style.flex=mode==='list'?'1':'0 1 auto';
+    supportPanel.style.minHeight='0';
+    supportPanel.style.maxHeight=mode==='list'?'none':'25vh';
+    log.hidden=mode==='list';footer.hidden=mode==='list';
+    footer.querySelector('.vt-chat-notice').textContent=mode?'Atendimento por texto. Acesso ao prontuário depende de autorização.':'Sou um assistente do sistema, não substituo o veterinário.';
+    if(mode)bannerVideo.pause();else if(dialog.open)bannerVideo.play().catch(()=>{});
+    requestAnimationFrame(updateLedPath);
+  }
+  function supportAction(action, fields = {}, retry = null) {
+    if (!session().key) {supportStatus.textContent='Entre como tutor ou veterinário para acessar atendimentos.';return;}
+    if (supportPending) return;
+    const requestId = crypto.randomUUID();
+    const operationId = retry?.operation_id || crypto.randomUUID();
+    const payload = {request_id:requestId, operation_id:operationId, ...fields};
+    supportPending = {requestId, action, fields:{...fields}, operation_id:operationId};
+    if(humanTicket){submit.disabled=true;if(action==='send'){input.disabled=true;input.value='';}}
+    if (supportStatus && action !== 'get') supportStatus.textContent = 'Carregando atendimento…';
+    clearTimeout(supportTimer);
+    supportTimer = setTimeout(() => supportFailure('Não foi possível confirmar a operação. Tente novamente.'), 30000);
+    try { bridge('support_' + action, payload); }
+    catch (_) { supportFailure('Não foi possível conectar. Tente novamente.'); }
+  }
+  function supportFailure(text) {
+    clearTimeout(supportTimer);
+    supportRetry = supportPending; supportPending = null;
+    supportRetryAt=Date.now()+15000;
+    if(humanTicket?.status==='em_atendimento'){
+      submit.disabled=false;input.disabled=false;
+      if(supportRetry?.action==='send'&&!input.value)input.value=supportRetry.fields.message;
+    }
+    supportStatus.replaceChildren(node('span','',text));
+    if (supportRetry) {
+      const retry=node('button','vt-chat-chip','Tentar atendimento novamente'); retry.type='button';
+      retry.onclick=()=>{const old=supportRetry; supportAction(old.action,old.fields,old);};
+      supportStatus.append(retry);
+    }
+  }
+  function supportButton(label, action) {
+    const b=node('button','vt-chat-chip',label); b.type='button'; b.onclick=action; return b;
+  }
+  function offerHandoff() {
+    offeredHandoff=true;
+    supportPanel.replaceChildren(node('p','','O assistente recomenda atendimento veterinário. Selecione o pet e confirme o compartilhamento desta conversa. Isso não libera o prontuário.'));
+    supportAction('list');
+  }
+  function handoffForm(pets) {
+    if(!offeredHandoff) return;
+    const box=node('section');
+    box.append(node('p','','O assistente recomenda atendimento veterinário. Confirme o pet e o compartilhamento desta conversa. Isso não libera o prontuário.'));
+    const select=node('select'); select.setAttribute('aria-label','Pet do atendimento');
+    const placeholder=node('option','','Selecione o pet');placeholder.value='';placeholder.disabled=true;placeholder.selected=true;select.append(placeholder);
+    for(const pet of pets||[]) { const option=node('option','',pet.name); option.value=pet.id; select.append(option); }
+    const label=node('label'); const consent=node('input'); consent.type='checkbox';
+    label.append(consent,document.createTextNode('Autorizo compartilhar esta conversa com o veterinário que assumir.'));
+    box.append(select,label,supportButton('Confirmar encaminhamento',()=>{
+      if(!consent.checked||!select.value) {supportStatus.textContent='Escolha seu pet e confirme o compartilhamento.';return;}
+      supportAction('create',{pet_id:Number(select.value),consent:true});
+    }),supportButton('Continuar com o assistente',()=>{
+      offeredHandoff=false;supportListVisible=false;supportPanel.replaceChildren();
+      supportMode(false);showConversation();input.disabled=false;submit.disabled=false;
+    }));
+    if(!pets?.length)box.append(node('p','','Cadastre um pet antes de solicitar atendimento.'));
+    supportPanel.append(box);
+  }
+  function renderTicket(ticket) {
+    supportListVisible=false;
+    const version=JSON.stringify(ticket);
+    if(humanTicket?.id===ticket.id && renderedSupportVersion===version){
+      const vet=ticket.veterinarian;
+      supportStatus.textContent=`${ticket.pet.name} · ${ticket.status}${vet?' · '+vet.name+' · CRMV '+vet.crmv+'/'+vet.uf:''}`;
+      input.disabled=ticket.status!=='em_atendimento';submit.disabled=input.disabled;
+      return;
+    }
+    const previousId=humanTicket?.id, draft=input.value;
+    const reasonDraft=supportPanel.querySelector('input')?.value||'';
+    humanTicket=ticket;renderedSupportVersion=version;offeredHandoff=false;
+    supportMode('ticket');
+    if(previousId!==ticket.id)cancelResponse();
+    historyView.hidden=true;log.hidden=false;footer.hidden=false;log.replaceChildren();
+    if(previousId===ticket.id)input.value=draft;
+    const vet=ticket.veterinarian;
+    supportStatus.textContent=`${ticket.pet.name} · ${ticket.status}${vet?' · '+vet.name+' · CRMV '+vet.crmv+'/'+vet.uf:''}`;
+    supportPanel.replaceChildren(supportButton('Meus atendimentos / fila',()=>supportAction('list')));
+    for(const row of ticket.context||[])message(`${row.role==='assistant'?'Assistente':'Tutor'}: ${row.content}`,false,false);
+    for(const row of ticket.messages||[])message(`${row.author_profile==='tutor'?'Tutor':'Veterinário'}: ${row.text}`,row.author_profile===session().key.split(':')[0],false,row.at);
+    for(const event of ticket.events||[]) {
+      const key=ticket.id+':'+event.id;
+      seenSupportEvents.add(key);
+      supportNotices.delete(key);
+      if(event.action==='claim')message('Veterinário assumiu o atendimento.',false,false,event.at);
+      if(event.action==='close')message('Atendimento encerrado: '+event.reason,false,false,event.at);
+    }
+    input.disabled=ticket.status!=='em_atendimento'; submit.disabled=input.disabled;
+    if(ticket.status!=='encerrado' && !supportPanel.querySelector('input')) {
+      const reason=node('input');reason.placeholder='Motivo do encerramento / orientação final';reason.maxLength=1000;
+      reason.value=previousId===ticket.id?reasonDraft:'';
+      reason.setAttribute('aria-label','Motivo do encerramento');
+      supportPanel.append(reason,supportButton(ticket.status==='aguardando'?'Cancelar chamado':'Encerrar atendimento',()=>{
+        if(!reason.value.trim()){supportStatus.textContent='Informe o motivo ou orientação final.';return;}
+        supportAction('close',{ticket_id:ticket.id,reason:reason.value,expected_status:ticket.status});
+      }));
+    }
+  }
+  window.addEventListener('vettech:support-response', event=>{
+    const data=event.detail||{};
+    if(!dialog?.open||!supportPending||data.request_id!==supportPending.requestId||data.conversation_id!==conversationId)return;
+    clearTimeout(supportTimer);
+    if(!data.ok){supportFailure(data.error||'Não foi possível concluir o atendimento.');return;}
+    supportPending=null;supportRetry=null;
+    if(data.ticket)renderTicket(data.ticket);
+    else if(data.tickets){
+      supportListVisible=true;
+      supportMode('list');
+      humanTicket=null;input.disabled=true;submit.disabled=true;
+      supportStatus.textContent='Atendimentos';supportPanel.replaceChildren();
+      supportPanel.append(supportButton('Atualizar atendimentos',()=>supportAction('list')),supportButton('Voltar ao assistente',resetConversation));
+      for(const t of data.tickets) {
+        supportPanel.append(supportButton(`#${t.id} · ${t.status}${t.own?' · Meu atendimento':''}`,()=>supportAction(t.own?'get':'claim',{ticket_id:t.id})));
+        for(const e of t.events||[]) {
+          const key=t.id+':'+e.id;
+          if(!seenSupportEvents.has(key)) {
+            seenSupportEvents.add(key);
+            if(e.action==='send'&&e.actor_profile===session().key.split(':')[0])continue;
+            supportNotices.set(key,{ticket:t.id,text:`Atendimento #${t.id}: ${e.action==='send'?'Nova mensagem':e.action==='claim'?'Veterinário assumiu':e.action==='close'?'Encerrado':'Criado'}`});
+          }
+        }
+        for(const notice of supportNotices.values())if(notice.ticket===t.id)supportPanel.append(node('p','',notice.text));
+      }
+      if(!data.tickets.length)supportPanel.append(node('p','','Nenhum atendimento disponível.'));
+      handoffForm(data.pets);
+    }
+  });
+  setInterval(()=>{
+    if(dialog?.open&&!supportPending&&supportRetry&&['get','list'].includes(supportRetry.action)&&Date.now()>=supportRetryAt){
+      supportAction(supportRetry.action,supportRetry.fields);return;
+    }
+    if(dialog?.open&&humanTicket&&!supportPending&&!supportRetry) supportAction('get',{ticket_id:humanTicket.id});
+    else if(dialog?.open&&supportListVisible&&!offeredHandoff&&!supportPending&&!supportRetry) supportAction('list');
+  },10000);
   const genericError = 'Não consegui responder agora. Tente novamente.';
   let transportReady = Boolean(window.__vetTechChatReady), bridgeQueue = [];
   function submitBridge(data) {
@@ -84,6 +234,11 @@
     input.focus();
   }
   function resetConversation() {
+    supportMode(false);
+    supportListVisible=false;
+    renderedSupportVersion='';
+    clearTimeout(supportTimer);supportPending=null;supportRetry=null;humanTicket=null;offeredHandoff=false;
+    supportPanel?.replaceChildren();if(supportStatus)supportStatus.textContent='';
     cancelResponse(); conversation = []; log.replaceChildren();
     conversationId = crypto.randomUUID();
     showConversation(); message(welcome());
@@ -108,14 +263,14 @@
     log.hidden = true; footer.hidden = true; historyView.hidden = false;
     historyButton.setAttribute('aria-expanded', 'true'); back.focus();
   }
-  function message(text, user = false, record = true) {
+  function message(text, user = false, record = true, at = null) {
     if (record) conversation.push({text, user});
     const row = node('div', `vt-chat-row${user ? ' is-user' : ''}`);
     if (!user) row.append(avatar());
     const bubble = node('div', 'vt-chat-bubble');
     bubble.append(node('p', '', text));
-    const time = node('div', 'vt-chat-time', new Intl.DateTimeFormat('pt-BR', {hour:'2-digit',minute:'2-digit'}).format(new Date()));
-    if (user) time.append(node('span', 'vt-chat-check', ' ✓✓'));
+    const time = node('div', 'vt-chat-time', new Intl.DateTimeFormat('pt-BR', {hour:'2-digit',minute:'2-digit'}).format(at ? new Date(at) : new Date()));
+    if (user) time.append(node('span', 'vt-chat-check', humanTicket ? ' ✓' : ' ✓✓'));
     bubble.append(time); row.append(bubble); log.append(row); log.scrollTop = log.scrollHeight;
     return row;
   }
@@ -127,6 +282,7 @@
     const reply = typeof result.reply === 'string' && result.reply.trim() ? result.reply : genericError;
     if (result.ok === true) {
       message(reply);
+      if(result.handoff&&session().key.startsWith('tutor:'))offerHandoff();
     } else {
       errorRow = message(reply, false, false);
       if (result.error?.code !== 'SESSION_INVALID') {
@@ -157,6 +313,13 @@
   function send(text) {
     const clean = text.trim().slice(0,1000);
     if (!clean || pending) return;
+    if(humanTicket){
+      if(humanTicket.status==='em_atendimento'&&!supportPending){
+        const retry=supportRetry?.action==='send'&&supportRetry.fields.message===clean&&supportRetry.fields.ticket_id===humanTicket.id?supportRetry:null;
+        supportAction('send',{ticket_id:humanTicket.id,message:clean},retry);input.value='';
+      }
+      return;
+    }
     lastQuestion = clean; message(clean, true); input.value = ''; respond(clean);
   }
   function close() {
@@ -195,6 +358,8 @@
     historyButton = button('Histórico de conversas', 'history', 'vt-chat-control');
     historyButton.setAttribute('aria-expanded', 'false');
     historyButton.onclick = () => historyView.hidden ? showHistory() : showConversation();
+    const supportEntry=supportButton('Atendimentos',()=>supportAction('list'));
+    head.append(supportEntry);
     head.append(back, avatar(), title, historyButton, minimize, dismiss);
     const banner = node('div', 'vt-chat-banner');
     bannerVideo = node('video', 'vt-chat-banner-video');
@@ -205,6 +370,9 @@
     bannerVideo.src = '/gifturtle.mp4';
     banner.append(bannerVideo);
     log = node('div', 'vt-chat-messages'); log.setAttribute('role', 'log'); log.setAttribute('aria-live', 'polite'); log.setAttribute('aria-label', 'Conversa com o assistente');
+    supportStatus=node('div','vt-chat-notice');supportStatus.setAttribute('role','status');
+    supportPanel=node('section');supportPanel.setAttribute('aria-label','Atendimento veterinário');
+    supportPanel.style.maxHeight='35vh';supportPanel.style.overflowY='auto';
     const chips = node('div', 'vt-chat-chips');
     for (const [label, shape] of [['Cadastrar um pet','paw'],['Ver vacinas','vaccine'],['Agendar consulta','calendar'],['Falar com a clínica','clinic']]) {
       const chip = node('button', 'vt-chat-chip'); chip.type='button'; chip.append(icon(shape),node('span','',label)); chip.onclick=()=>send(label); chips.append(chip);
@@ -216,7 +384,7 @@
     submit = button('Enviar mensagem','send','vt-chat-send'); submit.type='submit';
     form.append(input,submit); form.onsubmit=e=>{e.preventDefault();send(input.value);};
     foot.append(chips,form,node('p','vt-chat-notice','Sou um assistente do sistema, não substituo o veterinário.'));
-    dialog.append(led,head,banner,historyView,log,foot); document.body.append(dialog);
+    dialog.append(led,head,banner,supportStatus,supportPanel,historyView,log,foot); document.body.append(dialog);
     // Two continuous loops share the banner divider: a rectangular figure eight.
     // Local layout coordinates avoid the scale used by the opening animation.
     updateLedPath = () => {
@@ -268,6 +436,7 @@
       // Invalidate the previous conversation before the next authenticated request.
       try { if (conversationId) bridge('close'); } catch (_) { /* Server also guards session generation. */ }
       history = []; sessionKey = user.key;
+      seenSupportEvents.clear();supportNotices.clear();clearTimeout(supportTimer);supportPending=null;humanTicket=null;supportRetry=null;
       if (dialog) { cancelResponse(); conversation = []; log.replaceChildren(); historyView.replaceChildren(); if (dialog.open) resetConversation(); }
     }).observe(el, {attributes:true, attributeFilter:['data-chat-key','data-chat-name']});
     return true;
