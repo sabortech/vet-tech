@@ -6,6 +6,10 @@ from typing import Any
 from vet_tech.shared.xano_client import XanoRequestError, xano_request
 
 
+class SupportConfigurationError(XanoRequestError):
+    """Configuração local ausente; repetir a operação não resolve."""
+
+
 async def support_request(profile: str, token: str, payload: dict[str, Any]):
     if profile not in ("tutor", "veterinario") or not token:
         raise XanoRequestError("Sessão inválida.", 401)
@@ -13,7 +17,7 @@ async def support_request(profile: str, token: str, payload: dict[str, Any]):
     if payload.get("action") == "create":
         secret = os.getenv("SUPPORT_CHAT_BRIDGE_SECRET", "")
         if not secret:
-            raise XanoRequestError("Encaminhamento indisponível. Verifique a configuração do atendimento.")
+            raise SupportConfigurationError("O encaminhamento está indisponível por configuração. Tente mais tarde.")
         body["bridge_key"] = secret
     result = await xano_request("POST", "vettech-support", f"{profile}/chat",
                                 auth_token=token, json_payload=body)

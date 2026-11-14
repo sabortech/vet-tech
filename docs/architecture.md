@@ -189,9 +189,10 @@ O Xano verifica propriedade/participação novamente e serializa transições em
 `Support/operate`, no grupo `vettech-support`. O agregado `support_ticket`
 mantém contexto, mensagens e eventos; `support_lock` protege concorrência.
 Não se introduz serviço alternativo, autorização clínica ou consulta automática.
-O painel usa os controles existentes e consulta o atendimento ativo a cada dez
-segundos, suspendendo consultas quando fechado. Falhas de leitura usam espera
-de 15 segundos antes de nova leitura; escritas exigem retry manual idempotente.
+O painel usa os controles existentes e consulta o atendimento ativo a cada vinte
+segundos, suspendendo consultas quando fechado, em aba oculta ou encerrado.
+A lista só atualiza por ação explícita; encaminhamento consulta apenas pets.
+Falhas oferecem retry manual idempotente, sem repetir escritas automaticamente.
 Ver `docs/chat-veterinario.md` para contrato, operação e verificação.
 
 `features/support_chat/state.py` fornece o mixin de conversa do State existente;
@@ -413,3 +414,7 @@ O agendamento do tutor apresenta pet e veterinário no painel inicial do calend�
 A orientação clínica sem pet inclui o convite “Gostaria de agendar uma consulta?” abaixo da seleção existente. O diálogo local em `components/pets.py` reutiliza a tartaruga e oferece dois cards: Mudar pet pelo handler existente ou cadastro em Meus Pets (`/`). Não cria sessão, consulta ou nova leitura; os cards ficam em duas colunas e se empilham em telas estreitas.
 
 O painel de orientação mantém a tartaruga na borda externa junto ao LED, conteúdo rolável internamente e cards HTML retangulares de raio 18px, excluídos do arredondamento global de botões. O realce dos controles habilitados usa `--interaction-light`, priorizando cor explícita da ação, status clínico, consulta, prazo de vacina e verde padrão. Hover e foco usam halo por drop-shadow para preservar sombras existentes; controles desabilitados e somente leitura não recebem o halo.
+
+### Conversas privadas entre veterinário e tutor
+
+O domínio existente `features/support_chat` recebe eventos `direct_*` em sua ponte privada e usa `shared/direct_client.py` para os endpoints autenticados de conversas. `xano/function/direct/operate.xs` e `direct_conversation` mantêm pares privados independentes de `support_ticket`; nenhum identificador de pet ou contexto do assistente é compartilhado. O JavaScript adapta o DTO direto ao apresentador/compositor comum com `kind=direct`, roteando operações para a API correta e ocultando controles clínicos. O diretório de tutores é exclusivo do veterinário; o diretório de veterinários é exclusivo do tutor. Ambos retornam somente nome/ID em páginas de 20 e permitem iniciar o mesmo par privado em qualquer direção. Dados e credenciais não ficam em armazenamento persistente do navegador.

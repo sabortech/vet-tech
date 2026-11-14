@@ -2,14 +2,14 @@ import os
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from vet_tech.shared.support_client import support_request
+from vet_tech.shared.support_client import SupportConfigurationError, support_request
 from vet_tech.shared.xano_client import XanoRequestError
 
 
 class SupportClientTests(unittest.IsolatedAsyncioTestCase):
     async def test_creation_requires_private_credential(self):
         with patch.dict(os.environ, {'SUPPORT_CHAT_BRIDGE_SECRET': ''}), patch('vet_tech.shared.support_client.xano_request', AsyncMock()) as call:
-            with self.assertRaises(XanoRequestError):
+            with self.assertRaises(SupportConfigurationError):
                 await support_request('tutor', 'token', {'action': 'create'})
             call.assert_not_awaited()
 
