@@ -173,3 +173,76 @@ class ChatStateTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(call.await_count,2)
             await self.event('support_send',request_id=str(uuid4()),ticket_id=1,operation_id=operation,message='')
             self.assertEqual(call.await_count,2)
+
+    async def test_pet_selection_does_not_load_old_tickets(self):
+        self.authenticate();await self.event('open');await self.propose()
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock()) as tickets, patch('vet_tech.features.support_chat.state.xano_request',AsyncMock(return_value=[{'id':2,'nome':'Luna'}])) as pets:
+            events=await self.event('support_pets',request_id=str(uuid4()))
+            tickets.assert_not_awaited()
+            pets.assert_awaited_once()
+            self.assertIn('Luna',str(events))
+            self.assertEqual(self.state._support_human_ticket,0)
+
+    async def test_explicit_ticket_list_does_not_load_pets(self):
+        self.authenticate();await self.event('open');await self.propose()
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'tickets':[]})) as tickets, patch('vet_tech.features.support_chat.state.xano_request',AsyncMock()) as pets:
+            await self.event('support_list',request_id=str(uuid4()))
+            tickets.assert_awaited_once()
+            pets.assert_not_awaited()
+
+    async def test_missing_handoff_credential_has_specific_non_retryable_error(self):
+        self.authenticate();await self.event('open');await self.propose()
+        with patch.dict('os.environ',{'SUPPORT_CHAT_BRIDGE_SECRET':''}), patch('vet_tech.shared.support_client.xano_request',AsyncMock()) as remote:
+            events=await self.event('support_create',request_id=str(uuid4()),pet_id=2,consent=True)
+            remote.assert_not_awaited()
+            self.assertIn('indispon',str(events))
+            script=events[0].args[0][1]._var_value
+            self.assertIn('"retryable": false',script)
+            self.assertEqual(self.state._support_human_ticket,0)
+            self.assertTrue(self.state.is_authenticated)
+
+    async def test_tutor_cannot_close_active_care_through_bridge(self):
+        self.authenticate();await self.event('open')
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock()) as remote:
+            events=await self.event('support_close',request_id=str(uuid4()),ticket_id=1,
+                                    operation_id=str(uuid4()),reason='Fim',expected_status='em_atendimento')
+            remote.assert_not_awaited()
+            self.assertIn('respons',events[0].args[0][1]._var_value)
+            self.assertIn('"retryable": false',events[0].args[0][1]._var_value)
+
+    async def test_bridge_allows_tutor_cancellation_and_vet_closure(self):
+        for profile,status in [('tutor','aguardando'),('veterinario','em_atendimento')]:
+            self.authenticate(profile);await self.event('open')
+            with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':1}})) as remote:
+                await self.event('support_close',request_id=str(uuid4()),ticket_id=1,
+                                 operation_id=str(uuid4()),reason='Fim',expected_status=status)
+                remote.assert_awaited_once()
+
+    async def test_read_marker_is_forwarded_only_when_valid(self):
+        self.authenticate();await self.event('open');marker=str(uuid4())
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':1}})) as remote:
+            await self.event('support_get',request_id=str(uuid4()),ticket_id=1,read_through=marker)
+            self.assertEqual(remote.call_args.args[2]['read_through'],marker)
+            await self.event('support_get',request_id=str(uuid4()),ticket_id=1,read_through='invalid')
+            self.assertEqual(remote.await_count,1)
+
+    async def test_message_mutations_forward_only_valid_owned_operation_fields(self):
+        self.authenticate();await self.event('open');mid=str(uuid4());op=str(uuid4())
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(return_value={'ticket':{'id':1}})) as remote:
+            await self.event('support_edit',request_id=str(uuid4()),ticket_id=1,message_id=mid,operation_id=op,
+                             expected_revision=0,message=' Revisada ',author_id=999,author_profile='veterinario')
+            payload=remote.call_args.args[2]
+            self.assertEqual(payload['message'],'Revisada');self.assertEqual(payload['message_id'],mid)
+            self.assertNotIn('author_id',payload);self.assertNotIn('author_profile',payload)
+            await self.event('support_delete',request_id=str(uuid4()),ticket_id=1,message_id=mid,operation_id=op,expected_revision=True)
+            self.assertEqual(remote.await_count,1)
+            await self.event('support_delete',request_id=str(uuid4()),ticket_id=1,message_id=mid,operation_id=str(uuid4()),expected_revision=1)
+            self.assertEqual(remote.call_args.args[2]['action'],'delete')
+
+    async def test_message_conflict_does_not_offer_automatic_retry(self):
+        from vet_tech.shared.xano_client import XanoRequestError
+        self.authenticate();await self.event('open')
+        error='A mensagem foi alterada. Atualize a conversa antes de tentar novamente.'
+        with patch('vet_tech.features.support_chat.state.support_request',AsyncMock(side_effect=XanoRequestError(error,400))):
+            events=await self.event('support_edit',request_id=str(uuid4()),ticket_id=1,message_id=str(uuid4()),operation_id=str(uuid4()),expected_revision=0,message='Nova')
+            self.assertIn('"retryable": false',events[0].args[0][1]._var_value)

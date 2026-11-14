@@ -198,12 +198,13 @@ identificar a porta no log e reiniciar o backend; não parar processos de navega
 O diálogo global do assistente usa os tokens --vt-* definidos pelo tema do
 sistema. Painel, histórico, mensagens, ações e campo acompanham a preferência
 clara/escura antes da abertura e enquanto a janela está aberta, em todos os
-perfis e páginas. Não há preferência separada do chat nem alteração no transporte.
+perfis e páginas. Não há preferência separada do chat nem alteração no transporte. Os botões
+Atendimentos e Nova conversa compartilham o fundo verde do cabeçalho, sem faixa
+separada entre a identificação e a navegação.
 
-A janela aberta do chat tem traço verde luminoso com halo em percurso de oito:
-alterna a volta do cabeçalho/banner com a volta das mensagens/rodapé, passando
-pela divisória inferior do banner. O ciclo é linear (6s; 12s em movimento reduzido).
-Um ResizeObserver mantém o caminho SVG alinhado ao tamanho real do painel e banner.
+A janela aberta do chat tem traço verde luminoso com halo no perímetro externo,
+sem cruzar cabeçalho, banner ou mensagens, inclusive nos fluxos humanos. O ciclo é linear (6s; 12s em movimento reduzido).
+Um ResizeObserver mantém o caminho SVG alinhado ao tamanho real do painel.
 O SVG decorativo é único por janela, não recebe foco ou cliques e acompanha os
 cantos arredondados do painel em desktop e celular. Ao fechar/minimizar, a animação para.
 O efeito é global e independente de autenticação ou perfil.
@@ -214,7 +215,10 @@ controles ou pressionar Escape fecha o painel. Abertura e fechamento têm fade e
 leve deslocamento, desativados pela preferência de movimento reduzido.
 
 O banner `assets/gifturtle.mp4` permanece abaixo do cabeçalho e fora da rolagem
-das mensagens e do histórico. Ocupa toda a largura na proporção original 16:9,
-sem recorte; reproduz automaticamente, sem som e em loop. Fechar pausa o vídeo;
+das mensagens. Ocupa toda a largura do painel na proporção original 16:9, sem recorte;
+fica oculto e pausado no histórico e nos fluxos humanos; reproduz automaticamente, sem som e em loop. Fechar pausa o vídeo;
 reabrir retoma. A altura do chat é limitada pelo espaço acima da mascote para
 manter o painel e o campo de envio dentro da viewport.
+
+## Identidade Turtle
+A saudação local é “Oi! Eu sou a Turtle, mascote e assistente virtual do grupo Vet Tech!”. O cabeçalho do bot usa Turtle · Vet Tech; participantes humanos mantêm seus nomes. Não há chamada remota na saudação. O delta em scripts/n8n_support_handoff.json contém a identidade atualizada do assistente do tutor; aplicar a mesma orientação aos demais assistentes no workflow remoto. Publicação remota desta identidade ainda pendente por ausência do conector n8n nesta sessão.

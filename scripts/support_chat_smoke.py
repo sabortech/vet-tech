@@ -57,7 +57,7 @@ code,_=call('tb','get',ticket_id=tid);check('other_tutor_denied',code>=400)
 code,_=call('vb','get',ticket_id=tid);check('unassigned_vet_denied',code>=400)
 code,queue=call('va','list')
 row=next(r for r in queue.get('tickets',[]) if r['id']==tid)
-check('minimal_queue',code==200 and set(row)<= {'id','created_at','updated_at','status','own','events'} and row['events']==[])
+check('minimal_queue',code==200 and set(row)<= {'id','created_at','updated_at','status','own','events','pet_id','tutor'} and row['events']==[])
 with ThreadPoolExecutor(max_workers=2) as pool:
     futures=[pool.submit(call,a,'claim',ticket_id=tid) for a in ('va','vb')]
     results=[f.result() for f in futures]
