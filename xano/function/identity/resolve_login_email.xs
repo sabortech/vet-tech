@@ -11,18 +11,42 @@ function "Identity/resolve_login_email" {
       field_name = "email"
       field_value = $input.email
       output = ["id"]
+      mock = {
+        "tutor unico com reserva coerente": {id: 7}
+        "veterinario unico com reserva coerente": null
+        "sem conta em nenhum perfil": null
+        "email nos dois perfis": {id: 7}
+        "reserva divergente da identidade": {id: 7}
+        "reserva ausente": {id: 7}
+      }
     } as $tutor
 
     db.get veterinario {
       field_name = "email"
       field_value = $input.email
       output = ["id"]
+      mock = {
+        "tutor unico com reserva coerente": null
+        "veterinario unico com reserva coerente": {id: 9}
+        "sem conta em nenhum perfil": null
+        "email nos dois perfis": {id: 9}
+        "reserva divergente da identidade": null
+        "reserva ausente": null
+      }
     } as $vet
 
     db.get reserva_email {
       field_name = "email"
       field_value = $input.email
       output = ["id", "perfil", "identidade_id"]
+      mock = {
+        "tutor unico com reserva coerente": {id: -1, perfil: "tutor", identidade_id: 7}
+        "veterinario unico com reserva coerente": {id: -1, perfil: "veterinario", identidade_id: 9}
+        "sem conta em nenhum perfil": null
+        "email nos dois perfis": {id: -1, perfil: "tutor", identidade_id: 7}
+        "reserva divergente da identidade": {id: -1, perfil: "veterinario", identidade_id: 7}
+        "reserva ausente": null
+      }
     } as $reservation
 
     var $resultado {
@@ -53,4 +77,54 @@ function "Identity/resolve_login_email" {
   response = $resultado
   tags = ["vettech", "google-login"]
   guid = "FhsegRoN10Qt-rwdbd1MqDLuoAw"
+
+  test "tutor unico com reserva coerente" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "ok"
+    }
+
+    expect.to_equal ($response.perfil) {
+      value = "tutor"
+    }
+  }
+
+  test "veterinario unico com reserva coerente" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "ok"
+    }
+
+    expect.to_equal ($response.perfil) {
+      value = "veterinario"
+    }
+  }
+
+  test "sem conta em nenhum perfil" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "sem_conta"
+    }
+  }
+
+  test "email nos dois perfis" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "conflito"
+    }
+  }
+
+  test "reserva divergente da identidade" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "conflito"
+    }
+  }
+
+  test "reserva ausente" {
+    input = {email: "teste@example.invalid"}
+    expect.to_equal ($response.situacao) {
+      value = "conflito"
+    }
+  }
 }

@@ -54,10 +54,28 @@ Tokens gerados com `xano function run "Identity/issue_session"`, a mesma funçã
 - Testes de login, logout, cadastro e Google: 22 passam; os testes antigos do login por senha passam sem alteração após a extração de `_open_session`.
 - Nenhum registro criado pelo fluxo Google em `user`, `tutor`, `veterinario` ou `reserva_email` (registros mais recentes anteriores aos testes com Google).
 
-## Pendente
+## Casos negativos (tarefa 2.5)
 
-- Casos negativos da tarefa 2.5 que dependem de respostas específicas do Google ou de dados montados: e-mail não verificado, e-mail nos dois perfis, reserva divergente, identidade já vinculada a outro `sub`, `sub` vinculado a identidade removida. Cobertos por revisão do código do `retorno` e das funções `Identity/*`; ainda sem execução real.
-- Regressão do login por senha, do cadastro e do logout (tarefa 4.2).
+Testes unitários do Xano, escritos dentro de `retorno_POST.xs` e das funções `Identity/*` com `mock` para o Google e para toda gravação (ids simulados `-1`; o `db.del` da tentativa, que não aceita `mock`, ficou em `try_catch`, pois o uso único já é garantido pelo marcador). Rodados com `xano unit_test run_all`: **18 passam, 0 falham**. As tabelas do Google, `tutor` e `veterinario` ficaram idênticas antes e depois da execução.
+
+| Construção | Teste | Resultado esperado |
+|---|---|---|
+| `retorno` | nega state desconhecido ou expirado | erro genérico |
+| `retorno` | nega email google nao verificado | erro genérico, sem vínculo |
+| `retorno` | orienta cadastro quando nao ha conta | mensagem de cadastro |
+| `retorno` | nega email em dois perfis ou reserva divergente | erro genérico |
+| `retorno` | nega identidade ja vinculada a outro sub | erro genérico |
+| `retorno` | nega vinculo de identidade removida | erro genérico |
+| `retorno` | nega claims invalidas do google | erro genérico |
+| `retorno` | cria vinculo no primeiro acesso sem senha | `resultado: "sessao"` |
+| `retorno` | entra pelo sub ja vinculado | `resultado: "sessao"` |
+| `resolve_login_email` | tutor / veterinário único com reserva coerente | `ok` com o perfil certo |
+| `resolve_login_email` | sem conta em nenhum perfil | `sem_conta` |
+| `resolve_login_email` | email nos dois perfis; reserva divergente; reserva ausente | `conflito` |
+| `linked_identity_valid` | identidade removida; reserva divergente | `false` |
+| `linked_identity_valid` | identidade coerente | `true` |
+
+Cada teste negativo do `retorno` difere do teste de sucesso em um único ponto simulado, então falha exatamente na verificação que pretende cobrir. Depois da publicação, o fluxo real com `state` válido e `code` falso continua respondendo 403 genérico nas duas tentativas.
 
 ## Testes automatizados
 
