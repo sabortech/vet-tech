@@ -77,6 +77,27 @@ Testes unitários do Xano, escritos dentro de `retorno_POST.xs` e das funções 
 
 Cada teste negativo do `retorno` difere do teste de sucesso em um único ponto simulado, então falha exatamente na verificação que pretende cobrir. Depois da publicação, o fluxo real com `state` válido e `code` falso continua respondendo 403 genérico nas duas tentativas.
 
+## Regressão encontrada e corrigida (2026-11-15, 20:18)
+
+- **Sintoma:** depois da publicação do `retorno` com os testes inline (~19:30), todo login Google real voltava a `/login` com erro genérico. O histórico de requisições do Xano mostrou o `retorno` respondendo 403 em todas as chamadas a partir daí; as últimas com sucesso foram às 19:19.
+- **Causa:** ao mover a validação das claims para `$claims_validas`, a comparação `((exp|to_int) * 1000) > now` passou a ser avaliada como falsa pelo Xano mesmo com token válido. Os testes de sucesso não pegaram porque simulavam `$claims_validas = true`.
+- **Diagnóstico:** função interna temporária executada com `xano function run` mostrou `exp_ok = false` para um token que vencia em 50 min, e `true` quando `exp` em ms e `now` vinham de variáveis próprias. A função foi apagada em seguida.
+- **Correção:** `$exp_ms` e `$agora_ms` calculados em variáveis antes da comparação. Conferido com claims montadas: válido (`iss` com e sem `https`) → verdadeiro; vencido, `aud` de outro cliente, `iss` falso e `sub` vazio → falso.
+- **Testes reforçados:** os testes de sucesso agora executam a validação real das claims (só o `aud` esperado é simulado, para não colocar o ID do cliente no repositório), e o teste de claims inválidas virou "nega token google vencido". `xano unit_test run_all`: 18 passam.
+- **Confirmação real após a correção (20:29):** login Google do tutor 54 pelo vínculo existente (`ultimo_uso_em` 20:29:10) e primeiro acesso de outro tutor de teste (identidade 55), com vínculo criado sem senha às 20:29:29.
+
+## Páginas públicas para o Google (tarefa 1.3)
+
+Repositório público `sabortech/vettech-site`, GitHub Pages ativo (`has_pages: true` na API do GitHub). Conferido por requisição direta:
+
+| URL | HTTP |
+|---|---|
+| `https://sabortech.github.io/vettech-site/` | 200 |
+| `https://sabortech.github.io/vettech-site/privacidade.html` | 200 |
+| `style.css`, `assets/mascote_logo.webp`, `assets/favicon.png` | 200 |
+
+A política publicada tem e-mail de contato preenchido no `mailto:` e nenhum texto provisório restante. Antes de publicar, as duas páginas foram conferidas localmente em desktop e em 375 px (sem rolagem horizontal), nos temas claro e escuro. Publicação do app no Google (tarefa 1.4) ainda a confirmar.
+
 ## Testes automatizados
 
 - `tests/unit/test_google_login.py`: 10 testes (com subtestes) do fluxo Google no estado Reflex.

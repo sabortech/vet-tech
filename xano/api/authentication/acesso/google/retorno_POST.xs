@@ -34,7 +34,7 @@ query "acesso/google/retorno" verb=POST {
         "nega email em dois perfis ou reserva divergente": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "nega identidade ja vinculada a outro sub": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "nega vinculo de identidade removida": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
-        "nega claims invalidas do google": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
+        "nega token google vencido": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "cria vinculo no primeiro acesso sem senha": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "entra pelo sub ja vinculado": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
       }
@@ -60,7 +60,7 @@ query "acesso/google/retorno" verb=POST {
             "nega email em dois perfis ou reserva divergente": {id: -1}
             "nega identidade ja vinculada a outro sub": {id: -1}
             "nega vinculo de identidade removida": {id: -1}
-            "nega claims invalidas do google": {id: -1}
+            "nega token google vencido": {id: -1}
             "cria vinculo no primeiro acesso sem senha": {id: -1}
             "entra pelo sub ja vinculado": {id: -1}
           }
@@ -124,7 +124,7 @@ query "acesso/google/retorno" verb=POST {
             "nega email em dois perfis ou reserva divergente": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "nega identidade ja vinculada a outro sub": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "nega vinculo de identidade removida": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
-            "nega claims invalidas do google": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
+            "nega token google vencido": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "cria vinculo no primeiro acesso sem senha": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "entra pelo sub ja vinculado": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
           }
@@ -165,14 +165,14 @@ query "acesso/google/retorno" verb=POST {
     var $claims {
       value = ($partes|get:1)|base64_decode_urlsafe|json_decode
       mock = {
-        "nega email google nao verificado": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: false}
-        "orienta cadastro quando nao ha conta": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "nega email em dois perfis ou reserva divergente": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "nega identidade ja vinculada a outro sub": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "nega vinculo de identidade removida": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "nega claims invalidas do google": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "cria vinculo no primeiro acesso sem senha": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
-        "entra pelo sub ja vinculado": {sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "nega email google nao verificado": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: false}
+        "orienta cadastro quando nao ha conta": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "nega email em dois perfis ou reserva divergente": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "nega identidade ja vinculada a outro sub": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "nega vinculo de identidade removida": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "nega token google vencido": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 1000000000, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "cria vinculo no primeiro acesso sem senha": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "entra pelo sub ja vinculado": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
       }
     }
 
@@ -180,18 +180,32 @@ query "acesso/google/retorno" verb=POST {
       value = $claims|get:"iss":""
     }
 
-    var $claims_validas {
-      value = $claims != null && ($issuer == "https://accounts.google.com" || $issuer == "accounts.google.com") && ($claims|get:"aud":"") == $env.GOOGLE_OAUTH_CLIENT_ID && ((($claims|get:"exp":0)|to_int) * 1000) > now && ($claims|get:"sub":"") != ""
+    // Xano evaluates "x * 1000 > now" incorrectly inside one expression, so
+    // the timestamps are computed in their own variables before comparing.
+    var $exp_ms {
+      value = (($claims|get:"exp":0)|to_int) * 1000
+    }
+
+    var $agora_ms {
+      value = now
+    }
+
+    var $aud_esperado {
+      value = $env.GOOGLE_OAUTH_CLIENT_ID
       mock = {
-        "nega email google nao verificado": true
-        "orienta cadastro quando nao ha conta": true
-        "nega email em dois perfis ou reserva divergente": true
-        "nega identidade ja vinculada a outro sub": true
-        "nega vinculo de identidade removida": true
-        "nega claims invalidas do google": false
-        "cria vinculo no primeiro acesso sem senha": true
-        "entra pelo sub ja vinculado": true
+        "nega email google nao verificado": "cliente-de-teste"
+        "orienta cadastro quando nao ha conta": "cliente-de-teste"
+        "nega email em dois perfis ou reserva divergente": "cliente-de-teste"
+        "nega identidade ja vinculada a outro sub": "cliente-de-teste"
+        "nega vinculo de identidade removida": "cliente-de-teste"
+        "nega token google vencido": "cliente-de-teste"
+        "cria vinculo no primeiro acesso sem senha": "cliente-de-teste"
+        "entra pelo sub ja vinculado": "cliente-de-teste"
       }
+    }
+
+    var $claims_validas {
+      value = $claims != null && ($issuer == "https://accounts.google.com" || $issuer == "accounts.google.com") && ($claims|get:"aud":"") == $aud_esperado && $exp_ms > $agora_ms && ($claims|get:"sub":"") != ""
     }
 
     precondition ($claims_validas) {
@@ -416,7 +430,7 @@ query "acesso/google/retorno" verb=POST {
     }
   }
 
-  test "nega claims invalidas do google" {
+  test "nega token google vencido" {
     input = {code: "codigo-de-teste", state: "state-de-teste"}
     expect.to_throw {
       exception = "Não foi possível entrar com o Google. Tente novamente."

@@ -75,7 +75,7 @@ Ordem de resolução em `acesso/google/retorno`:
 
 O token é gerado com `security.create_auth_token` contra `tutor` ou `veterinario`, com os mesmos `extras = {perfil}` e a mesma expiração de 86400 s do login por senha. Nenhum endpoint passa a aceitar outro formato de token.
 
-Particularidades do Xano observadas na implementação: `base64_encode_urlsafe` usa `.` como padding (removido junto com `=` para o PKCE); `db.get` só devolve campos `visibility = "internal"` listados em `output`; o push normaliza o arquivo e descarta valores padrão como `?=0`, por isso os inserts gravam todos os campos explicitamente.
+Particularidades do Xano observadas na implementação: `base64_encode_urlsafe` usa `.` como padding (removido junto com `=` para o PKCE); `db.get` só devolve campos `visibility = "internal"` listados em `output`; o push normaliza o arquivo e descarta valores padrão como `?=0`, por isso os inserts gravam todos os campos explicitamente. Comparar uma conta com `now` na mesma expressão (`exp * 1000 > now`) é avaliado incorretamente como falso; por isso `exp` em milissegundos e o instante atual são calculados em variáveis próprias antes da comparação.
 
 ### 4. Reflex
 
@@ -94,7 +94,30 @@ Particularidades do Xano observadas na implementação: `base64_encode_urlsafe` 
 | Xano | `GOOGLE_OAUTH_REDIRECT_URI` | URI exata da rota Reflex `/login/google` do ambiente; nunca recebida do cliente |
 | Reflex `.env` | `GOOGLE_LOGIN_ENABLED` | `true`/`false`; habilita o botão |
 
-O `.env.example` documenta somente a flag do Reflex, ao lado das variáveis já existentes. Os valores do Xano ficam nas variáveis de ambiente do workspace (`$env.*`), com um cliente OAuth por ambiente e sua URI registrada no Google Cloud Console.
+O `.env.example` documenta somente a flag do Reflex, ao lado das variáveis já existentes. Os valores do Xano ficam nas variáveis de ambiente do workspace (`$env.*`); nenhum valor do cliente OAuth fica no repositório.
+
+### 6. Cliente OAuth no Google Cloud e publicação do app
+
+O Vet Tech ainda roda só localmente (`reflex run` em `http://localhost:3000`); apenas o backend Xano está na nuvem. Por isso, por decisão do usuário em 2026-11-15, **um único cliente OAuth** ("Aplicativo da Web") atende o desenvolvimento local e servirá de base para produção:
+
+- **URI de redirecionamento autorizada:** `http://localhost:3000/login/google`. O Google aceita `localhost` mesmo com o app publicado. **Origens JavaScript autorizadas** ficam vazias: o fluxo é feito no servidor (Xano), não no navegador.
+- **Escopos:** `openid`, `email` e `profile`, todos não sensíveis; por isso a publicação não exige revisão do Google, não exibe aviso de app não verificado e não tem limite de usuários.
+- **Status de publicação:** em teste, só as contas da lista de usuários de teste entram. Para não manter essa lista, o app passa a **"Em produção"**, o que vale para qualquer forma de login Google (inclusive Google Identity Services). Publicar não abre o Vet Tech: o backend continua aceitando somente e-mails já cadastrados.
+- **Branding exigido para publicar:** o Google pede nome do app, e-mail de suporte e URLs públicas da página inicial e da política de privacidade. Como o app não tem endereço público, essas páginas ficam no GitHub Pages, num repositório público separado só com HTML estático, sem código do app:
+
+  | Campo do Branding | Valor |
+  |---|---|
+  | Nome do app | `Vet Tech` |
+  | E-mail de suporte | e-mail do time (não registrado aqui) |
+  | Página inicial | `https://sabortech.github.io/vettech-site/` |
+  | Política de privacidade | `https://sabortech.github.io/vettech-site/privacidade.html` |
+  | Domínios autorizados | `sabortech.github.io` |
+
+  O repositório é `sabortech/vettech-site` (`index.html`, `privacidade.html`, `style.css`, `assets/`), publicado por **Settings → Pages → Deploy from a branch → `main` / root**. A política de privacidade descreve os dados realmente tratados (tabelas do Xano), o uso limitado dos dados do Google (só `email`, `email_verified` e `sub`, sem guardar credenciais ou tokens), os serviços de terceiros (Xano, Google, n8n) e os direitos da LGPD. Sem logo no Branding, não há verificação de marca; se o Google pedir prova de posse do domínio, ela é feita pelo Google Search Console com um arquivo no repositório.
+
+- **Limitação ao hospedar o app:** `GOOGLE_OAUTH_REDIRECT_URI` guarda uma única URI e o workspace Xano é um só (`v1`). Enquanto for assim, o login Google funciona em um ambiente por vez (local ou produção). Ao hospedar o Reflex, adicionar `https://<endereço>/login/google` ao cliente OAuth e, ou trocar o valor da variável, ou evoluir para uma lista fixa de URIs permitidas no Xano (o backend continuaria recusando URI fora da lista). As URLs de Branding passam então a apontar para o domínio do app.
+
+Alternativa avaliada e não adotada agora: **Google Identity Services** (botão/One Tap com `id_token` validado no Xano). Usa origens JavaScript em vez de URI de retorno e resolveria os vários ambientes, mas exige script do Google na tela de login e validação de assinatura no Xano; não muda a exigência de publicação nem de Branding.
 
 ## Risks / Trade-offs
 
@@ -112,8 +135,9 @@ O `.env.example` documenta somente a flag do Reflex, ao lado das variáveis já 
 2. Remover do workspace o que sobrou da etapa de senha descartada: endpoint `acesso/google/confirmar` e tabela `confirmacao_vinculo_google` (vazia, sem uso).
 3. Implementar o Reflex com `GOOGLE_LOGIN_ENABLED=false`; publicar o frontend sem efeito visível.
 4. Verificar o fluxo e os casos negativos com usuários de teste Google (ver tarefas) e registrar em `verification.md`.
-5. Configurar cliente OAuth de produção e só então habilitar a flag.
-6. Rollback: desligar `GOOGLE_LOGIN_ENABLED`; os endpoints podem permanecer sem uso. Tabelas e vínculos são mantidos (não afetam o login por senha) e não são truncados.
+5. Publicar as páginas públicas (GitHub Pages), preencher o Branding e mudar o app no Google para "Em produção" (seção 6).
+6. Ao hospedar o Reflex: adicionar a URI de produção ao cliente OAuth, resolver a URI única no Xano (seção 6), apontar o Branding para o domínio do app e só então habilitar a flag em produção.
+7. Rollback: desligar `GOOGLE_LOGIN_ENABLED`; os endpoints podem permanecer sem uso. Tabelas e vínculos são mantidos (não afetam o login por senha) e não são truncados.
 
 ## Open Questions
 
