@@ -18,10 +18,10 @@ O sistema SHALL apresentar a tela de login existente com a hierarquia e o estilo
 ### Requirement: Entrada com Google inicia e conclui o fluxo pela tela de login
 Quando o login Google estiver habilitado, o sistema SHALL apresentar "Entrar com Google" como botão acessível por teclado e leitor de tela, desabilitado durante envio, que inicia o fluxo sem pedir perfil. O sistema SHALL oferecer uma rota de retorno que usa o mesmo cartão de autenticação (LED de perímetro e sombra verde), mostra carregamento, conclui o login e encaminha para a área do perfil autenticado ou de volta a `/login` com mensagem genérica. Quando desabilitado, o botão SHALL permanecer inerte e não afirmar que o fluxo existe. O login por e-mail e senha SHALL continuar disponível e inalterado.
 
-#### Scenario: Entrada com Google de conta já vinculada
-- **GIVEN** o login Google habilitado e a conta Google já vinculada
-- **WHEN** a pessoa aciona "Entrar com Google" por clique ou teclado e escolhe a conta
-- **THEN** chega à área do seu perfil sem etapa de senha
+#### Scenario: Entrada com Google habilitada
+- **GIVEN** o login Google habilitado no ambiente
+- **WHEN** a pessoa aciona "Entrar com Google" por clique ou teclado e escolhe uma conta Google de uma identidade cadastrada
+- **THEN** chega à área do seu perfil sem digitar a senha do Vet Tech, inclusive no primeiro acesso
 
 #### Scenario: Cancelamento ou falha no Google
 - **WHEN** a pessoa cancela no Google ou o retorno falha
@@ -38,24 +38,4 @@ Quando o login Google estiver habilitado, o sistema SHALL apresentar "Entrar com
 
 #### Scenario: Retorno em viewport estreita
 - **WHEN** a rota de retorno é exibida em celular
-- **THEN** o indicador de carregamento, a etapa de senha e as mensagens ficam visíveis sem overflow horizontal
-
-### Requirement: Primeiro acesso com Google mostra a confirmação de senha
-Quando o backend pedir confirmação no primeiro login Google, a rota de retorno SHALL exibir uma etapa que explica que a senha do Vet Tech é pedida uma única vez para vincular a conta Google, mostra o e-mail Google em modo somente leitura e oferece apenas o campo de senha, a ação "Confirmar e entrar" (desabilitada durante envio) e a opção de cancelar e voltar ao login. A etapa SHALL NOT oferecer campo de e-mail editável nem seletor de perfil.
-
-#### Scenario: Confirmação com senha correta
-- **GIVEN** a etapa de confirmação exibida
-- **WHEN** a pessoa informa a senha correta e confirma
-- **THEN** chega à área do seu perfil, e os próximos logins com essa conta Google não exibem a etapa
-
-#### Scenario: Confirmação com senha incorreta
-- **WHEN** a pessoa informa uma senha incorreta
-- **THEN** a etapa continua visível com o erro seguro do login, o campo de senha é limpo e é possível tentar de novo
-
-#### Scenario: Confirmação expirada ou esgotada
-- **WHEN** a confirmação expira ou as tentativas se esgotam
-- **THEN** a pessoa volta a `/login` com a orientação de entrar com Google novamente, sem sessão
-
-#### Scenario: Cancelar a confirmação
-- **WHEN** a pessoa cancela na etapa de senha
-- **THEN** volta a `/login`, a confirmação pendente é descartada da aba e nenhum vínculo é criado
+- **THEN** o indicador de carregamento e as mensagens ficam visíveis sem overflow horizontal

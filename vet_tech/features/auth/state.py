@@ -1,7 +1,8 @@
 import asyncio
 import base64
+import hmac
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 import reflex as rx
 
@@ -10,13 +11,18 @@ from vet_tech.features.clinical.state import ClinicalMixin, MONTHS, calendar_day
 from vet_tech.features.dashboard.state import TutorDashboardMixin
 from vet_tech.features.support_chat.state import SupportChatMixin
 from vet_tech.features.veterinarians.validation import professional_payload
+from vet_tech.shared.config import google_login_enabled
 from vet_tech.shared.xano_client import (
     AUTH_API_GROUP,
+    GOOGLE_LOGIN_FAILED,
+    GOOGLE_LOGIN_UNAVAILABLE,
     PET_API_GROUP,
     XanoRequestError,
     xano_request,
     xano_request_batch,
 )
+
+_GOOGLE_AUTHORIZE_PREFIX = "https://accounts.google.com/o/oauth2/v2/auth?"
 from vet_tech.shared.dates import calendar_date, date_label
 
 
@@ -141,6 +147,9 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     pet_detail_message: str = ""
     is_loading_pet: bool = False
     _auth_token: str = ""
+    # Login Google: o state fica só no servidor da aba; nunca em query,
+    # localStorage ou log.
+    _google_state: str = ""
     _session_generation: int = 0
     _pet_context_generation: int = 0
     _pet_list_generation: int = 0
@@ -253,6 +262,7 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
         self._pet_list_generation += 1
         self._clear_pet_context()
         self._auth_token = ""
+        self._clear_google_login()
         self.is_authenticated = False
         self.pets = []
         self.species_options = []
@@ -419,52 +429,155 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
                     "password": password,
                 },
             )
-            token = result.get("authToken") if isinstance(result, dict) else None
             if session != self._session_generation:
                 return
-            if not token:
-                raise XanoRequestError("O Xano não retornou uma sessão válida.")
-            profile = result.get("perfil")
-            identity_id = str(result.get("identidade_id", ""))
-            if profile not in ("tutor", "veterinario") or not identity_id.isascii() or not identity_id.isdecimal() or int(identity_id) <= 0:
-                raise XanoRequestError("O Xano não retornou uma identidade válida.")
-            identity = await xano_request("GET", AUTH_API_GROUP, f"{profile}/me", auth_token=str(token))
-            if session != self._session_generation:
-                return
-            if not isinstance(identity, dict) or identity.get("perfil") != profile or str(identity.get("identidade_id")) != identity_id:
-                raise XanoRequestError("Não foi possível confirmar a identidade da sessão.")
-            self._auth_token = str(token)
-            self.profile = profile
-            self.identity_id = identity_id
-            self.identity_name = str(identity.get("nome") or "")
-            self.is_authenticated = True
-            if profile == "veterinario":
-                return
-            self.pets = []
-            self.species_options = []
-            self.breed_options = []
-            self.selected_species_id = ""
-            self.selected_breed_id = ""
-            self.pet_message = ""
-            self.is_loading_pets = True
-            # Publica a sessão antes das leituras auxiliares do perfil.
-            yield
-            try:
-                await self._load_species()
-            except XanoRequestError as error:
-                if session != self._session_generation:
-                    return
-                if error.status_code == 401:
-                    self._expire_session()
-                    return
-                self.pet_message = f"Não foi possível carregar as espécies: {error}"
-            if session != self._session_generation:
-                return
-            await self._load_pets()
+            async for event in self._open_session(result, session):
+                yield event
         except XanoRequestError as error:
             if session == self._session_generation:
                 self._clear_session()
                 self.login_message = str(error)
+        finally:
+            if session == self._session_generation:
+                self.is_busy = False
+                self.is_loading_pets = False
+
+    async def _open_session(self, result: Any, session: int):
+        """Confirma a identidade emitida pelo backend e publica a sessão.
+
+        Compartilhado pelo login por senha e pelo login Google. Levanta
+        XanoRequestError se a resposta não for uma sessão válida; quem chama
+        limpa a sessão e libera o formulário.
+        """
+        token = result.get("authToken") if isinstance(result, dict) else None
+        if not token:
+            raise XanoRequestError("O Xano não retornou uma sessão válida.")
+        profile = result.get("perfil")
+        identity_id = str(result.get("identidade_id", ""))
+        if profile not in ("tutor", "veterinario") or not identity_id.isascii() or not identity_id.isdecimal() or int(identity_id) <= 0:
+            raise XanoRequestError("O Xano não retornou uma identidade válida.")
+        identity = await xano_request("GET", AUTH_API_GROUP, f"{profile}/me", auth_token=str(token))
+        if session != self._session_generation:
+            return
+        if not isinstance(identity, dict) or identity.get("perfil") != profile or str(identity.get("identidade_id")) != identity_id:
+            raise XanoRequestError("Não foi possível confirmar a identidade da sessão.")
+        self._auth_token = str(token)
+        self.profile = profile
+        self.identity_id = identity_id
+        self.identity_name = str(identity.get("nome") or "")
+        self.is_authenticated = True
+        if profile == "veterinario":
+            return
+        self.pets = []
+        self.species_options = []
+        self.breed_options = []
+        self.selected_species_id = ""
+        self.selected_breed_id = ""
+        self.pet_message = ""
+        self.is_loading_pets = True
+        # Publica a sessão antes das leituras auxiliares do perfil.
+        yield
+        try:
+            await self._load_species()
+        except XanoRequestError as error:
+            if session != self._session_generation:
+                return
+            if error.status_code == 401:
+                self._expire_session()
+                return
+            self.pet_message = f"Não foi possível carregar as espécies: {error}"
+        if session != self._session_generation:
+            return
+        await self._load_pets()
+
+    @rx.var
+    def google_login_available(self) -> bool:
+        return google_login_enabled()
+
+    def _clear_google_login(self):
+        self._google_state = ""
+
+    def _fail_google_login(self, message: str):
+        self._clear_session()
+        self.login_message = message
+        self.login_message_success = False
+        return rx.redirect("/login")
+
+    @rx.event
+    async def start_google_login(self):
+        if self.is_busy or not google_login_enabled():
+            return
+        self._clear_session()
+        from vet_tech.features.settings.state import SettingsState
+        settings = await self.get_state(SettingsState)
+        settings.clear()
+        self.login_message = ""
+        self.login_message_success = False
+        self.is_busy = True
+        session = self._session_generation
+        yield
+        try:
+            result = await xano_request("GET", AUTH_API_GROUP, "acesso/google/inicio")
+            if session != self._session_generation:
+                return
+            url = result.get("url") if isinstance(result, dict) else None
+            if not isinstance(url, str) or not url.startswith(_GOOGLE_AUTHORIZE_PREFIX):
+                raise XanoRequestError(GOOGLE_LOGIN_UNAVAILABLE)
+            state = parse_qs(urlsplit(url).query).get("state", [""])[0]
+            if not state:
+                raise XanoRequestError(GOOGLE_LOGIN_UNAVAILABLE)
+            # Amarra o retorno a esta aba (proteção contra CSRF de login).
+            self._google_state = state
+            yield rx.redirect(url)
+        except XanoRequestError as error:
+            if session == self._session_generation:
+                self._clear_session()
+                self.login_message = str(error)
+        finally:
+            if session == self._session_generation:
+                self.is_busy = False
+
+    @rx.event
+    async def finish_google_login(self):
+        params = self.router.url.query_parameters
+        code = str(params.get("code", "") or "")
+        returned_state = str(params.get("state", "") or "")
+        expected_state = self._google_state
+        self._google_state = ""
+        if not expected_state and self.is_authenticated:
+            # Sessão ativa e nenhum login Google iniciado nesta aba: não desloga.
+            yield rx.redirect("/")
+            return
+        if (params.get("error") or not code or not returned_state or not expected_state
+                or not hmac.compare_digest(returned_state, expected_state)):
+            # Cancelado no Google, aberto em outra aba ou sem login iniciado aqui:
+            # descarta sem chamar o backend.
+            yield self._fail_google_login(GOOGLE_LOGIN_FAILED)
+            return
+        self._clear_session()
+        from vet_tech.features.settings.state import SettingsState
+        settings = await self.get_state(SettingsState)
+        settings.clear()
+        self.is_busy = True
+        session = self._session_generation
+        yield
+        try:
+            result = await xano_request(
+                "POST", AUTH_API_GROUP, "acesso/google/retorno",
+                json_payload={"code": code, "state": returned_state},
+            )
+            if session != self._session_generation:
+                return
+            if not isinstance(result, dict) or result.get("resultado") != "sessao":
+                raise XanoRequestError(GOOGLE_LOGIN_FAILED)
+            # Sem senha do Vet Tech: o backend vincula no primeiro acesso.
+            async for event in self._open_session(result, session):
+                yield event
+            if session == self._session_generation and self.is_authenticated:
+                yield rx.redirect("/")
+        except XanoRequestError as error:
+            if session == self._session_generation:
+                yield self._fail_google_login(str(error))
         finally:
             if session == self._session_generation:
                 self.is_busy = False

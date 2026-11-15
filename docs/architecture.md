@@ -219,6 +219,41 @@ aplicada na entrada da agenda e destinos validados no guard de configurações.
 Os campos profissionais permanecem somente leitura; o backend permite apenas
 nome/telefone e valida a senha atual antes de alterá-la.
 
+### Login com Google
+
+Entrada adicional para tutor e veterinário já cadastrados; o login por e-mail e
+senha não muda. Todo o OAuth/OpenID Connect (código de autorização com PKCE S256)
+roda no Xano, grupo Authentication:
+
+- `acesso/google/inicio` gera `state` e verificador, grava só o hash do `state`
+  em `tentativa_oauth_google` (10 min) e devolve apenas a URL do Google.
+- `acesso/google/retorno` consome o `state` uma única vez (marcador com chave
+  única em `uso_oauth_google`, padrão de `support_lock`), troca o código com o
+  segredo do cliente, valida `iss`, `aud`, `exp`, `sub` e `email_verified` e
+  devolve a mesma sessão de `acesso/login`.
+- Primeiro acesso: o e-mail verificado precisa resolver exatamente uma
+  identidade com reserva coerente (`Identity/resolve_login_email`, mesmas regras
+  do login por senha). O vínculo `sub` ↔ identidade é criado automaticamente em
+  `vinculo_google`, sem pedir a senha do Vet Tech. Acessos seguintes usam o `sub`,
+  validado por `Identity/linked_identity_valid`; trocar o e-mail no Google não
+  muda a conta. Índices únicos garantem um `sub` por identidade e vice-versa.
+- `Identity/issue_session` emite o token com a mesma tabela, claims e validade de
+  `acesso/login`. O fluxo nunca cria tutor, veterinário, `user` ou reserva.
+
+No Reflex, `State.start_google_login` guarda o `state` só no servidor da aba e
+redireciona; a rota `/login/google` (`pages/login_google.py`) roda
+`State.finish_google_login`, que compara o `state` antes de chamar o Xano e
+publica a sessão pela mesma rotina do login por senha (`_open_session`). Erros e
+cancelamento voltam a `/login` com mensagem genérica; "sem conta" orienta o
+cadastro. A página reutiliza o cartão da autenticação (`auth_shell`).
+
+Configuração: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` e
+`GOOGLE_OAUTH_REDIRECT_URI` ficam nas variáveis do workspace Xano (a URI aponta
+para `/login/google` do ambiente e é registrada no cliente OAuth do Google Cloud);
+no Reflex, `GOOGLE_LOGIN_ENABLED=true` habilita o botão, desligado por padrão.
+Rollback: desligar a flag; tabelas e vínculos permanecem sem afetar o login por
+senha.
+
 ### Identidade profissional na sidebar médica
 
 `veterinary_actions` apresenta avatar de iniciais, rótulo Veterinário(a), nome e

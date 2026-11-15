@@ -46,6 +46,11 @@ def get_xano_base_url() -> str:
     return value
 
 
+def google_login_enabled() -> bool:
+    """Login com Google fica desligado salvo `GOOGLE_LOGIN_ENABLED=true`."""
+    return os.environ.get("GOOGLE_LOGIN_ENABLED", "").strip().lower() in {"true", "1"}
+
+
 @asynccontextmanager
 async def validate_backend_configuration():
     """Interrompe o startup ASGI antes de aceitar requisições sem configuração."""
