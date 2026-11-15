@@ -160,25 +160,7 @@ def login_view() -> rx.Component:
             align="center",
             spacing="2",
         ),
-        rx.hstack(
-            rx.image(
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
-                alt="",
-                width="18px",
-                height="18px",
-            ),
-            rx.text("Entrar com Google", font_family="Nunito", font_size="14px"),
-            width="100%",
-            height="36px",
-            align="center",
-            justify="center",
-            spacing="2",
-            background="var(--vt-surface)",
-            color="var(--vt-text)",
-            border="1px solid var(--vt-border)",
-            border_radius="999px",
-            cursor="default",
-        ),
+        google_entry(),
         rx.button(
             rx.hstack(
                 rx.text(
@@ -210,6 +192,97 @@ def login_view() -> rx.Component:
         spacing="3",
     )
 
+    return auth_shell(painel_formulario)
+
+
+_GOOGLE_ICON = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+_ENTRY_STYLE = dict(
+    width="100%",
+    height="36px",
+    align="center",
+    justify="center",
+    spacing="2",
+    background="var(--vt-surface)",
+    color="var(--vt-text)",
+    border="1px solid var(--vt-border)",
+    border_radius="999px",
+)
+
+
+def google_entry() -> rx.Component:
+    """Botão acionável com a flag ligada; elemento inerte do protótipo com ela desligada."""
+    content = [
+        rx.image(src=_GOOGLE_ICON, alt="", width="18px", height="18px"),
+        rx.text("Entrar com Google", font_family="Nunito", font_size="14px"),
+    ]
+    return rx.cond(
+        State.google_login_available,
+        rx.button(
+            rx.hstack(*content, align="center", justify="center", spacing="2"),
+            type="button",
+            on_click=State.start_google_login,
+            disabled=State.is_busy,
+            aria_label="Entrar com Google",
+            padding="0",
+            cursor="pointer",
+            _hover={"background": "var(--vt-field-bg)"},
+            **{k: v for k, v in _ENTRY_STYLE.items() if k not in ("align", "justify", "spacing")},
+        ),
+        rx.hstack(*content, cursor="default", **_ENTRY_STYLE),
+    )
+
+
+def _brand() -> rx.Component:
+    return rx.vstack(
+        rx.image(
+            src="/optimized/mascote_logo.webp",
+            alt="Mascote Vet Tech",
+            width="80px",
+            height="80px",
+            object_fit="contain",
+        ),
+        rx.heading(
+            "Vet Tech",
+            as_="h1",
+            font_family="Nunito",
+            font_size="32px",
+            font_weight="400",
+            line_height="1",
+            color="var(--vt-text)",
+        ),
+        align="center",
+        spacing="3",
+    )
+
+
+def google_return_view() -> rx.Component:
+    """Rota de retorno do Google: só carregamento; o estado redireciona ao concluir."""
+    painel = rx.vstack(
+        _brand(),
+        rx.vstack(
+            rx.spinner(size="3", color="var(--vt-green)"),
+            rx.text(
+                "Entrando com Google...",
+                role="status",
+                color="var(--vt-text)",
+                font_family="Nunito",
+                font_size="16px",
+            ),
+            align="center",
+            spacing="3",
+            padding_y="16px",
+        ),
+        width="min(100%, 440px)",
+        max_width="100%",
+        align="center",
+        justify="center",
+        spacing="4",
+    )
+    return auth_shell(painel)
+
+
+def auth_shell(painel: rx.Component) -> rx.Component:
+    """Cartão da autenticação (LED, imagens otimizadas e fundo desfocado)."""
     return rx.box(
         rx.box(
             position="absolute",
@@ -228,7 +301,7 @@ def login_view() -> rx.Component:
             perimeter_led("vet-date-led auth-card-led", "32"),
             rx.hstack(
                 rx.box(
-                    painel_formulario,
+                    painel,
                     width=["100%", "100%", "52%"],
                     height="100%",
                     padding=["28px 22px", "36px 30px", "32px 48px"],

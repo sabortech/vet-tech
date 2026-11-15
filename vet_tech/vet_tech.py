@@ -6,6 +6,7 @@ from vet_tech.pages.cadastro import cadastro
 from vet_tech.pages.configuracoes import configuracoes
 from vet_tech.features.settings.state import SettingsState
 from vet_tech.pages.index import index, login_page
+from vet_tech.pages.login_google import login_google_page
 from vet_tech.shared.config import validate_backend_configuration
 from vet_tech.pages.atendimento import atendimento
 from vet_tech.pages.dashboard import dashboard
@@ -33,6 +34,7 @@ app = rx.App(
 app.register_lifespan_task(validate_backend_configuration)
 app.add_page(index, on_load=NavigationState.close_drawer)
 app.add_page(login_page, route="/login", title="Login | Vet Tech", on_load=NavigationState.close_drawer)
+app.add_page(login_google_page, route="/login/google", title="Entrar com Google | Vet Tech", on_load=[NavigationState.close_drawer, State.finish_google_login])
 app.add_page(cadastro, route="/cadastro", title="Cadastro | Vet Tech")
 
 app.add_page(configuracoes, route="/configuracoes", title="Configurações | Vet Tech", on_load=[NavigationState.close_drawer, SettingsState.enter])
