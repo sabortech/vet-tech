@@ -136,8 +136,17 @@ Alternativa avaliada e não adotada agora: **Google Identity Services** (botão/
 3. Implementar o Reflex com `GOOGLE_LOGIN_ENABLED=false`; publicar o frontend sem efeito visível.
 4. Verificar o fluxo e os casos negativos com usuários de teste Google (ver tarefas) e registrar em `verification.md`.
 5. Publicar as páginas públicas (GitHub Pages), preencher o Branding e mudar o app no Google para "Em produção" (seção 6).
-6. Ao hospedar o Reflex: adicionar a URI de produção ao cliente OAuth, resolver a URI única no Xano (seção 6), apontar o Branding para o domínio do app e só então habilitar a flag em produção.
+6. Colocação em produção: fora desta change; ver "Para quando hospedar".
 7. Rollback: desligar `GOOGLE_LOGIN_ENABLED`; os endpoints podem permanecer sem uso. Tabelas e vínculos são mantidos (não afetam o login por senha) e não são truncados.
+
+## Para quando hospedar
+
+Esta change entrega o login Google funcionando com o Reflex local e o app Google publicado. A colocação em produção depende de hospedar o Reflex, o que ainda não existe, e deve ser tratada numa change própria de hospedagem/deploy, que também cuidará das demais variáveis do servidor (Xano, n8n, flags). Passos do login Google a incluir nela:
+
+1. **Cliente OAuth:** adicionar `https://<endereço>/login/google` às URIs de redirecionamento autorizadas do cliente atual. Opcionalmente, criar depois um cliente só para desenvolvimento e retirar `localhost` do cliente de produção.
+2. **URI no Xano:** `GOOGLE_OAUTH_REDIRECT_URI` guarda um único endereço e o workspace é um só (`v1`). Ou trocar o valor para a URI de produção (o login Google deixa de funcionar no `localhost`), ou evoluir para uma lista fixa de URIs permitidas no Xano, com o Reflex indicando qual usar e o backend recusando qualquer URI fora da lista.
+3. **Branding:** opcionalmente trocar página inicial, política de privacidade e domínio autorizado (hoje no GitHub Pages, `sabortech.github.io`) para o domínio do app, mantendo a política atualizada.
+4. **Flag:** definir `GOOGLE_LOGIN_ENABLED=true` nas variáveis de ambiente do servidor hospedado por último, depois de testar o fluxo lá. Rollback: desligar a flag; o login por senha não é afetado.
 
 ## Open Questions
 
