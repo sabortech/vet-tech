@@ -96,7 +96,7 @@ Repositório público `sabortech/vettech-site`, GitHub Pages ativo (`has_pages: 
 | `https://sabortech.github.io/vettech-site/privacidade.html` | 200 |
 | `style.css`, `assets/mascote_logo.webp`, `assets/favicon.png` | 200 |
 
-A política publicada tem e-mail de contato preenchido no `mailto:` e nenhum texto provisório restante. Antes de publicar, as duas páginas foram conferidas localmente em desktop e em 375 px (sem rolagem horizontal), nos temas claro e escuro. Publicação do app no Google (tarefa 1.4) ainda a confirmar.
+A política publicada tem e-mail de contato preenchido no `mailto:` e nenhum texto provisório restante. Antes de publicar, as duas páginas foram conferidas localmente em desktop e em 375 px (sem rolagem horizontal), nos temas claro e escuro. Publicação do app no Google (tarefa 1.4): Branding preenchido e app "Em produção"; confirmado pelo primeiro acesso do tutor 55 às 20:29:29 com uma conta Google fora da lista de usuários de teste.
 
 ## Testes automatizados
 

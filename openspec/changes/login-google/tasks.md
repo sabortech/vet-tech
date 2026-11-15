@@ -5,7 +5,7 @@
 - [x] 1.1 Criar cliente OAuth "Aplicativo da Web" de teste no Google Cloud Console, com tela de consentimento em modo de teste, escopos `openid email profile` e URI de redirecionamento da rota `/login/google` do ambiente local/teste. Procedimento não registrado em `docs/`, por decisão do usuário.
 - [x] 1.2 Cadastrar `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` e `GOOGLE_OAUTH_REDIRECT_URI` nas variáveis do workspace Xano; adicionar `GOOGLE_LOGIN_ENABLED=false` ao `.env.example`, junto das variáveis existentes; conferir que nenhum valor aparece no repositório.
 - [x] 1.3 Publicar página inicial e política de privacidade em URLs públicas, exigidas pelo Google para publicar o app: repositório público `sabortech/vettech-site` no GitHub Pages (`index.html`, `privacidade.html`), com a política baseada nos dados realmente tratados pelo Vet Tech e no uso limitado dos dados do Google.
-- [ ] 1.4 Preencher o Branding no Google Auth Platform (nome, e-mail de suporte, página inicial, política de privacidade e domínio autorizado `sabortech.github.io`) e publicar o app ("Em produção"), dispensando a lista de usuários de teste; confirmar um login com conta Google fora da lista.
+- [x] 1.4 Preencher o Branding no Google Auth Platform (nome, e-mail de suporte, página inicial, política de privacidade e domínio autorizado `sabortech.github.io`) e publicar o app ("Em produção"), dispensando a lista de usuários de teste; confirmar um login com conta Google fora da lista.
 
 ## 2. Backend Xano
 
