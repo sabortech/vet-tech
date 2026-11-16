@@ -5,41 +5,20 @@ query "veterinario/password" verb=POST {
     text current_password
     text new_password
     text password_confirmation
+    text challenge_id
+    text code
   }
   stack {
-    precondition ($input.current_password != "" && $input.new_password != "" && $input.password_confirmation != "") {
+    function.run "Security/password_operation" {
+      input = {action: "change", purpose: "change", profile: "veterinario", actor_id: $auth.id, current_password: $input.current_password, new_password: $input.new_password, password_confirmation: $input.password_confirmation, challenge_id: $input.challenge_id, code: $input.code}
+    } as $operation
+    precondition ($operation.public.ok) {
       error_type = "inputerror"
-      error = "Preencha todos os campos obrigatórios."
+      error = $operation.public.message
     }
-    precondition ($input.new_password == $input.password_confirmation) {
-      error_type = "inputerror"
-      error = "As senhas não coincidem."
-    }
-    db.get veterinario {
-      field_name = "id"
-      field_value = $auth.id
-      output = ["id", "senha"]
-    } as $identity
-    precondition ($identity != null) {
-      error_type = "accessdenied"
-      error = "Sessão inválida."
-    }
-    security.check_password {
-      text_password = $input.current_password
-      hash_password = $identity.senha
-    } as $valid
-    precondition ($valid) {
-      error_type = "inputerror"
-      error = "Senha atual incorreta."
-    }
-    db.edit veterinario {
-      field_name = "id"
-      field_value = $auth.id
-      data = {senha: $input.new_password}
-      output = ["id"]
-    } as $updated
   }
-  response = {success: true}
-  tags = ["vettech"]
+  response = $operation.public
+  history = false
+  tags = ["vettech", "password-security"]
   guid = "zP_PWvABhW3pcqDUGRRO0afCgUA"
 }

@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 import reflex as rx
 
+from vet_tech.features.auth.password_recovery import PasswordRecoveryMixin
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
 from vet_tech.features.clinical.state import ClinicalMixin, MONTHS, calendar_days, today
 from vet_tech.features.dashboard.state import TutorDashboardMixin
@@ -98,7 +99,7 @@ async def _fetch_pet_details(pet_id, token, species, known_pet):
         return details, warnings
 
 
-class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
+class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
@@ -234,6 +235,7 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
             self.identity_professional_loaded = True
 
     def _clear_session(self):
+        self._clear_password_recovery()
         self._reset_support_chat()
         self._clear_dashboard_session()
         self._clear_clinical_session()
@@ -297,6 +299,7 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
 
     @rx.event
     def show_signup(self):
+        self._clear_password_recovery()
         self.is_registering = True
         self.login_message = ""
         self.login_message_success = False
@@ -306,6 +309,7 @@ class State(SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
 
     @rx.event
     def show_login(self):
+        self._clear_password_recovery()
         self.is_registering = False
         self.signup_message = ""
 

@@ -1,6 +1,7 @@
 """Configurações compartilhadas com identidade e menu específicos por perfil."""
 import reflex as rx
 from vet_tech.components.date_input import perimeter_led
+from vet_tech.components.password_input import password_visibility_button
 
 from vet_tech.components.sidebar import _EXISTING_ROUTES, layout_com_menu
 from vet_tech.features.auth.state import State
@@ -78,12 +79,7 @@ def password_field(label, name, autocomplete):
         rx.box(
             rx.icon(icon, size=18, class_name="settings-field-icon", aria_hidden=True),
             rx.input(name=name, id=name, type="password", required=True, custom_attrs={"autoComplete": autocomplete}, disabled=Settings.saving, class_name="settings-input"),
-            rx.el.button(
-                rx.icon("eye", size=18, class_name="password-eye-open", aria_hidden=True),
-                rx.icon("eye-off", size=18, class_name="password-eye-closed", aria_hidden=True),
-                type="button", class_name="settings-eye",
-                custom_attrs={"data-password-target": name, "aria-label": f"Mostrar {label.lower()}", "aria-pressed": "false"},
-            ),
+            password_visibility_button(name, label, disabled=Settings.saving, class_name="settings-eye"),
             class_name="settings-control settings-control--with-icon",
         ), class_name="settings-field",
     )
@@ -93,17 +89,36 @@ def security():
     return rx.box(
         perimeter_led("vet-date-led settings-card-led", "19"),
         rx.heading("Alterar senha", as_="h2"),
-        rx.text("Confirme sua senha atual para definir uma nova.", class_name="settings-hint"),
-        rx.form(
-            password_field("Senha atual", "current_password", "current-password"),
-            password_field("Nova senha", "new_password", "new-password"),
-            password_field("Confirmar nova senha", "password_confirmation", "new-password"),
-            feedback(),
-            rx.box(rx.button(rx.cond(Settings.saving, "Atualizando...", "Atualizar senha"), type="submit", disabled=Settings.saving, class_name="vt-primary"), class_name="settings-actions"),
-            on_submit=Settings.change_password, reset_on_submit=False, id="settings-password-form",
+        rx.text("Confirme sua senha atual e seu e-mail para definir uma nova senha.", class_name="settings-hint"),
+        rx.cond(
+            Settings.password_code_sent,
+            rx.form(
+                rx.text("Confira o código em ", Settings.password_email_hint, class_name="settings-hint"),
+                password_field("Senha atual", "current_password", "current-password"),
+                rx.box(
+                    rx.el.label("Código recebido por e-mail", html_for="settings-code"),
+                    rx.input(name="code", id="settings-code", required=True, disabled=Settings.saving,
+                             custom_attrs={"autoComplete": "one-time-code", "inputMode": "numeric", "pattern": "[0-9]{6}", "maxLength": "6"}, class_name="settings-input"),
+                    class_name="settings-field",
+                ),
+                password_field("Nova senha", "new_password", "new-password"),
+                password_field("Confirmar nova senha", "password_confirmation", "new-password"),
+                feedback(),
+                rx.box(rx.button(rx.cond(Settings.saving, "Atualizando...", "Atualizar senha"), type="submit", disabled=Settings.saving, class_name="vt-primary"), class_name="settings-actions"),
+                rx.button("Solicitar outro código", type="button", on_click=Settings.cancel_password_challenge, disabled=Settings.saving, variant="ghost"),
+                rx.text("O código vale por 10 minutos. Um novo envio requer aguardar 60 segundos e confirmar a senha atual.", class_name="settings-hint"),
+                on_submit=Settings.change_password, reset_on_submit=False, id="settings-password-form",
+            ),
+            rx.form(
+                password_field("Senha atual", "current_password", "current-password"),
+                feedback(),
+                rx.box(rx.button(rx.cond(Settings.saving, "Enviando...", "Enviar código por e-mail"), type="submit", disabled=Settings.saving, class_name="vt-primary"), class_name="settings-actions"),
+                on_submit=Settings.request_password_code, reset_on_submit=False, id="settings-password-form",
+            ),
         ),
         rx.text("Após atualizar, você entrará novamente no sistema.", class_name="settings-hint"),
         class_name="settings-card settings-card--security", position="relative", isolation="isolate",
+        on_unmount=Settings.cancel_password_challenge,
     )
 
 

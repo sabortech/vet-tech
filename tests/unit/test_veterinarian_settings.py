@@ -58,8 +58,9 @@ class VeterinarianSettingsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_password_uses_vet_endpoint_without_trimming_and_keeps_wrong_current(self):
         state, auth = make()
+        state._password_challenge = "challenge-a"
         with patch.object(SettingsState, 'get_state', AsyncMock(return_value=auth)), patch(TARGET, AsyncMock(side_effect=XanoRequestError('Senha atual incorreta.', 400))) as request:
-            await consume(SettingsState.change_password.fn(state, {'current_password': ' old ', 'new_password': ' new ', 'password_confirmation': ' new '}))
+            await consume(SettingsState.change_password.fn(state, {'code': '012345', 'current_password': ' old ', 'new_password': ' new ', 'password_confirmation': ' new '}))
         self.assertEqual(request.await_args.args[2], 'veterinario/password')
         self.assertEqual(request.await_args.kwargs['json_payload']['new_password'], ' new ')
         self.assertTrue(auth.is_authenticated)
@@ -67,10 +68,11 @@ class VeterinarianSettingsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_password_success_cleans_veterinarian_session(self):
         state, auth = make()
+        state._password_challenge = "challenge-a"
         async def get_state(instance, cls):
             return state if cls is SettingsState else auth
         with patch.object(SettingsState, 'get_state', get_state), patch.object(State, 'get_state', get_state), patch(TARGET, AsyncMock(return_value={'success': True})):
-            await consume(SettingsState.change_password.fn(state, {'current_password': 'old', 'new_password': 'new', 'password_confirmation': 'new'}))
+            await consume(SettingsState.change_password.fn(state, {'code': '012345', 'current_password': 'old', 'new_password': 'new', 'password_confirmation': 'new'}))
         self.assertFalse(auth.is_authenticated)
         self.assertEqual(state.account_profile, '')
         self.assertEqual(state.crmv, '')

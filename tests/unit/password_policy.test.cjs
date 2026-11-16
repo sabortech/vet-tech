@@ -1,0 +1,19 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {readFileSync}=require('node:fs');
+const vm=require('node:vm');
+const ctx={};vm.createContext(ctx);vm.runInContext(readFileSync('xano/security/password_policy.js','utf8'),ctx);
+const decide=c=>JSON.parse(JSON.stringify(ctx.decidePasswordOperation(JSON.parse(JSON.stringify(c)))));
+const now=1800000000000;
+function base(action='request') {return {now,payload:{action,code:'012345',new_password:' new ',password_confirmation:' new '},row:null,person:{id:1},fingerprint:'credential-v1',current_valid:true,authenticated:false,origin_times:[],presented_code_digest:'proof',presented_grant_digest:'grant-proof',generated:{public_id:'opaque-id',code_digest:'proof',grant_digest:'grant-proof',grant_token:'opaque-grant'}};}
+function ready(action='verify'){const c=base(),d=decide(c);c.row={public_id:d.public_id,state:d.state,grant_digest:''};c.row.state.challenge.sent=true;c.payload.action=action;return c;}
+test('unknown and existing emails receive identical public request shape',()=>{const a=base(),b=base();b.person=null;assert.deepEqual(decide(a).reply,decide(b).reply);assert.equal(decide(b).send,false);});
+test('request never changes password; wrong current prevents delivery',()=>{const c=base();assert.equal(decide(c).write_password,false);c.authenticated=true;c.current_valid=false;assert.equal(decide(c).send,false);assert.equal(decide(c).reply.ok,false);});
+test('expiry, pending delivery and wrong credential fingerprint reject verification',()=>{for(const alter of [c=>c.now+=600000,c=>c.row.state.challenge.sent=false,c=>c.fingerprint='changed']){const c=ready();alter(c);assert.equal(decide(c).reply.ok,false);}});
+test('five wrong attempts survive separate operations',()=>{const c=ready();c.presented_code_digest='bad';for(let i=0;i<5;i++){const d=decide(c);assert.equal(d.reply.ok,false);c.row.state=d.state;}assert.equal(c.row.state.challenge.attempts,5);c.presented_code_digest='proof';assert.equal(decide(c).reply.ok,false);});
+test('verification consumes code and returns only a restricted grant',()=>{const c=ready(),d=decide(c);assert.equal(d.reply.reset_token,'opaque-grant');assert.equal(d.reply.authToken,undefined);assert.equal(d.write_password,false);c.row.state=d.state;assert.equal(decide(c).reply.ok,false);});
+test('grant completes once and expires after five minutes',()=>{const c=ready();const v=decide(c);c.row.state=v.state;c.row.grant_digest=v.grant_digest;c.payload.action='complete';const d=decide(c);assert.equal(d.write_password,true);c.row.state=d.state;assert.equal(decide(c).write_password,false);c.row.state=v.state;c.now+=300000;assert.equal(decide(c).write_password,false);});
+test('wrong grant and changed credential cannot reset password',()=>{for(const alter of [c=>c.presented_grant_digest='forged',c=>c.fingerprint='new-version']){const c=ready(),v=decide(c);c.row.state=v.state;c.row.grant_digest=v.grant_digest;c.payload.action='complete';alter(c);assert.equal(decide(c).write_password,false);}});
+test('authenticated change needs current password and code and preserves spaces',()=>{const c=ready('change');c.authenticated=true;assert.equal(decide(c).write_password,true);c.current_valid=false;assert.equal(decide(c).write_password,false);});
+test('resend keeps aggregate limits and invalidates previous code',()=>{const c=ready('request');c.authenticated=true;c.now+=60001;c.generated.public_id='replacement';c.generated.code_digest='new-proof';const d=decide(c);assert.equal(d.state.sends.length,2);assert.equal(d.public_id,'replacement');assert.equal(d.state.challenge.digest,'new-proof');c.row.state=d.state;c.now+=60001;c.row.state.sends=Array(5).fill(now);assert.equal(decide(c).send,false);});
+test('origin limit also protects unknown emails',()=>{const c=base();c.person=null;c.origin_times=Array(20).fill(now);assert.equal(decide(c).event,'rejected');});
