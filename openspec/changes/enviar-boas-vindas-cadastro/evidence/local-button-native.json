@@ -1,0 +1,14 @@
+{
+  "tutor": {
+    "html_link_correct": true,
+    "button_label": true,
+    "text_link_correct": true,
+    "clean_mascot_preserved": true
+  },
+  "veterinario": {
+    "html_link_correct": true,
+    "button_label": true,
+    "text_link_correct": true,
+    "clean_mascot_preserved": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "http": 200,
+  "documents": [
+    "xano/table/welcome_email_event.xs",
+    "xano/table/welcome_email_attempt.xs",
+    "xano/function/notifications/render_welcome_email.xs",
+    "xano/function/notifications/welcome_identity.xs",
+    "xano/function/notifications/deliver_welcome_email.xs",
+    "xano/function/notifications/send_welcome_email.xs"
+  ],
+  "env_imported": false,
+  "records_imported": false,
+  "delete": false,
+  "transaction": true
+}

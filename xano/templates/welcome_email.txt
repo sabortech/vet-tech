@@ -1,0 +1,25 @@
+Vet Tech — Cuidado que acompanha você.
+
+{{title}}
+Olá, {{name}}!
+
+{{intro}}
+
+Seus próximos passos
+1. {{step_one}}
+2. {{step_two}}
+3. {{step_three}}
+
+Para começar, acesse sua conta com o e-mail e a senha que você cadastrou.
+Acesse nosso sistema: {{system_url}}
+
+{{closing}}
+O melhor sistema para seu melhor amigo!
+
+Desenvolvedores do Sistema:
+Davi Diniz · Vitor Sousa · Danikelly Alves
+
+Com carinho,
+Vet Tech Team
+Esta é uma mensagem automática de boas-vindas.
+Copyright © by Vet Tech Team

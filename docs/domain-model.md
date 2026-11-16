@@ -231,3 +231,32 @@ repetição automática. O isolamento real precisa de ensaio no backend remoto.
 A alteração invalida desafios pendentes dos dois fluxos da conta, preservando
 os contadores. A rotina do backend Reflex local aciona a limpeza na inicialização e a cada hora enquanto o aplicativo estiver aberto, removendo metadados sem atualização há 24h e eventos com mais de 30 dias. Com o processo desligado a remoção física aguarda o reinício; a expiração continua obrigatória no Xano. `history=false` cobre as funções e endpoints
 sensíveis desta implementação.
+
+## Boas-vindas após cadastro
+
+```mermaid
+erDiagram
+    TUTOR |o--o| WELCOME_EMAIL_EVENT : identidade_logica
+    VETERINARIO |o--o| WELCOME_EMAIL_EVENT : identidade_logica
+    WELCOME_EMAIL_EVENT ||--o| WELCOME_EMAIL_ATTEMPT : reserva_unica
+    WELCOME_EMAIL_EVENT {
+        int id PK
+        text key UK "perfil:identidade_id"
+        text profile
+        int identity_id
+        timestamp created_at
+    }
+    WELCOME_EMAIL_ATTEMPT {
+        int id PK
+        int event_id UK
+        text state "reservado, aceito, falhou ou incerto"
+        text provider_id
+        timestamp created_at
+        timestamp updated_at
+    }
+```
+
+A referência lógica de perfil é revalidada na tabela correta e em `reserva_email`.
+O evento participa do commit do cadastro; a tentativa é reservada depois por
+inserção com índice único. Não há dados clínicos, senha, nome ou e-mail nessas
+tabelas. Sem endpoints CRUD públicos. Ver `docs/welcome-email.md`.

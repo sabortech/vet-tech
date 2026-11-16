@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "profile": "tutor",
+      "recipient_scope": "authorized_vet_tech_test_mailbox",
+      "accepted": true,
+      "state": "aceito",
+      "provider_id": "<202611162048.50772506570@smtp-relay.mailin.fr>",
+      "purpose": "fictional_preview_larger_bottom_aligned_mascot",
+      "account_created": false
+    },
+    {
+      "profile": "veterinario",
+      "recipient_scope": "authorized_vet_tech_test_mailbox",
+      "accepted": true,
+      "state": "aceito",
+      "provider_id": "<202611162048.46588064183@smtp-relay.mailin.fr>",
+      "purpose": "fictional_preview_larger_bottom_aligned_mascot",
+      "account_created": false
+    }
+  ],
+  "real_signup_end_to_end": false
+}

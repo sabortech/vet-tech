@@ -1,0 +1,33 @@
+{
+  "checks": [
+    {
+      "profile": "tutor",
+      "width": 390,
+      "overflow": false,
+      "all_images_loaded": true,
+      "clinic_proportion_preserved": true
+    },
+    {
+      "profile": "tutor",
+      "width": 900,
+      "overflow": false,
+      "all_images_loaded": true,
+      "clinic_proportion_preserved": true
+    },
+    {
+      "profile": "veterinario",
+      "width": 390,
+      "overflow": false,
+      "all_images_loaded": true,
+      "clinic_proportion_preserved": true
+    },
+    {
+      "profile": "veterinario",
+      "width": 900,
+      "overflow": false,
+      "all_images_loaded": true,
+      "clinic_proportion_preserved": true
+    }
+  ],
+  "email_sent": false
+}

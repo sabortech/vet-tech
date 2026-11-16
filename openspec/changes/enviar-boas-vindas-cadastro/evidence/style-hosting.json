@@ -1,0 +1,14 @@
+{
+  "background_image_url": {
+    "http": 200,
+    "mime": "image/webp",
+    "bytes_match": true,
+    "sha256": "4d94c7a21bc65944c0dc8fc4ebfcc8cc2f23c4a64580bef0d04e8bf01ba04bfe"
+  },
+  "mascot_image_url": {
+    "http": 200,
+    "mime": "image/png",
+    "bytes_match": true,
+    "sha256": "6832ee098ce5c4e57a51501b3f0cf46b3537cf0d087610134145541f468d4f4d"
+  }
+}

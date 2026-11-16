@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "profile": "tutor",
+      "failure_after_event_insertion": true,
+      "identity_rolled_back": true,
+      "welcome_not_dispatched": true
+    },
+    {
+      "profile": "veterinario",
+      "failure_after_event_insertion": true,
+      "identity_rolled_back": true,
+      "welcome_not_dispatched": true
+    }
+  ],
+  "real_email_sent": false,
+  "cleanup_complete": true
+}

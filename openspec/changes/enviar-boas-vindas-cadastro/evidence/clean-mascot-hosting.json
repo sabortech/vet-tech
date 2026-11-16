@@ -1,0 +1,19 @@
+{
+  "http": 200,
+  "mime": "image/png",
+  "bytes_match": true,
+  "sha256": "001ce713b7a2e0476144caaacb5b2c39128d14ea322a5cd78b8592919e08ed08",
+  "size": [
+    1493,
+    1053
+  ],
+  "opaque_bounds": [
+    32,
+    29,
+    1460,
+    1030
+  ],
+  "display_width": 110,
+  "bottom_compensation_px": 1.7,
+  "original_preserved": true
+}
