@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--url', default='http://127.0.0.1:3000')
     parser.add_argument('--chromium', default='/home/usuario/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome')
-    parser.add_argument('--output', type=Path, default=ROOT/'openspec/changes/verificar-alteracao-senha-email/evidence/password-visibility')
+    parser.add_argument('--output', type=Path, default=ROOT/'openspec/changes/archive/2026-11-15-verificar-alteracao-senha-email/evidence/password-visibility')
     parser.add_argument('--back-only', action='store_true', help='Regressão de Voltar sem chamadas ao Xano.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,15 @@
+{
+  "native_renderer": true,
+  "no_attachments": true,
+  "https_header_matches": true,
+  "no_cid": true,
+  "no_data_uri": true,
+  "leading_zero_preserved": true,
+  "pets_before_warning": true,
+  "davi_image_url_matches": true,
+  "vitor_image_url_matches": true,
+  "danikelly_image_url_matches": true,
+  "ocean_background": true,
+  "no_shadow_box": true,
+  "copyright_correct": true
+}

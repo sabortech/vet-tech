@@ -41,7 +41,7 @@ def render(purpose: str, code: str, validity_minutes: int) -> dict[str, str]:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "openspec/changes/verificar-alteracao-senha-email/evidence/email")
+    parser.add_argument("--output", type=Path, default=ROOT / "openspec/changes/archive/2026-11-15-verificar-alteracao-senha-email/evidence/email")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     for purpose in ("change", "reset"):

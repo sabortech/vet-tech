@@ -1,0 +1,11 @@
+{
+  "test": "authorized_https_header_email_via_xano_resend",
+  "recipient": "vet.tech.impact@gmail.com",
+  "metadata_http": 200,
+  "accepted": true,
+  "inbox_confirmed": true,
+  "password_changed": false,
+  "automatic_retry": false,
+  "function_status": "ok",
+  "visual_confirmed_by_user": true
+}

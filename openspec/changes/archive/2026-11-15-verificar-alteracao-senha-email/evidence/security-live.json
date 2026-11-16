@@ -1,0 +1,70 @@
+{
+  "delivery": "simulated_in_internal_function_for_synthetic_accounts_only",
+  "checks": [
+    {
+      "check": "veterinario login inicial",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario token cruzado",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "veterinario código incorreto",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "veterinario conclusão change",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario senha anterior rejeitada change",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "check": "veterinario senha nova aceita change",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario replay da conclusão change",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "veterinario verificação de recuperação",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario replay do código",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "veterinario conclusão reset",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario senha anterior rejeitada reset",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "check": "veterinario senha nova aceita reset",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "veterinario replay da conclusão reset",
+      "status": 400,
+      "ok": true
+    }
+  ]
+}

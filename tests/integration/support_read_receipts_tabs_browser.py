@@ -62,7 +62,7 @@ def main():
   reads=[c for c in calls if c.get('read_through')==MID]
   assert len(reads)==1,reads
   assert all(c['session_key'].startswith('tutor:') for c in reads)
-  sender.screenshot(path=str(ROOT/'openspec/changes/reorganizar-fluxos-chat/evidence/read-seen-fast-tab-switch.png'))
+  sender.screenshot(path=str(ROOT/'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/read-seen-fast-tab-switch.png'))
   browser.close()
  print('OK: shared two-tab state changes Entregue to Visto after a quick profile switch, with one grouped read acknowledgement.')
 

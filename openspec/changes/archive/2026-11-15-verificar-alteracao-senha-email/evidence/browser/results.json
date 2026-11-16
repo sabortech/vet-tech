@@ -1,0 +1,8 @@
+[
+  "recovery/1440/light: sem overflow",
+  "recovery/1440/dark: sem overflow",
+  "recovery/390/light: sem overflow",
+  "recovery/390/dark: sem overflow",
+  "resposta genérica, colagem preserva zero inicial e código inválido rejeitado",
+  "cancelamento retorna ao login"
+]

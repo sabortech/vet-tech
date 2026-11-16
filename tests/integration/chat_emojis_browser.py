@@ -38,7 +38,7 @@ def main():
    expect(panel).to_contain_text('Limite de 1000 caracteres atingido.');expect(field).to_have_value('a'*1000)
    page.get_by_role('button',name='Fechar emojis',exact=True).click()
    field.fill('Olá ');toggle.click();page.get_by_role('combobox',name='Categoria de emojis').select_option('Pets')
-   page.screenshot(path=str(ROOT/f'openspec/changes/reorganizar-fluxos-chat/evidence/emojis-assistant-{profile or "guest"}-{theme}.png'))
+   page.screenshot(path=str(ROOT/f'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/emojis-assistant-{profile or "guest"}-{theme}.png'))
    page.get_by_role('button',name='patinhas',exact=True).click();expect(field).to_have_value('Olá 🐾')
    toggle.click();field.click();expect(panel).not_to_be_visible()
    if profile:
@@ -47,7 +47,7 @@ def main():
     expect(field).to_have_value('Tudo bem 👍')
     page.get_by_role('button',name='Enviar mensagem',exact=True).click()
     assert page.evaluate("probe.requests.filter(r=>r.action==='support_send').at(-1).message")=='Tudo bem 👍'
-    toggle.click();page.screenshot(path=str(ROOT/f'openspec/changes/reorganizar-fluxos-chat/evidence/emojis-human-{profile}-{theme}.png'))
+    toggle.click();page.screenshot(path=str(ROOT/f'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/emojis-human-{profile}-{theme}.png'))
     page.keyboard.press('Escape')
     page.evaluate("window.ticketStatus='aguardando'")
     page.get_by_role('button',name='Informações do atendimento: Em atendimento',exact=True).click()

@@ -39,7 +39,7 @@ def main():
   expect(modal.get_by_role('button',name='Editar mensagem',exact=True)).to_be_disabled()
   expect(modal.get_by_role('button',name='Apagar mensagem',exact=True)).to_be_disabled()
   expect(modal).to_contain_text('O prazo de 10 minutos')
-  page.screenshot(path=str(ROOT/'openspec/changes/reorganizar-fluxos-chat/evidence/message-window-expired.png'))
+  page.screenshot(path=str(ROOT/'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/message-window-expired.png'))
   browser.close()
  print('OK: 10-minute expiry disables open editor, preserves draft, ignores local clock jump and keeps one centered start time.')
 

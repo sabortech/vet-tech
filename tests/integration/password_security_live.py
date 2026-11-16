@@ -22,7 +22,7 @@ from vet_tech.shared.config import get_xano_base_url
 from vet_tech.shared.xano_client import AUTH_API_GROUP
 
 FIXTURES = ROOT / '.env.foundation-fixtures.json'
-RESULTS = ROOT / 'openspec/changes/verificar-alteracao-senha-email/evidence/security-live.json'
+RESULTS = ROOT / 'openspec/changes/archive/2026-11-15-verificar-alteracao-senha-email/evidence/security-live.json'
 
 
 def save_private(data):

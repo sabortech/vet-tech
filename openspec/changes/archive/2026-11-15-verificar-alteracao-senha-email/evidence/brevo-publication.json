@@ -1,0 +1,11 @@
+{
+  "provider": "brevo",
+  "metadata_http": 200,
+  "only_expected_environment_change": true,
+  "brevo_url_published": true,
+  "correct_secret_name": true,
+  "resend_disabled": true,
+  "history_disabled": true,
+  "sender_configured": true,
+  "no_records_imported": true
+}

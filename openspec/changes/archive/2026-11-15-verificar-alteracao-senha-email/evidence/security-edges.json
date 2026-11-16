@@ -1,0 +1,94 @@
+{
+  "delivery": "simulated",
+  "clock": "technical_fixture_metadata_only",
+  "checks": [
+    {
+      "check": "login fixture sem etapa adicional",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "check": "emissão interna change",
+      "ok": true
+    },
+    {
+      "check": "código expirado rejeitado",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "finalidade incorreta rejeitada",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "login outra fixture",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "check": "código de outra conta rejeitado",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "tentativa inválida 1",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "tentativa inválida 2",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "tentativa inválida 3",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "tentativa inválida 4",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "tentativa inválida 5",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "código correto após cinco erros rejeitado",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "contador persiste após respostas HTTP 400",
+      "ok": true
+    },
+    {
+      "check": "emissão interna change",
+      "ok": true
+    },
+    {
+      "check": "desafio substituído rejeitado",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "intervalo mínimo de reenvio aplicado",
+      "ok": true
+    },
+    {
+      "check": "limite de cinco envios por hora aplicado",
+      "ok": true
+    },
+    {
+      "check": "emissão interna reset",
+      "ok": true
+    },
+    {
+      "check": "verificação concorrente tem um único vencedor",
+      "ok": false
+    }
+  ]
+}

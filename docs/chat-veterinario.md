@@ -129,7 +129,7 @@ Verificação sem consumir Xano ou IA:
 ```
 
 O teste de navegador aceita `--chromium /caminho/do/chrome`, simula a ponte e
-registra screenshots em `openspec/changes/reorganizar-fluxos-chat/evidence/`.
+registra screenshots em `openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/`.
 
 Na lista, o título Atendimentos fica à esquerda e as ações Atualizar atendimentos
 e Falar com assistente aparecem como botões compactos com ícones à direita,

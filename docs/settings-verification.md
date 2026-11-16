@@ -92,3 +92,29 @@ O estado compartilhado separa cache e respostas por token, perfil, identidade e
 geração da sessão. O guard de saída preserva o destino permitido de cada perfil;
 a leitura continua em background. Preferências de tema/menu usam os mecanismos
 existentes e não passam a conceder acesso ao prontuário.
+
+## Confirmação por código e recuperação com Brevo
+
+A nova Segurança solicita senha atual para enviar o código; a conclusão exige
+senha atual novamente, código, nova senha e confirmação. Solicitar outro código
+retorna à solicitação e exige senha atual. O backend impõe 60 segundos entre envios,
+validade de dez minutos e cinco erros por código; reenvio invalida o anterior.
+Os endpoints antigos de conclusão passam a exigir `challenge_id` e `code`.
+
+No login, “Esqueceu a senha?” abre e-mail → código → nova senha. Recuperação não
+pede senha atual, não exige seletor de perfil nem cria sessão automaticamente.
+O login comum continua com e-mail/senha. Sucesso limpa a sessão local; não há
+revogação global de tokens já emitidos em outros dispositivos.
+
+Verificar cancelamento, mudança de identidade, respostas antigas, reenvio,
+zeros iniciais e colagem do código, teclado e temas em 390 px nos dois perfis.
+A verificação real exige fixture de desenvolvimento com destinatário de teste
+configurado, remetente verificado no Brevo e variáveis descritas em
+`password-email-template.md`. Não usar contas pessoais ou expor códigos em logs.
+Mocks e sintaxe válida não comprovam envio, autorização remota ou atomicidade.
+
+## Mostrar e ocultar senhas
+
+Login, cadastro dos dois perfis, recuperação e Segurança usam o botão local de visibilidade. Deve preservar o valor, alternar somente o campo associado, não submeter o formulário e atualizar ícone, aria-pressed e rótulo Mostrar/Ocultar. Reset e troca para outra aba do navegador restauram type=password. O ensaio `tests/integration/password_visibility_browser.py` usa navegador isolado e contas sintéticas .invalid apenas para login de Configurações. Etapas protegidas são simuladas somente no estado visual do cliente para conferir os controles; não emite códigos nem altera senha e não comprova recuperação real por e-mail.
+
+Na recuperação, Voltar na primeira etapa retorna ao login. Em código ou nova senha, reinicia pela solicitação de e-mail e descarta o desafio/autorização; respostas pendentes não podem restaurar a etapa abandonada.

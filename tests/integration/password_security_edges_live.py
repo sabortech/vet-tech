@@ -34,7 +34,7 @@ def main():
     base = origin + '/api:' + AUTH_API_GROUP + '/'
     headers = {'Authorization': 'Bearer ' + profile['access_token']}
     checks = []
-    evidence = ROOT / 'openspec/changes/verificar-alteracao-senha-email/evidence/security-edges.json'
+    evidence = ROOT / 'openspec/changes/archive/2026-11-15-verificar-alteracao-senha-email/evidence/security-edges.json'
     if '--grant-only' in sys.argv:
         evidence = evidence.with_name('security-concurrency.json')
     last_call = 0

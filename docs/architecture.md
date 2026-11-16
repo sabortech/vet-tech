@@ -453,3 +453,24 @@ O painel de orientação mantém a tartaruga na borda externa junto ao LED, cont
 ### Conversas privadas entre veterinário e tutor
 
 O domínio existente `features/support_chat` recebe eventos `direct_*` em sua ponte privada e usa `shared/direct_client.py` para os endpoints autenticados de conversas. `xano/function/direct/operate.xs` e `direct_conversation` mantêm pares privados independentes de `support_ticket`; nenhum identificador de pet ou contexto do assistente é compartilhado. O JavaScript adapta o DTO direto ao apresentador/compositor comum com `kind=direct`, roteando operações para a API correta e ocultando controles clínicos. O diretório de tutores é exclusivo do veterinário; o diretório de veterinários é exclusivo do tutor. Ambos retornam somente nome/ID em páginas de 20 e permitem iniciar o mesmo par privado em qualquer direção. Dados e credenciais não ficam em armazenamento persistente do navegador.
+
+### Confirmação e recuperação de senha
+
+`features/auth/password_recovery.py` integra o estado de recuperação à State
+existente por mixin Reflex; `components/password_recovery.py` apresenta o fluxo
+no login. Token restrito e desafio ficam em variáveis privadas, sem persistência
+no navegador. `features/settings/` mantém a confirmação compartilhada dos perfis.
+`Security/password_operation` no Xano centraliza identidade, HMAC, limites e
+consumo transacional; a política JS testável de `xano/security/` é incorporada
+à função por `scripts/sync_password_policy.py`. Xano continua sendo a autoridade.
+`Security/send_password_email` usa Brevo somente no backend, com template
+canônico sincronizado por `scripts/sync_password_email.py`. Ver
+`docs/password-email-template.md` para edição e configuração. Os artefatos locais
+exigem publicação coordenada; testes locais não comprovam a integração remota.
+
+`shared/password_cleanup.py` registra um lifespan no backend Reflex para chamar
+a limpeza assinada no Xano ao iniciar e a cada hora. O segredo fica no `.env`
+privado do processo Python. A expiração é validada pelo Xano mesmo quando o
+aplicativo local estiver desligado; somente a remoção física aguarda o retorno.
+
+A visibilidade dos campos de senha é apresentada por `components/password_input.py`, reutilizado no login, cadastro, recuperação e Configurações. A delegação local de `assets/preferences.js` alterna apenas o type do input, o ícone e os atributos acessíveis; não mantém credenciais nem visibilidade no State ou storage. Reset do formulário e página oculta restauram o mascaramento. A recuperação exibe Vet Tech Team acima da mascote em V já existente.

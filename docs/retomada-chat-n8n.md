@@ -30,7 +30,7 @@ ele faça a alteração. Não declarar a integração concluída com resposta si
 
 ## Estado atual
 
-- A change está em `openspec/changes/chat-tutor-veterinario-pos-bot/`.
+- A change está em `openspec/changes/archive/2026-11-15-chat-tutor-veterinario-pos-bot/`.
   Ler `proposal.md`, `specs/`, `tasks.md` e `verification.md` antes de continuar.
 - Existem 17 de 20 tarefas concluídas. Restam 2.4 (workflow publicado),
   4.1 (ciclo completo real) e 4.2 (falhas desse ciclo).

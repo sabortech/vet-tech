@@ -6,7 +6,7 @@ Apresentar a animação da tartaruga no topo do assistente, de forma contínua e
 ## Requirements
 
 ### Requirement: Banner animado do assistente
-O chat compartilhado SHALL apresentar gifturtle.mp4 abaixo do cabeçalho e antes da primeira mensagem, com proporção preservada, reprodução automática silenciosa, inline e em loop. O vídeo SHALL pausar quando o chat estiver fechado e retomar ao abrir.
+O chat compartilhado SHALL apresentar gifturtle.mp4 abaixo do cabeçalho e antes da primeira mensagem, ocupando toda a largura do painel na proporção original 16:9, sem recorte, reprodução automática silenciosa, inline e em loop. O vídeo SHALL pausar quando o chat estiver fechado, no histórico ou nos fluxos humanos e retomar ao retornar ao assistente.
 
 #### Scenario: Abrir o chat
 - **WHEN** uma pessoa de qualquer perfil abre o assistente
@@ -21,5 +21,9 @@ O chat compartilhado SHALL apresentar gifturtle.mp4 abaixo do cabeçalho e antes
 - **THEN** o banner respeita a largura do painel e mantém mensagens e envio acessíveis
 
 #### Scenario: Rolar mensagens
-- **WHEN** a pessoa rola a conversa ou consulta o histórico
-- **THEN** o banner permanece fixo abaixo do cabeçalho, fora da área de rolagem
+- **WHEN** a pessoa rola a conversa do assistente
+- **THEN** o banner permanece fixo abaixo do cabeçalho e da navegação, fora da área de rolagem
+
+#### Scenario: Encaminhamento e histórico
+- **WHEN** a pessoa abre confirmação, lista, atendimento humano ou histórico
+- **THEN** o banner fica oculto e pausado para dar espaço ao conteúdo

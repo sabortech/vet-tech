@@ -1,0 +1,10 @@
+{
+  "test": "authorized_email_with_ocean_background_via_xano_resend",
+  "recipient": "vet.tech.impact@gmail.com",
+  "metadata_http": 200,
+  "accepted": true,
+  "inbox_confirmed": false,
+  "password_changed": false,
+  "automatic_retry": false,
+  "function_status": "ok"
+}
