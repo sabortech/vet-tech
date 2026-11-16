@@ -58,7 +58,7 @@ def main():
             for fid in ids:
                 time.sleep(3.2);r=client.delete(base+'/function/'+str(fid),params={'branch':'v1'},headers=headers);removed.append(r.status_code in (200,404))
             out={'tests':results,'real_email_sent':False,'cleanup_complete':all(cleaned) and all(removed)}
-            (ROOT/'openspec/changes/enviar-boas-vindas-cadastro/evidence/native-rollback.json').write_text(json.dumps(out,indent=2));assert out['cleanup_complete']
+            (ROOT/'openspec/changes/archive/2026-11-16-enviar-boas-vindas-cadastro/evidence/native-rollback.json').write_text(json.dumps(out,indent=2));assert out['cleanup_complete']
     assert len(results)==2
 
 if __name__=='__main__':main()

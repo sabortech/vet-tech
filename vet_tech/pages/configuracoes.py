@@ -86,7 +86,15 @@ def password_field(label, name, autocomplete):
 
 
 def security():
-    return rx.box(
+    return rx.cond(
+        ~Settings.has_local_password,
+        rx.box(
+            rx.heading("Segurança da conta", as_="h2"),
+            rx.text("Você entra pelo Google e ainda não possui senha do Vet Tech. Se desejar, defina uma senha confirmando seu e-mail.", class_name="settings-hint"),
+            rx.button("Definir uma senha", on_click=Settings.define_first_password, class_name="vt-primary"),
+            class_name="settings-card settings-card--security",
+        ),
+        rx.box(
         perimeter_led("vet-date-led settings-card-led", "19"),
         rx.heading("Alterar senha", as_="h2"),
         rx.text("Confirme sua senha atual e seu e-mail para definir uma nova senha.", class_name="settings-hint"),
@@ -119,6 +127,7 @@ def security():
         rx.text("Após atualizar, você entrará novamente no sistema.", class_name="settings-hint"),
         class_name="settings-card settings-card--security", position="relative", isolation="isolate",
         on_unmount=Settings.cancel_password_challenge,
+    )
     )
 
 

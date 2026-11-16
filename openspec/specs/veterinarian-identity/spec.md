@@ -17,6 +17,12 @@ O sistema SHALL oferecer cadastro veterinário em `/cadastro` com nome, e-mail, 
 - **WHEN** o cadastro informa uma clínica inexistente
 - **THEN** o backend rejeita o cadastro sem criar conta parcial
 
+As exigências de senha, confirmação e retorno ao login SHALL aplicar-se ao cadastro convencional. No cadastro Google, o sistema SHALL importar nome e e-mail verificado, dispensar senha e confirmação e exigir telefone, CRMV/UF, especialidades e espécies antes de criar a identidade e abrir sessão. Clínica continua opcional e todas as validações profissionais permanecem.
+
+#### Scenario: Cadastro profissional Google
+- **WHEN** a pessoa conclui OAuth e fornece dados profissionais válidos
+- **THEN** cria somente identidade veterinária, com vínculo Google, sem exigir senha e abre sessão isolada
+
 ### Requirement: CRMV recebe validação local e unicidade
 O sistema SHALL aceitar CRMV de 1 a 20 caracteres ASCII alfanuméricos após remover espaços externos, normalizar letras para maiúsculas e exigir UF brasileira válida. O par CRMV normalizado/UF SHALL ser único. O sistema SHALL NOT consultar serviço externo ou apresentar a validação sintática como comprovação de habilitação profissional.
 

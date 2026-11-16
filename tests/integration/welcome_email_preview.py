@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[2]
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--chromium',default='/home/usuario/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome');p.add_argument('--output',type=Path,default=ROOT/'openspec/changes/enviar-boas-vindas-cadastro/evidence/email');a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True);checks=[]
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--chromium',default='/home/usuario/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome');p.add_argument('--output',type=Path,default=ROOT/'openspec/changes/archive/2026-11-16-enviar-boas-vindas-cadastro/evidence/email');a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True);checks=[]
     with sync_playwright() as pw:
         browser=pw.chromium.launch(executable_path=a.chromium,headless=True,args=['--no-sandbox'])
         for profile in ('tutor','veterinario'):

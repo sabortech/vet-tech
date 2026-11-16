@@ -46,6 +46,11 @@ query "acesso/login" verb=POST {
           error = "Credenciais inválidas."
         }
 
+        precondition ($tutor.password != null && $tutor.password != "") {
+          error_type="accessdenied"
+          error="Credenciais inválidas."
+        }
+
         security.check_password {
           text_password = $input.password
           hash_password = $tutor.password
@@ -76,6 +81,11 @@ query "acesso/login" verb=POST {
         precondition ($reservation.perfil == "veterinario" && $reservation.identidade_id == $vet.id) {
           error_type = "accessdenied"
           error = "Credenciais inválidas."
+        }
+
+        precondition ($vet.senha != null && $vet.senha != "") {
+          error_type="accessdenied"
+          error="Credenciais inválidas."
         }
 
         security.check_password {

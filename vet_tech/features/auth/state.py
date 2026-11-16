@@ -108,6 +108,11 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
     identity_professional_loaded: bool = False
     identity_professional_loading: bool = False
     identity_professional_error: bool = False
+    google_signup: bool = False
+    google_signup_name: str = ""
+    google_signup_email: str = ""
+    _google_signup_proof: str = ""
+    _google_intent: str = "login"
     signup_profile: str = "tutor"
     registration_species: list[dict[str, str]] = []
     registration_specialties: list[dict[str, str]] = []
@@ -500,6 +505,21 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
 
     def _clear_google_login(self):
         self._google_state = ""
+        self._google_intent = "login"
+        self._google_signup_proof = ""
+        self.google_signup = False
+        self.google_signup_name = self.google_signup_email = ""
+
+    @rx.event
+    def cancel_google_signup(self):
+        self._clear_google_login()
+        self.signup_message = ""
+        return rx.redirect("/cadastro")
+
+    @rx.event
+    async def start_google_signup(self):
+        async for event in self._start_google("cadastro"):
+            yield event
 
     def _fail_google_login(self, message: str):
         self._clear_session()
@@ -509,9 +529,14 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
 
     @rx.event
     async def start_google_login(self):
+        async for event in self._start_google("login"):
+            yield event
+
+    async def _start_google(self, intent: str):
         if self.is_busy or not google_login_enabled():
             return
         self._clear_session()
+        self._google_intent = intent
         from vet_tech.features.settings.state import SettingsState
         settings = await self.get_state(SettingsState)
         settings.clear()
@@ -521,7 +546,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
         session = self._session_generation
         yield
         try:
-            result = await xano_request("GET", AUTH_API_GROUP, "acesso/google/inicio")
+            result = await xano_request("GET", AUTH_API_GROUP, "acesso/google/inicio" + ("?intencao=cadastro" if intent == "cadastro" else ""))
             if session != self._session_generation:
                 return
             url = result.get("url") if isinstance(result, dict) else None
@@ -546,6 +571,8 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
         params = self.router.url.query_parameters
         code = str(params.get("code", "") or "")
         returned_state = str(params.get("state", "") or "")
+        intent = self._google_intent
+        signup_profile = self.signup_profile
         expected_state = self._google_state
         self._google_state = ""
         if not expected_state and self.is_authenticated:
@@ -572,6 +599,19 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
             )
             if session != self._session_generation:
                 return
+            if intent == "cadastro" and isinstance(result, dict) and result.get("resultado") == "cadastro":
+                if not all(isinstance(result.get(k), str) and result[k] for k in ("prova", "email")):
+                    raise XanoRequestError(GOOGLE_LOGIN_FAILED)
+                self._google_signup_proof = result["prova"]
+                self.google_signup_email = result["email"]
+                self.google_signup_name = str(result.get("nome") or "")
+                self.google_signup = True
+                self.signup_profile = signup_profile
+                self.signup_message = "Complete seus dados para concluir o cadastro com Google."
+                if signup_profile == "veterinario":
+                    await self.load_registration_options()
+                yield rx.redirect("/cadastro")
+                return
             if not isinstance(result, dict) or result.get("resultado") != "sessao":
                 raise XanoRequestError(GOOGLE_LOGIN_FAILED)
             # Sem senha do Vet Tech: o backend vincula no primeiro acesso.
@@ -593,12 +633,12 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
             return
         nome = str(form_data.get("nome", "")).strip()
         cpf = normalize_cpf(str(form_data.get("cpf", "")))
-        email = str(form_data.get("email", "")).strip().lower()
+        email = self.google_signup_email if self.google_signup else str(form_data.get("email", "")).strip().lower()
         telefone = str(form_data.get("telefone", "")).strip()
         endereco = str(form_data.get("endereco", "")).strip()
         password = str(form_data.get("password", ""))
 
-        if not all((nome, email, telefone, password)):
+        if not all((nome, email, telefone)) or (not self.google_signup and not password):
             self.signup_message = "Preencha todos os campos obrigatórios."
             return
         payload = {"nome": nome, "email": email, "telefone": telefone, "password": password}
@@ -622,16 +662,26 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
             self.signup_message = "Selecione o perfil a cadastrar."
             return
 
-        if password != str(form_data.get("password_confirmation", "")):
+        if not self.google_signup and password != str(form_data.get("password_confirmation", "")):
             self.signup_message = "As senhas não coincidem."
             return
+
+        google_signup = self.google_signup
+        if google_signup:
+            if not self._google_signup_proof:
+                self.signup_message = "Cadastro Google expirado. Comece novamente."
+                return
+            payload.pop("password", None)
+            payload.pop("email", None)
+            payload.update(prova=self._google_signup_proof, perfil=self.signup_profile)
+            endpoint = "acesso/google/cadastro"
 
         self.is_busy = True
         session = self._session_generation
         self.signup_message = ""
         yield
         try:
-            await xano_request(
+            result = await xano_request(
                 "POST",
                 AUTH_API_GROUP,
                 endpoint,
@@ -642,6 +692,19 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
                 self.signup_message = str(error)
         else:
             if session != self._session_generation:
+                return
+            if google_signup:
+                self._clear_google_login()
+                try:
+                    async for event in self._open_session(result, session):
+                        yield event
+                    if session == self._session_generation and self.is_authenticated:
+                        yield rx.redirect("/")
+                except XanoRequestError:
+                    if session == self._session_generation:
+                        self._clear_session()
+                        self.login_message = "Cadastro concluído. Entre pelo Google para acessar sua conta."
+                        yield rx.redirect("/login")
                 return
             self.is_registering = False
             self.signup_cpf = ""

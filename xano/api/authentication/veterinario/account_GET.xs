@@ -7,7 +7,7 @@ query "veterinario/account" verb=GET {
     db.get veterinario {
       field_name = "id"
       field_value = $auth.id
-      output = ["nome", "email", "telefone", "crmv", "crmv_uf", "cmv"]
+      output = ["senha", "nome", "email", "telefone", "crmv", "crmv_uf", "cmv"]
     } as $account
     precondition ($account != null) {
       error_type = "accessdenied"
@@ -15,6 +15,7 @@ query "veterinario/account" verb=GET {
     }
   }
   response = {
+    possui_senha: $account.senha != null && $account.senha != ""
     nome: $account.nome|first_notempty:""
     email: $account.email|first_notempty:""
     telefone: $account.telefone|first_notempty:""
