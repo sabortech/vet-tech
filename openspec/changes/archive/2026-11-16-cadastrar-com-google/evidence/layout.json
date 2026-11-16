@@ -1,0 +1,50 @@
+[
+  {
+    "width": 390,
+    "theme": "light",
+    "gaps": [
+      12.0,
+      12.0,
+      12.0,
+      12.0
+    ],
+    "overflow": false,
+    "cpf_feedback": true
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "gaps": [
+      12.0,
+      12.0,
+      12.0,
+      12.0
+    ],
+    "overflow": false,
+    "cpf_feedback": true
+  },
+  {
+    "width": 1100,
+    "theme": "light",
+    "gaps": [
+      12.0,
+      12.0,
+      12.0,
+      12.0
+    ],
+    "overflow": false,
+    "cpf_feedback": true
+  },
+  {
+    "width": 1100,
+    "theme": "dark",
+    "gaps": [
+      12.0,
+      12.0,
+      12.0,
+      12.0
+    ],
+    "overflow": false,
+    "cpf_feedback": true
+  }
+]

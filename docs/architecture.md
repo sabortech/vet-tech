@@ -484,3 +484,12 @@ em `util.post_process`, preservando o sucesso da conta se o Brevo falhar.
 Brevo já configurado. Templates próprios em `xano/templates/welcome_email.*`
 compartilham os padrões visuais dos códigos, sem alterar sua finalidade ou
 transporte. Ver `docs/welcome-email.md` para prévias, operação e rollback.
+
+### Cadastro Google sem senha
+
+O cadastro possui intenção OAuth distinta do login. A autorização verificada resulta
+em prova temporária privada; a identidade nasce somente após completar os campos do
+perfil. Helpers `Identity/create_tutor` e `Identity/create_veterinario` compartilham
+validação e persistência com os endpoints convencionais. O endpoint de conclusão
+inclui consumo único da prova, reserva e vínculo Google na mesma transação.
+Ver [google-registration.md](google-registration.md) para contrato e rollback.

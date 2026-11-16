@@ -25,7 +25,7 @@ def render(profile,name):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,default=ROOT/'openspec/changes/enviar-boas-vindas-cadastro/evidence/email');a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,default=ROOT/'openspec/changes/archive/2026-11-16-enviar-boas-vindas-cadastro/evidence/email');a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
     config=json.loads((TEMPLATES/'welcome_email.json').read_text())
     for profile,name in (('tutor','Ana Silva'),('veterinario','Alex Oliveira')):
         m=render(profile,name)

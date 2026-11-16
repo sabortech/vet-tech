@@ -29,6 +29,7 @@ class SettingsState(rx.State):
     message: str = ""
     message_ok: bool = False
     discard_open: bool = False
+    has_local_password: bool = True
     password_code_sent: bool = False
     _password_challenge: str = ""
     _password_generation: int = 0
@@ -80,6 +81,7 @@ class SettingsState(rx.State):
         self._context = ("", "", "", -1)
         self.loaded = self.loading = self.saving = self.discard_open = False
         self.message = ""
+        self.has_local_password = True
         self.message_ok = False
         self.tab = "account"
         self._session = self._pending = ""
@@ -97,6 +99,7 @@ class SettingsState(rx.State):
             self.crmv, self.crmv_uf = result["crmv"], result["crmv_uf"]
         else:
             self.endereco, self.cpf_mascarado = result["endereco"], result["cpf_mascarado"]
+        self.has_local_password = result.get("possui_senha", self.has_local_password) is not False
         self._snapshot = self._draft()
         self.loaded = True
         self._loaded_at = time.monotonic()
@@ -390,3 +393,13 @@ class SettingsState(rx.State):
         # The browser checked the live inputs; do not wait for an input delta.
         self._pending = "history"
         self.discard_open = True
+
+    @rx.event
+    async def define_first_password(self):
+        auth = await self.get_state(AuthState)
+        if not self._current(auth, self._context) or self.has_local_password:
+            return
+        auth._clear_session()
+        auth.recovery_step = "email"
+        self.clear()
+        yield rx.redirect("/login")

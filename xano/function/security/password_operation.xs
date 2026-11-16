@@ -180,10 +180,15 @@ function "Security/password_operation" {
             var.update $account_key { value = $row.key }
           }
         }
+        conditional {
+          if ($credential == null || $credential == "") {
+            var.update $credential {value="google-without-local-password"}
+          }
+        }
         var $fingerprint { value = $credential|hmac_sha256:$env.PASSWORD_CODE_SECRET }
         var $current_valid { value = false }
         conditional {
-          if ($context.authenticated && ($input.action == "request" || $input.action == "change")) {
+          if ($context.authenticated && $credential != "google-without-local-password" && ($input.action == "request" || $input.action == "change")) {
             security.check_password {
               text_password = $input.current_password
               hash_password = $credential

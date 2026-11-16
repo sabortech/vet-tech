@@ -103,7 +103,7 @@ def main():
                     removed.append(r.status_code in (200,404))
                 except Exception:removed.append(False)
             evidence={'environment':'development','synthetic':True,'real_email_sent':False,'checks':results,'synthetic_accounts_removed':all(cleaned),'temporary_functions_removed':all(removed)}
-            out=ROOT/'openspec/changes/enviar-boas-vindas-cadastro/evidence/live-integration.json';out.write_text(json.dumps(evidence,indent=2))
+            out=ROOT/'openspec/changes/archive/2026-11-16-enviar-boas-vindas-cadastro/evidence/live-integration.json';out.write_text(json.dumps(evidence,indent=2))
             save_progress()
             if all(cleaned) and all(removed):checkpoint.unlink()
             assert all(cleaned) and all(removed),'Limpeza sintética incompleta; checkpoint privado preservado.'

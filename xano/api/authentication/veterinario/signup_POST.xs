@@ -14,132 +14,20 @@ query "veterinario/signup" verb=POST {
   }
 
   stack {
-    precondition ($input.nome != "" && $input.telefone != "" && $input.password != "") {
-      error_type = "inputerror"
-      error = "Preencha todos os campos obrigatórios."
+    precondition ($input.password != null && $input.password != "") {
+      error_type="inputerror"
+      error="Preencha todos os campos obrigatórios."
     }
-
-    precondition ("/^[A-Z0-9]{1,20}$/"|regex_matches:$input.crmv) {
-      error_type = "inputerror"
-      error = "CRMV deve conter de 1 a 20 letras ou números, sem espaços internos."
-    }
-
-    precondition ("/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/"|regex_matches:$input.crmv_uf) {
-      error_type = "inputerror"
-      error = "Informe uma UF válida para o CRMV."
-    }
-
-    var $species {
-      value = $input.especies_ids|unique
-    }
-
-    var $specialties {
-      value = $input.especialidades_ids|unique
-    }
-
-    precondition (($species|count) > 0 && ($specialties|count) > 0) {
-      error_type = "inputerror"
-      error = "Selecione pelo menos uma espécie e uma especialidade."
-    }
-
-    conditional {
-      if ($input.clinica_id != null && $input.clinica_id != 0) {
-        db.has clinica {
-          field_name = "id"
-          field_value = $input.clinica_id
-        } as $has_clinic
-
-        precondition ($has_clinic) {
-          error_type = "inputerror"
-          error = "Clínica indisponível."
-        }
-      }
-    }
-
-    foreach ($species) {
-      each as $species_id {
-        db.has especie {
-          field_name = "id"
-          field_value = $species_id
-        } as $exists
-
-        precondition ($exists) {
-          error_type = "inputerror"
-          error = "Espécie indisponível."
-        }
-      }
-    }
-
-    foreach ($specialties) {
-      each as $specialty_id {
-        db.has especialidade {
-          field_name = "id"
-          field_value = $specialty_id
-        } as $exists
-
-        precondition ($exists) {
-          error_type = "inputerror"
-          error = "Especialidade indisponível."
-        }
-      }
-    }
-
-    function.run "Identity/check_email_available" {
-      input = {email: $input.email}
-    } as $email_check
-
-    db.transaction {
-      stack {
-        db.add reserva_email {
-          data = {email: $input.email, perfil: "veterinario"}
-        } as $reservation
-
-        db.add veterinario {
-          data = {
-            nome      : $input.nome
-            email     : $input.email
-            telefone  : $input.telefone
-            senha     : $input.password
-            crmv      : $input.crmv
-            crmv_uf   : $input.crmv_uf
-            clinica_id: $input.clinica_id
-          }
-        } as $vet
-
-        foreach ($species) {
-          each as $species_id {
-            db.add veterinario_especie {
-              data = {veterinario_id: $vet.id, especie_id: $species_id}
-            } as $species_link
-          }
-        }
-
-        foreach ($specialties) {
-          each as $specialty_id {
-            db.add veterinario_especialidade {
-              data = {veterinario_id: $vet.id, especialidade_id: $specialty_id}
-            } as $specialty_link
-          }
-        }
-
-        db.edit reserva_email {
-          field_name = "id"
-          field_value = $reservation.id
-          data = {identidade_id: $vet.id}
-        } as $complete
-
-        db.add welcome_email_event {
-          data={key:"veterinario:" ~ ($vet.id|to_text), profile:"veterinario", identity_id:$vet.id}
-        } as $welcome_event
-      }
-    }
+    function.run "Identity/create_veterinario" {
+      input={nome:$input.nome, email:$input.email, telefone:$input.telefone, password:$input.password, crmv:$input.crmv, crmv_uf:$input.crmv_uf, clinica_id:$input.clinica_id, especies_ids:$input.especies_ids, especialidades_ids:$input.especialidades_ids}
+    } as $created
     // A resposta do cadastro não depende do provedor de e-mail.
     util.post_process {
       stack {
         var $welcome_attempted {value=false}
         try_catch {
           try {
-            function.run "Notifications/send_welcome_email" {input={event_id:$welcome_event.id}} as $welcome_result
+            function.run "Notifications/send_welcome_email" {input={event_id:$created.event_id}} as $welcome_result
             var.update $welcome_attempted {value=true}
           }
           catch {

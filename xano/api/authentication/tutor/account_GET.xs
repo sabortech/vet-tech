@@ -7,7 +7,7 @@ query "tutor/account" verb=GET {
     db.get tutor {
       field_name = "id"
       field_value = $auth.id
-      output = ["nome", "email", "cpf", "telefone", "endereco"]
+      output = ["password", "nome", "email", "cpf", "telefone", "endereco"]
     } as $account
     precondition ($account != null) {
       error_type = "accessdenied"
@@ -25,6 +25,7 @@ query "tutor/account" verb=GET {
     }
   }
   response = {
+    possui_senha: $account.password != null && $account.password != ""
     nome: $account.nome
     email: $account.email
     cpf_mascarado: $masked

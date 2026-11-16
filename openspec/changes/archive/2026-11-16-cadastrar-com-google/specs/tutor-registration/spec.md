@@ -1,0 +1,118 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Cadastro coleta os dados obrigatórios do tutor
+O sistema SHALL oferecer um cadastro de tutor com nome, CPF, e-mail, telefone, endereço e senha obrigatórios.
+
+#### Scenario: Cadastro com todos os campos válidos
+- **WHEN** uma pessoa envia todos os campos obrigatórios com valores válidos
+- **THEN** o sistema aceita o pedido de criação da conta de tutor
+
+#### Scenario: Campo obrigatório ausente
+- **WHEN** uma pessoa envia o cadastro sem um ou mais campos obrigatórios
+- **THEN** o sistema identifica os campos que precisam ser corrigidos e não cria a conta
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Cadastro cria somente uma identidade de tutor
+O sistema SHALL persistir a nova conta na entidade `tutor`, armazenar a senha de forma segura e não expor senha ou hash na resposta do cadastro.
+
+#### Scenario: Criação de conta de tutor
+- **WHEN** uma pessoa envia dados válidos e únicos para cadastro
+- **THEN** o sistema cria a conta na entidade `tutor` e não cria uma identidade na entidade genérica `user`
+
+#### Scenario: Credenciais não são expostas
+- **WHEN** o sistema responde a uma tentativa de cadastro
+- **THEN** a resposta não contém a senha nem seu hash
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Cadastro concluído retorna a pessoa ao login
+O sistema SHALL confirmar a criação da conta e permitir que o novo tutor siga para o login sem criar automaticamente uma sessão autenticada.
+
+#### Scenario: Cadastro concluído
+- **WHEN** a conta de tutor é criada com sucesso
+- **THEN** o sistema confirma o resultado, limpa a senha informada e apresenta o formulário de login
+
+#### Scenario: Falha no cadastro
+- **WHEN** o endpoint rejeita o cadastro ou fica indisponível
+- **THEN** o sistema informa a falha, não simula sucesso e permite corrigir os dados ou tentar novamente
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Cadastro usa uma única tela com identidade visual
+O sistema SHALL oferecer `/cadastro` compartilhado entre tutor e veterinário, com seleção do perfil a cadastrar, campos adequados, identidade visual existente e layout acessível em desktop e celular. Os acessos ao cadastro SHALL direcionar a essa tela; selecionar perfil SHALL NOT conceder privilégios de sessão.
+
+#### Scenario: Acesso pelo login ou diretamente
+- **WHEN** a pessoa abre `/cadastro` ou escolhe criar conta no login
+- **THEN** encontra a mesma tela com logo, cores, escolha de perfil e ação Cadastrar
+
+#### Scenario: Tela pequena
+- **WHEN** a pessoa usa uma tela de celular
+- **THEN** consegue acessar todos os campos, mensagens e botão por rolagem sem corte do formulário
+
+#### Scenario: Seleção do perfil tutor
+- **WHEN** a pessoa escolhe cadastrar tutor
+- **THEN** são solicitados os dados obrigatórios atuais de tutor, mantendo validação de CPF e confirmação de senha
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Confirmação de senha impede envio inconsistente
+O sistema SHALL exigir confirmação da senha e rejeitar divergências antes de enviar o cadastro à API.
+
+#### Scenario: Senhas diferentes
+- **WHEN** senha e confirmação não coincidem
+- **THEN** informa a divergência e não chama a API
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Tela apresenta o resultado real do cadastro
+O sistema SHALL exibir feedback do CPF, erros da API e estado de envio, impedir novo envio durante uma requisição e retornar ao login com confirmação após sucesso sem autenticar automaticamente.
+
+#### Scenario: API rejeita cadastro
+- **WHEN** o endpoint rejeita a conta
+- **THEN** exibe a mensagem e mantém os campos disponíveis para correção
+
+#### Scenario: Envio concluído
+- **WHEN** a API confirma a criação
+- **THEN** apresenta o login com confirmação e limpa senha e confirmação
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta
+
+### Requirement: Controles sem integração não simulam funcionalidade
+O sistema SHALL identificar o acesso Google como indisponível e não oferecer persistência de informações pessoais sem implementação.
+
+#### Scenario: Opção Google
+- **WHEN** a pessoa visualiza as opções de cadastro
+- **THEN** encontra Google indisponível e pode usar o cadastro por e-mail
+
+No cadastro convencional, as regras acima permanecem. Na modalidade Google, o sistema SHALL importar nome e e-mail verificado, exigir todos os demais dados pessoais, dispensar senha e confirmação e abrir sessão somente após criar a identidade completa. Controles Google SHALL mostrar “Cadastrar com Google” quando disponíveis; falha de configuração SHALL informar indisponibilidade sem simular cadastro.
+
+#### Scenario: Cadastro Google completo
+- **WHEN** uma identidade Google verificada conclui os dados pessoais obrigatórios
+- **THEN** a conta é criada sem senha e a sessão de tutor é aberta

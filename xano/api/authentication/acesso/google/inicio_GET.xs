@@ -3,9 +3,15 @@
 // from the environment, never from the client. Returns only the URL.
 query "acesso/google/inicio" verb=GET {
   api_group = "Authentication"
-  input {}
+  input {
+    text intencao?="login"
+  }
 
   stack {
+    precondition ($input.intencao == "login" || $input.intencao == "cadastro") {
+      error_type="inputerror"
+      error="Operação inválida."
+    }
     precondition ($env.GOOGLE_OAUTH_CLIENT_ID != null && $env.GOOGLE_OAUTH_CLIENT_ID != "" && $env.GOOGLE_OAUTH_CLIENT_SECRET != null && $env.GOOGLE_OAUTH_CLIENT_SECRET != "" && $env.GOOGLE_OAUTH_REDIRECT_URI != null && $env.GOOGLE_OAUTH_REDIRECT_URI != "") {
       error_type = "standard"
       error = "Login com Google indisponível no momento."
@@ -33,6 +39,7 @@ query "acesso/google/inicio" verb=GET {
 
     db.add tentativa_oauth_google {
       data = {
+        intencao     : $input.intencao
         state_hash   : $state|sha256
         code_verifier: $code_verifier
         expira_em    : now|add_secs_to_timestamp:600

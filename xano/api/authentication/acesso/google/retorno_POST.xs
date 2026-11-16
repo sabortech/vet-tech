@@ -26,11 +26,12 @@ query "acesso/google/retorno" verb=POST {
     db.get tentativa_oauth_google {
       field_name = "state_hash"
       field_value = $input.state|sha256
-      output = ["id", "code_verifier", "expira_em"]
+      output = ["id", "code_verifier", "expira_em", "intencao"]
       mock = {
         "nega state desconhecido ou expirado": null
         "nega email google nao verificado": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "orienta cadastro quando nao ha conta": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
+        "cadastro google retorna prova sem sessao": {intencao:"cadastro", id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "nega email em dois perfis ou reserva divergente": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "nega identidade ja vinculada a outro sub": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
         "nega vinculo de identidade removida": {id: -1, code_verifier: "verificador-de-teste", expira_em: 4102444800000}
@@ -57,6 +58,7 @@ query "acesso/google/retorno" verb=POST {
           mock = {
             "nega email google nao verificado": {id: -1}
             "orienta cadastro quando nao ha conta": {id: -1}
+            "cadastro google retorna prova sem sessao": {id: -1}
             "nega email em dois perfis ou reserva divergente": {id: -1}
             "nega identidade ja vinculada a outro sub": {id: -1}
             "nega vinculo de identidade removida": {id: -1}
@@ -121,6 +123,7 @@ query "acesso/google/retorno" verb=POST {
           mock = {
             "nega email google nao verificado": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "orienta cadastro quando nao ha conta": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
+            "cadastro google retorna prova sem sessao": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "nega email em dois perfis ou reserva divergente": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "nega identidade ja vinculada a outro sub": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
             "nega vinculo de identidade removida": {response: {status: 200, result: {id_token: "cabecalho.carga.assinatura"}}}
@@ -167,6 +170,7 @@ query "acesso/google/retorno" verb=POST {
       mock = {
         "nega email google nao verificado": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: false}
         "orienta cadastro quando nao ha conta": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
+        "cadastro google retorna prova sem sessao": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
         "nega email em dois perfis ou reserva divergente": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
         "nega identidade ja vinculada a outro sub": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
         "nega vinculo de identidade removida": {iss: "https://accounts.google.com", aud: "cliente-de-teste", exp: 4102444800, sub: "sub-de-teste", email: "teste@example.invalid", email_verified: true}
@@ -195,6 +199,7 @@ query "acesso/google/retorno" verb=POST {
       mock = {
         "nega email google nao verificado": "cliente-de-teste"
         "orienta cadastro quando nao ha conta": "cliente-de-teste"
+        "cadastro google retorna prova sem sessao": "cliente-de-teste"
         "nega email em dois perfis ou reserva divergente": "cliente-de-teste"
         "nega identidade ja vinculada a outro sub": "cliente-de-teste"
         "nega vinculo de identidade removida": "cliente-de-teste"
@@ -232,6 +237,7 @@ query "acesso/google/retorno" verb=POST {
       mock = {
         "nega email google nao verificado": null
         "orienta cadastro quando nao ha conta": null
+        "cadastro google retorna prova sem sessao": null
         "nega email em dois perfis ou reserva divergente": null
         "nega identidade ja vinculada a outro sub": null
         "nega vinculo de identidade removida": {id: -1, perfil: "tutor", identidade_id: -1}
@@ -244,6 +250,24 @@ query "acesso/google/retorno" verb=POST {
       value = null
     }
 
+    conditional {
+      if (($tentativa|get:"intencao":"login") == "cadastro") {
+        precondition ($email_verificado && $google_email != "" && $vinculo == null) {
+          error_type="accessdenied"
+          error="Não foi possível cadastrar com Google. Se já possui conta, entre pelo login."
+        }
+        function.run "Identity/check_email_available" {input={email:$google_email}} as $disponivel
+        security.random_bytes {
+          length=32
+        } as $prova
+        var.update $prova {value=$prova|base64_encode_urlsafe}
+        db.add cadastro_google {
+          data={prova_hash:$prova|sha256, google_sub:$google_sub, email:$google_email, nome:($claims|get:"name":""), expira_em:now|add_secs_to_timestamp:600}
+          mock={"cadastro google retorna prova sem sessao":{id:-1,nome:"Teste",email:"teste@example.invalid"}}
+        } as $cadastro
+        var.update $resposta {value={resultado:"cadastro", prova:$prova, nome:$cadastro.nome, email:$cadastro.email}}
+      }
+      else {
     conditional {
       if ($vinculo != null) {
         function.run "Identity/linked_identity_valid" {
@@ -296,6 +320,7 @@ query "acesso/google/retorno" verb=POST {
           input = {email: $google_email}
           mock = {
             "orienta cadastro quando nao ha conta": {situacao: "sem_conta", perfil: "", identidade_id: 0}
+            "cadastro google retorna prova sem sessao": {situacao: "sem_conta", perfil: "", identidade_id: 0}
             "nega email em dois perfis ou reserva divergente": {situacao: "conflito", perfil: "", identidade_id: 0}
             "nega identidade ja vinculada a outro sub": {situacao: "ok", perfil: "tutor", identidade_id: -1}
             "cria vinculo no primeiro acesso sem senha": {situacao: "ok", perfil: "tutor", identidade_id: -1}
@@ -382,11 +407,19 @@ query "acesso/google/retorno" verb=POST {
         }
       }
     }
+      }
+    }
   }
 
+  history = false
   response = $resposta
   tags = ["vettech", "google-login"]
   guid = "XeiVEQOw08_KKoVIxZjTORVZGqQ"
+
+  test "cadastro google retorna prova sem sessao" {
+    input={code:"codigo-de-teste",state:"state-de-teste"}
+    expect.to_equal ($response.resultado) {value="cadastro"}
+  }
 
   test "nega state desconhecido ou expirado" {
     input = {code: "codigo-de-teste", state: "state-de-teste"}

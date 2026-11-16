@@ -4,6 +4,7 @@ table tentativa_oauth_google {
   auth = false
 
   schema {
+    text intencao?="login"
     int id
     timestamp created_at?=now
     text state_hash {

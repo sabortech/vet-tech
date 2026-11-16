@@ -12,7 +12,7 @@ table tutor {
       email email filters=trim|lower
     text telefone filters=trim
     text endereco filters=trim
-      password password {
+      password password? {
       sensitive = true
       visibility = "internal"
     }

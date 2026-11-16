@@ -13,7 +13,7 @@ Fontes: `xano/templates/welcome_email.html`, `.txt` e `.json`. A imagem é a ori
 .venv/bin/python tests/integration/welcome_email_preview.py
 ```
 
-A prévia gera dois HTML/TXT com nomes fictícios em `openspec/changes/enviar-boas-vindas-cadastro/evidence/email/`. Só a prévia embute bytes das imagens; o e-mail enviado mantém HTTPS. Por autorização explícita do usuário, o botão Acesse nosso sistema aponta temporariamente para `http://localhost:3000/login`, também presente no TXT. Esse endereço só funciona no aparelho onde o app está rodando. `system_url` no JSON poderá receber a URL pública HTTPS quando disponível. Publicar o aplicativo não é necessário nesta etapa.
+A prévia gera dois HTML/TXT com nomes fictícios em `openspec/changes/archive/2026-11-16-enviar-boas-vindas-cadastro/evidence/email/`. Só a prévia embute bytes das imagens; o e-mail enviado mantém HTTPS. Por autorização explícita do usuário, o botão Acesse nosso sistema aponta temporariamente para `http://localhost:3000/login`, também presente no TXT. Esse endereço só funciona no aparelho onde o app está rodando. `system_url` no JSON poderá receber a URL pública HTTPS quando disponível. Publicar o aplicativo não é necessário nesta etapa.
 
 ## Contrato e configuração
 

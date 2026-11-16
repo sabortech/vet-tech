@@ -260,3 +260,11 @@ A referência lógica de perfil é revalidada na tabela correta e em `reserva_em
 O evento participa do commit do cadastro; a tentativa é reservada depois por
 inserção com índice único. Não há dados clínicos, senha, nome ou e-mail nessas
 tabelas. Sem endpoints CRUD públicos. Ver `docs/welcome-email.md`.
+
+### Prova de cadastro Google
+
+`tentativa_oauth_google.intencao` distingue login de cadastro. `cadastro_google`
+armazena hash de prova, sub, nome/e-mail verificados e expiração; não representa
+identidade autenticada. `uso_oauth_google` usa marcador único `cadastro:<id>` para
+conclusão atômica. Contas Google novas podem não ter credencial local; reserva de
+e-mail, CPF/CRMV, aptidões e consentimento clínico mantêm as regras existentes.
