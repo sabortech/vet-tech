@@ -2,6 +2,8 @@ import reflex as rx
 from vet_tech.components.date_input import perimeter_led
 
 from vet_tech.features.auth.state import State
+from vet_tech.components.password_recovery import password_recovery
+from vet_tech.components.password_input import password_control
 
 
 def login_view() -> rx.Component:
@@ -24,8 +26,9 @@ def login_view() -> rx.Component:
                 font_size="14px",
                 _focus={"border": "1.5px solid var(--vt-green)", "box_shadow": "none"},
             ),
-            rx.input(
+            password_control(rx.input(
                 placeholder="Senha",
+                id="login-password",
                 aria_label="Senha",
                 type="password",
                 name="password",
@@ -40,7 +43,7 @@ def login_view() -> rx.Component:
                 font_family="Nunito",
                 font_size="14px",
                 _focus={"border": "1.5px solid var(--vt-green)", "box_shadow": "none"},
-            ),
+            ), "login-password", "Senha", disabled=State.is_busy),
             rx.hstack(
                 rx.hstack(
                     rx.box(
@@ -62,8 +65,10 @@ def login_view() -> rx.Component:
                     align="center",
                     spacing="2",
                 ),
-                rx.text(
+                rx.button(
                     "Esqueceu a senha?",
+                    type="button", variant="ghost", on_click=State.start_password_recovery,
+                    disabled=State.is_busy,
                     color="var(--vt-green)",
                     font_family="Nunito",
                     font_size="13px",
@@ -192,7 +197,7 @@ def login_view() -> rx.Component:
         spacing="3",
     )
 
-    return auth_shell(painel_formulario)
+    return auth_shell(rx.cond(State.recovery_step != "", password_recovery(), painel_formulario))
 
 
 _GOOGLE_ICON = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -341,6 +346,7 @@ def auth_shell(painel: rx.Component) -> rx.Component:
         ),
         min_height="100dvh",
         class_name="login-view",
+        on_unmount=State.cancel_password_recovery,
         width="100%",
         display="flex",
         align_items=["flex-start", "center"],

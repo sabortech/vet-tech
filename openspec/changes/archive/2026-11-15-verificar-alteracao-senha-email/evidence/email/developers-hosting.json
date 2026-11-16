@@ -1,0 +1,32 @@
+[
+  {
+    "file": "davi-diniz.jpeg",
+    "url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/b42d19ced00e15fb04ef612a2c176919b66be7dd/email/developers/davi-diniz.jpeg",
+    "authorized_by_user": true,
+    "bytes": 114967,
+    "sha256": "e2b3671402aa4f195c633ed76097e78e7c78615422cf6da90a046b2c0391330e",
+    "http": 200,
+    "mime": "image/jpeg",
+    "bytes_match": true
+  },
+  {
+    "file": "vitor-sousa.png",
+    "url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/491b6b77173e105b76a9082990c35fa591ca4d69/email/developers/vitor-sousa.png",
+    "authorized_by_user": true,
+    "bytes": 293164,
+    "sha256": "af885561e0795eb0ee5b88bf1acad7aa8d7c4e28a39d7969d49833aa566b51a1",
+    "http": 200,
+    "mime": "image/png",
+    "bytes_match": true
+  },
+  {
+    "file": "danikelly-alves.png",
+    "url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/d9684c01dec861e10d8308f03ad4134d19f9b0ca/email/developers/danikelly-alves.png",
+    "authorized_by_user": true,
+    "bytes": 278536,
+    "sha256": "a4ce9520d9f69b47de3d82db2d6dfa9070b75213da2a3f789e6499c3bcdd66f4",
+    "http": 200,
+    "mime": "image/png",
+    "bytes_match": true
+  }
+]

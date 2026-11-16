@@ -57,7 +57,7 @@ def main():
    assert page.evaluate('probe.requests.length')==count+1
    assert 'read_through' not in page.evaluate("probe.requests.filter(r=>r.action==='support_get').at(-1)")
    page.locator('.vt-chat-messages').evaluate('el=>el.scrollTop=el.scrollHeight')
-   page.screenshot(path=str(ROOT/f'openspec/changes/reorganizar-fluxos-chat/evidence/read-receipts-{profile}-{theme}.png'))
+   page.screenshot(path=str(ROOT/f'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/read-receipts-{profile}-{theme}.png'))
    page.close()
   browser.close()
  print('OK: tutor card name, delivered/read, viewport and hidden-tab guards, grouped polling and monotonic acknowledgement in both profiles.')

@@ -98,10 +98,11 @@ class SettingsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_password_mismatch_blocks_api_and_wrong_current_keeps_session(self):
         state, auth = self.make()
+        state._password_challenge = "challenge-a"
         with patch.object(SettingsState, 'get_state', AsyncMock(return_value=auth)), patch('vet_tech.features.settings.state.xano_request', AsyncMock(side_effect=XanoRequestError('Senha atual incorreta.',400))) as call:
-            await consume(SettingsState.change_password.fn(state, {'current_password':'wrong','new_password':'x','password_confirmation':'y'}))
+            await consume(SettingsState.change_password.fn(state, {'code': '012345', 'current_password':'wrong','new_password':'x','password_confirmation':'y'}))
             call.assert_not_awaited()
-            await consume(SettingsState.change_password.fn(state, {'current_password':'wrong','new_password':' x ','password_confirmation':' x '}))
+            await consume(SettingsState.change_password.fn(state, {'code': '012345', 'current_password':'wrong','new_password':' x ','password_confirmation':' x '}))
         self.assertEqual(call.await_args.kwargs['json_payload']['new_password'], ' x ')
         self.assertTrue(auth.is_authenticated)
         self.assertEqual(state.message,'Senha atual incorreta.')
@@ -109,10 +110,11 @@ class SettingsTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_password_success_cleans_session_and_redirects(self):
         state, auth = self.make()
+        state._password_challenge = "challenge-a"
         async def get_state(instance, cls):
             return state if cls is SettingsState else auth
         with patch.object(SettingsState,'get_state',get_state), patch.object(AuthState,'get_state',get_state), patch('vet_tech.features.settings.state.xano_request', AsyncMock(return_value={'success':True})):
-            result = await consume(SettingsState.change_password.fn(state, {'current_password':'old','new_password':'new','password_confirmation':'new'}))
+            result = await consume(SettingsState.change_password.fn(state, {'code': '012345', 'current_password':'old','new_password':'new','password_confirmation':'new'}))
         self.assertFalse(auth.is_authenticated)
         self.assertEqual(auth._auth_token,'')
         self.assertEqual(state.email,'')
@@ -156,3 +158,35 @@ class SettingsTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(XanoRequestError('Sessão inválida.',403).session_invalid)
         self.assertFalse(XanoRequestError('Senha atual incorreta.',400).session_invalid)
         self.assertFalse(XanoRequestError('Negado',403).session_invalid)
+
+
+class PasswordCodeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_both_profiles_request_own_email_and_ignore_forged_identity(self):
+        for profile in ('tutor', 'veterinario'):
+            state, auth = SettingsTests().make()
+            auth.profile = state.account_profile = profile
+            state._context = state._context_for(auth)
+            with patch.object(SettingsState, 'get_state', AsyncMock(return_value=auth)), patch('vet_tech.features.settings.state.xano_request', AsyncMock(return_value={'ok': True, 'challenge_id': 'own-code'})) as call:
+                await consume(SettingsState.request_password_code.fn(state, {'current_password': ' old ', 'email': 'other@example.invalid', 'identity_id': 999}))
+            self.assertEqual(call.await_args.args[2], profile + '/password/request-code')
+            self.assertEqual(call.await_args.kwargs['json_payload'], {'current_password': ' old '})
+            self.assertTrue(state.password_code_sent)
+            self.assertEqual(state._password_challenge, 'own-code')
+
+    async def test_no_challenge_cannot_change_password(self):
+        state, auth = SettingsTests().make()
+        with patch.object(SettingsState, 'get_state', AsyncMock(return_value=auth)), patch('vet_tech.features.settings.state.xano_request', AsyncMock()) as call:
+            await consume(SettingsState.change_password.fn(state, {'current_password': 'old', 'new_password': 'new', 'password_confirmation': 'new', 'code': '012345'}))
+        call.assert_not_awaited()
+        self.assertTrue(auth.is_authenticated)
+
+    async def test_cancel_discards_pending_request_and_clears_busy(self):
+        state, auth = SettingsTests().make()
+        async def response(*args, **kwargs):
+            state.cancel_password_challenge()
+            return {'ok': True, 'challenge_id': 'stale'}
+        with patch.object(SettingsState, 'get_state', AsyncMock(return_value=auth)), patch('vet_tech.features.settings.state.xano_request', AsyncMock(side_effect=response)):
+            await consume(SettingsState.request_password_code.fn(state, {'current_password': 'old'}))
+        self.assertEqual(state._password_challenge, '')
+        self.assertFalse(state.saving)
+        self.assertFalse(state.password_code_sent)

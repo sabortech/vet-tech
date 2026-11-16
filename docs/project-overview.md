@@ -386,3 +386,61 @@ Desenvolvimento incremental por módulo, com spec driven development usando Open
 | DER | Diagrama entidade-relacionamento |
 | LGPD | Lei Geral de Proteção de Dados |
 | xanoscript | Linguagem de script do Xano usada para definir o backend |
+
+
+## Confirmação de senha por e-mail
+
+As tabelas técnicas abaixo pertencem à autenticação, sem referência a pet ou
+prontuário. Fonte: `xano/table/password_*.xs`. Não criar CRUD público.
+
+```mermaid
+erDiagram
+    TUTOR |o--o{ PASSWORD_CHALLENGE : identidade_logica
+    VETERINARIO |o--o{ PASSWORD_CHALLENGE : identidade_logica
+    TUTOR |o--o{ PASSWORD_EVENT : identidade_logica
+    VETERINARIO |o--o{ PASSWORD_EVENT : identidade_logica
+    PASSWORD_CHALLENGE {
+        int id PK
+        text key UK "HMAC do email normalizado e finalidade"
+        text public_id "identificador aleatorio do desafio"
+        text grant_digest "HMAC da autorizacao restrita"
+        text profile "tutor ou veterinario"
+        int identity_id "identidade logica do perfil"
+        json state "digests, limites, finalidade, expiracao e consumo"
+        timestamp updated_at
+    }
+    PASSWORD_ORIGIN {
+        int id PK
+        text key UK "HMAC da origem confiavel"
+        json times "solicitacoes recentes"
+        timestamp updated_at
+    }
+    PASSWORD_LOCK {
+        int id PK
+        text key UK "trava transacional temporaria"
+    }
+    PASSWORD_EVENT {
+        int id PK
+        text profile
+        int identity_id
+        text purpose
+        text outcome
+        timestamp created_at
+    }
+```
+
+`profile` e `identity_id` formam uma referência lógica polimórfica, validada no
+backend. Uma conta existente referencia exatamente uma tabela de domínio;
+solicitações públicas para e-mail desconhecido têm identidade ausente e resposta
+indistinguível, sem inventar um usuário. `key` não contém o e-mail em claro.
+`state` guarda HMAC do código, fingerprint protegido da credencial atual,
+expirações, contadores, confirmação de envio e consumo; nunca senha ou código
+em claro. A autorização de recuperação é opaca, restrita e armazenada por HMAC.
+
+A chave técnica única de `password_lock` é inserida/removida na mesma transação,
+seguindo o padrão já usado nas operações clínicas. Todas as operações de senha
+compartilham essa trava inicial; concorrência pode rejeitar uma requisição, sem
+repetição automática. O isolamento real precisa de ensaio no backend remoto.
+A alteração invalida desafios pendentes dos dois fluxos da conta, preservando
+os contadores. A rotina do backend Reflex local aciona a limpeza na inicialização e a cada hora enquanto o aplicativo estiver aberto, removendo metadados sem atualização há 24h e eventos com mais de 30 dias. Com o processo desligado a remoção física aguarda o reinício; a expiração continua obrigatória no Xano. `history=false` cobre as funções e endpoints
+sensíveis desta implementação.

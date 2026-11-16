@@ -1,0 +1,12 @@
+{
+  "test": "authorized_change_template_email_via_xano_brevo",
+  "recipient": "vet.tech.impact@gmail.com",
+  "metadata_http": 200,
+  "accepted": true,
+  "inbox_confirmed": false,
+  "password_changed": false,
+  "automatic_retry": false,
+  "function_status": "ok",
+  "provider_delivery_confirmed": true,
+  "delivery_event_date": "2026-11-15T23:01:21.000-03:00"
+}

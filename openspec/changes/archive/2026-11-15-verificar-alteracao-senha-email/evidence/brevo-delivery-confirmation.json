@@ -1,0 +1,18 @@
+{
+  "provider": "brevo",
+  "recipient_scope": "authorized_vet_tech_test_mailbox",
+  "purposes": {
+    "reset": {
+      "accepted": true,
+      "provider_delivery_confirmed": true,
+      "date": "2026-11-15T23:01:09.000-03:00"
+    },
+    "change": {
+      "accepted": true,
+      "provider_delivery_confirmed": true,
+      "date": "2026-11-15T23:01:21.000-03:00"
+    }
+  },
+  "password_changed": false,
+  "second_mailbox_tested": false
+}

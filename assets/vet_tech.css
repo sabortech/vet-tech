@@ -2490,3 +2490,13 @@ html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection
   filter:drop-shadow(0 0 3px color-mix(in srgb, var(--interaction-light) 60%, transparent))
          drop-shadow(0 0 10px color-mix(in srgb, var(--interaction-light) 38%, transparent));
 }
+
+/* Visibilidade local de senha compartilhada entre as telas de autenticação. */
+.password-control input { padding-right: 48px; }
+.password-eye { position: absolute; right: 2px; top: 2px; width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--vt-muted); border-radius: 10px; cursor: pointer; }
+.password-eye:hover { color: var(--vt-green); }
+.password-eye:focus-visible { outline: 3px solid var(--vt-focus); outline-offset: 2px; }
+.password-eye:disabled, .settings-eye:disabled { opacity: .5; cursor: not-allowed; }
+.password-eye .password-eye-open { display: none; }
+.password-eye[aria-pressed="true"] .password-eye-open { display: block; }
+.password-eye[aria-pressed="true"] .password-eye-closed { display: none; }

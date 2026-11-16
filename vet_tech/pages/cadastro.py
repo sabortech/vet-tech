@@ -5,6 +5,7 @@ from vet_tech.components.date_input import perimeter_led
 
 from vet_tech.features.auth.state import State
 from vet_tech.components.professional_registration import professional_fields
+from vet_tech.components.password_input import password_control
 
 VERDE = "var(--vt-green)"
 VERDE_ESCURO = "var(--vt-text)"
@@ -19,7 +20,7 @@ def campo_texto(
     **props: Any,
 ) -> rx.Component:
     autocomplete = props.pop("auto_complete", "off")
-    return rx.input(
+    control = rx.input(
         placeholder=placeholder,
         type=input_type,
         name=name,
@@ -38,6 +39,9 @@ def campo_texto(
         _focus={"border": f"1.5px solid {VERDE}", "box_shadow": "none"},
         **props,
     )
+    if input_type == "password":
+        return password_control(control, props["id"], placeholder, disabled=State.is_busy)
+    return control
 
 
 def botao_primario() -> rx.Component:

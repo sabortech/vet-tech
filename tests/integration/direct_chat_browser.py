@@ -37,7 +37,7 @@ def main():
    expect(picker).to_be_visible();expect(picker.locator(':scope > .vt-chat-status-led')).to_have_count(1)
    expect(picker.locator('.vt-chat-direct-mascot')).to_be_visible();page.wait_for_function("document.querySelector('.vt-chat-direct-mascot').naturalWidth>0")
    expect(picker.locator('.vt-chat-direct-card > .vt-chat-status-led')).to_have_count(1)
-   evidence=ROOT/'openspec/changes/conversas-diretas-veterinario-tutor/evidence';evidence.mkdir(exist_ok=True)
+   evidence=ROOT/'openspec/changes/archive/2026-11-15-conversas-diretas-veterinario-tutor/evidence';evidence.mkdir(exist_ok=True)
    page.screenshot(path=str(evidence/f'seletor-{profile}.png'))
    picker.get_by_role('textbox',name='Buscar tutor' if profile=='veterinario' else 'Buscar veterinário').fill('Teste')
    before=page.evaluate('requests.length');page.wait_for_timeout(100);assert page.evaluate('requests.length')==before
@@ -60,7 +60,7 @@ def main():
    expect(page.locator('.vt-chat-bubble')).to_contain_text('Mensagem apagada')
    assert page.evaluate("requests.some(d=>d.action==='direct_delete'&&d.thread_id===3)")
    assert not errors,errors
-   evidence=ROOT/'openspec/changes/conversas-diretas-veterinario-tutor/evidence';evidence.mkdir(exist_ok=True)
+   evidence=ROOT/'openspec/changes/archive/2026-11-15-conversas-diretas-veterinario-tutor/evidence';evidence.mkdir(exist_ok=True)
    page.screenshot(path=str(evidence/f'{profile}-conversa.png'))
    page.close()
   browser.close()

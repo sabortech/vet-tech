@@ -490,3 +490,103 @@ class AuthStateTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PasswordRecoveryTests(unittest.IsolatedAsyncioTestCase):
+    async def consume(self, state, data):
+        return [event async for event in State.submit_password_recovery.fn(state, data)]
+
+    async def test_back_returns_to_login_from_email_and_clears_later_steps(self):
+        for step, destination in (("email", ""), ("code", "email"), ("password", "email"), ("", "")):
+            with self.subTest(step=step):
+                state = make_state()
+                state.recovery_step = step
+                state.recovery_email = 'a@example.invalid'
+                state._recovery_challenge = 'challenge'
+                state._recovery_token = 'restricted'
+                state.recovery_busy = True
+                generation = state._recovery_generation
+                state.recovery_back()
+                self.assertEqual(state.recovery_step, destination)
+                self.assertEqual(state.recovery_email, '')
+                self.assertEqual(state._recovery_challenge, '')
+                self.assertEqual(state._recovery_token, '')
+                self.assertFalse(state.recovery_busy)
+                self.assertGreater(state._recovery_generation, generation)
+
+    async def test_back_discards_pending_email_response(self):
+        state = make_state()
+        state.start_password_recovery()
+        async def response(*args, **kwargs):
+            state.recovery_back()
+            return {'ok': True, 'challenge_id': 'stale'}
+        with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock(side_effect=response)):
+            await self.consume(state, {'email': 'a@example.invalid'})
+        self.assertEqual(state.recovery_step, '')
+        self.assertEqual(state._recovery_challenge, '')
+        self.assertFalse(state.recovery_busy)
+
+    async def test_full_recovery_preserves_password_and_never_authenticates(self):
+        state = make_state()
+        state.start_password_recovery()
+        with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock(side_effect=[
+            {'ok': True, 'challenge_id': 'challenge'},
+            {'ok': True, 'reset_token': 'restricted'},
+            {'ok': True, 'success': True},
+        ])) as call:
+            await self.consume(state, {'email': ' TUTOR@example.invalid '})
+            self.assertEqual(state.recovery_step, 'code')
+            await self.consume(state, {'code': '012345'})
+            self.assertEqual(call.await_args.kwargs['json_payload']['code'], '012345')
+            self.assertEqual(state.recovery_step, 'password')
+            await self.consume(state, {'new_password': ' new ', 'password_confirmation': ' new '})
+        self.assertEqual(call.await_args.kwargs['json_payload']['new_password'], ' new ')
+        self.assertFalse(state.is_authenticated)
+        self.assertEqual(state._auth_token, '')
+        self.assertEqual(state._recovery_token, '')
+        self.assertEqual(state.recovery_step, '')
+        self.assertTrue(state.login_message_success)
+
+    async def test_cancel_and_session_change_discard_pending_response(self):
+        for session_change in (False, True):
+            state = make_state()
+            state.start_password_recovery()
+            async def response(*args, **kwargs):
+                if session_change:
+                    state._clear_session()
+                else:
+                    state.cancel_password_recovery()
+                return {'ok': True, 'challenge_id': 'stale'}
+            with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock(side_effect=response)):
+                await self.consume(state, {'email': 'a@example.invalid'})
+            self.assertEqual(state._recovery_challenge, '')
+            self.assertEqual(state.recovery_step, '')
+            self.assertFalse(state.recovery_busy)
+
+    async def test_bad_code_mismatch_and_duplicate_do_not_send(self):
+        state = make_state()
+        state.recovery_step, state._recovery_challenge = 'code', 'challenge'
+        with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock()) as call:
+            await self.consume(state, {'code': '１２３４５６'})
+            state.recovery_step, state._recovery_token = 'password', 'token'
+            await self.consume(state, {'new_password': 'a', 'password_confirmation': 'b'})
+            state.recovery_busy = True
+            await self.consume(state, {'new_password': 'a', 'password_confirmation': 'a'})
+        call.assert_not_awaited()
+
+    async def test_failure_does_not_leak_provider_and_resend_replaces_challenge(self):
+        state = make_state()
+        state.start_password_recovery()
+        state.recovery_step, state.recovery_email, state._recovery_challenge = 'code', 'a@example.invalid', 'old'
+        with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock(return_value={'ok': True, 'challenge_id': 'new'})) as call:
+            await consume_recovery_resend(state)
+        self.assertEqual(state._recovery_challenge, 'new')
+        self.assertEqual(call.await_args.args[2], 'acesso/password-reset/request')
+        with patch('vet_tech.features.auth.password_recovery.xano_request', AsyncMock(side_effect=XanoRequestError('SECRET PROVIDER DETAIL'))):
+            await self.consume(state, {'code': '012345'})
+        self.assertNotIn('SECRET', state.recovery_message)
+        self.assertFalse(state.is_authenticated)
+
+
+async def consume_recovery_resend(state):
+    return [event async for event in State.resend_recovery_code.fn(state)]

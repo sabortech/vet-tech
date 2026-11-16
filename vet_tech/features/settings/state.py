@@ -10,8 +10,7 @@ from vet_tech.features.navigation.state import NavigationState, TUTOR_DESTINATIO
 from vet_tech.shared.xano_client import AUTH_API_GROUP, XanoRequestError, xano_request
 
 _PASSWORD_RESET = """document.querySelector('#settings-password-form')?.reset();
-document.querySelectorAll('#settings-password-form input').forEach(e => e.type = 'password');
-document.querySelectorAll('[data-password-target]').forEach(e => { e.setAttribute('aria-pressed', 'false'); e.setAttribute('aria-label', 'Mostrar ' + document.querySelector('label[for=\"' + e.dataset.passwordTarget + '\"]').textContent.toLowerCase()); });"""
+window.vetTechPasswords?.hideAll('#settings-password-form');"""
 
 
 class SettingsState(rx.State):
@@ -30,6 +29,9 @@ class SettingsState(rx.State):
     message: str = ""
     message_ok: bool = False
     discard_open: bool = False
+    password_code_sent: bool = False
+    _password_challenge: str = ""
+    _password_generation: int = 0
     _snapshot: dict[str, str] = {}
     _session: str = ""
     _pending: str = ""
@@ -47,6 +49,11 @@ class SettingsState(rx.State):
         if self.account_profile == "veterinario":
             return VETERINARIAN_DESTINATIONS
         return TUTOR_DESTINATIONS if self.account_profile == "tutor" else frozenset()
+
+    @rx.var
+    def password_email_hint(self) -> str:
+        local, separator, domain = self.email.partition("@")
+        return (local[:1] + "***@" + domain) if separator else "seu e-mail cadastrado"
 
     @rx.var
     def crmv_label(self) -> str:
@@ -67,6 +74,7 @@ class SettingsState(rx.State):
         return draft
 
     def clear(self):
+        self._clear_password_challenge()
         self.nome = self.telefone = self.endereco = self.email = self.cpf_mascarado = ""
         self.crmv = self.crmv_uf = self.account_profile = ""
         self._context = ("", "", "", -1)
@@ -224,6 +232,59 @@ class SettingsState(rx.State):
             if self._current(auth, context):
                 self.saving = False
 
+    def _clear_password_challenge(self):
+        self.password_code_sent = False
+        self._password_challenge = ""
+        self._password_generation += 1
+
+    @rx.event
+    def cancel_password_challenge(self):
+        self._clear_password_challenge()
+        self.saving = False
+        self.message = ""
+        return rx.call_script(_PASSWORD_RESET)
+
+    @rx.event
+    async def request_password_code(self, form_data: dict[str, Any]):
+        if self.saving:
+            return
+        auth = await self.get_state(AuthState)
+        context = self._context
+        if not self._current(auth, context):
+            yield AuthState.logout
+            return
+        current = str(form_data.get("current_password", ""))
+        if not current:
+            self.message = "Informe sua senha atual."
+            self.message_ok = False
+            return
+        generation = self._password_generation
+        self.saving = True
+        self.message = ""
+        self.message_ok = False
+        yield
+        try:
+            result = await xano_request("POST", AUTH_API_GROUP, context[1] + "/password/request-code", auth_token=context[0], json_payload={"current_password": current})
+            if not self._current(auth, context) or generation != self._password_generation:
+                return
+            if not isinstance(result, dict) or result.get("ok") is not True or not isinstance(result.get("challenge_id"), str) or not result["challenge_id"]:
+                raise XanoRequestError("Resposta de verificação inválida.")
+            self._password_challenge = result["challenge_id"]
+            self.password_code_sent = True
+            self.message = "Solicitação recebida. Confira seu e-mail e o spam. O código vale por 10 minutos."
+            self.message_ok = True
+            yield rx.call_script(_PASSWORD_RESET)
+        except XanoRequestError as error:
+            if self._current(auth, context) and generation == self._password_generation:
+                if error.session_invalid:
+                    yield AuthState.logout
+                else:
+                    self.message = str(error)
+                    yield rx.call_script(_PASSWORD_RESET)
+        finally:
+            if self._current(auth, context) and generation == self._password_generation:
+                self.saving = False
+
     @rx.event
     async def change_password(self, form_data: dict[str, Any]):
         if self.saving:
@@ -242,25 +303,34 @@ class SettingsState(rx.State):
         if payload["new_password"] != payload["password_confirmation"]:
             self.message = "As senhas não coincidem."
             return
+        code = str(form_data.get("code", "")).strip()
+        if not self._password_challenge or len(code) != 6 or not code.isascii() or not code.isdecimal():
+            self.message = "Solicite e informe o código de seis dígitos enviado ao seu e-mail."
+            return
+        payload.update(challenge_id=self._password_challenge, code=code)
+        generation = self._password_generation
         self.saving = True
         self.message = ""
         yield
         try:
-            await xano_request("POST", AUTH_API_GROUP, context[1] + "/password", auth_token=token, json_payload=payload)
-            if self._current(auth, context):
+            result = await xano_request("POST", AUTH_API_GROUP, context[1] + "/password", auth_token=token, json_payload=payload)
+            if self._current(auth, context) and generation == self._password_generation:
+                if not isinstance(result, dict) or result.get("success") is not True:
+                    raise XanoRequestError("Não foi possível confirmar a alteração da senha.")
                 yield rx.call_script(_PASSWORD_RESET)
                 await auth.logout()
                 auth.login_message = "Senha atualizada. Entre novamente com sua nova senha."
                 auth.login_message_success = True
                 yield rx.redirect("/login")
         except XanoRequestError as error:
-            if self._current(auth, context):
+            if self._current(auth, context) and generation == self._password_generation:
                 if error.session_invalid:
                     yield AuthState.logout
                 else:
                     self.message = str(error)
+                    yield rx.call_script(_PASSWORD_RESET)
         finally:
-            if self._current(auth, context):
+            if self._current(auth, context) and generation == self._password_generation:
                 self.saving = False
 
     @rx.event
@@ -287,6 +357,7 @@ class SettingsState(rx.State):
         self.discard_open = True
 
     def _execute(self, action: str):
+        self._clear_password_challenge()
         self.message = ""
         self.message_ok = False
         if action in {"account", "security", "preferences"}:

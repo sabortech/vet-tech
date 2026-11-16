@@ -1,0 +1,11 @@
+{
+  "previous_provider_restored": true,
+  "previous_sender_restored": true,
+  "brevo_secret_preserved": true,
+  "history_disabled": true,
+  "password_changed": false,
+  "brevo_email_accepted": false,
+  "blocked_outbound_ip": "34.172.71.79",
+  "earlier_recovery_test_accepted": true,
+  "delivery_stable": false
+}

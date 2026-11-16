@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Código sem sessão tutor",
+    "status": 401,
+    "ok": true
+  },
+  {
+    "name": "Código sem sessão veterinário",
+    "status": 401,
+    "ok": true
+  },
+  {
+    "name": "Assinatura inválida da limpeza",
+    "status": 403,
+    "ok": true
+  },
+  {
+    "name": "Limpeza autenticada",
+    "status": 200,
+    "ok": true
+  },
+  {
+    "name": "Solicitação para email desconhecido",
+    "status": 200,
+    "ok": true
+  },
+  {
+    "name": "Código de desafio inexistente",
+    "status": 400,
+    "ok": true
+  },
+  {
+    "name": "Autorização de recuperação inexistente",
+    "status": 400,
+    "ok": true
+  }
+]

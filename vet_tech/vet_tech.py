@@ -8,6 +8,7 @@ from vet_tech.features.settings.state import SettingsState
 from vet_tech.pages.index import index, login_page
 from vet_tech.pages.login_google import login_google_page
 from vet_tech.shared.config import validate_backend_configuration
+from vet_tech.shared.password_cleanup import password_cleanup_lifespan
 from vet_tech.pages.atendimento import atendimento
 from vet_tech.pages.dashboard import dashboard
 from vet_tech.pages.profile import clinical_page
@@ -16,7 +17,7 @@ from vet_tech.features.navigation.state import NavigationState
 
 app = rx.App(
     extra_app_wraps={(6, "VetTechMascote"): mascote_app_wrap},
-    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=schedule-card-led-20261109"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
+    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=password-visibility-20261115"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js?v=password-visibility-20261115"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
 	toaster=rx.toast.provider(position="bottom-left", offset="calc(24px + env(safe-area-inset-bottom, 0px))"),
 	stylesheets=[
 		"https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap",
@@ -32,6 +33,7 @@ app = rx.App(
 	},
 )
 app.register_lifespan_task(validate_backend_configuration)
+app.register_lifespan_task(password_cleanup_lifespan)
 app.add_page(index, on_load=NavigationState.close_drawer)
 app.add_page(login_page, route="/login", title="Login | Vet Tech", on_load=NavigationState.close_drawer)
 app.add_page(login_google_page, route="/login/google", title="Entrar com Google | Vet Tech", on_load=[NavigationState.close_drawer, State.finish_google_login])

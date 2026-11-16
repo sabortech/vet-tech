@@ -6,7 +6,7 @@ import runpy
 from playwright.sync_api import sync_playwright, expect
 
 ROOT=Path(__file__).resolve().parents[2]
-OUT=ROOT/'openspec/changes/reorganizar-fluxos-chat/evidence'
+OUT=ROOT/'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence'
 MOCK=runpy.run_path(str(ROOT/'tests/integration/chat_flows_browser.py'))['MOCK']
 
 

@@ -67,7 +67,7 @@ def main():
    assert len(edits)==2 and edits[0]['operation_id']==edits[1]['operation_id']
    expect(own.locator('p')).to_have_text('Atualizada <b> 🐾');expect(own.locator('b')).to_have_count(0)
    expect(own.locator('.vt-chat-edited')).to_have_text(' · Editada');expect(own.locator('.vt-chat-receipt')).to_have_text('Entregue')
-   page.screenshot(path=str(ROOT/f'openspec/changes/reorganizar-fluxos-chat/evidence/message-edited-{profile}-{theme}.png'))
+   page.screenshot(path=str(ROOT/f'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/message-edited-{profile}-{theme}.png'))
    own.focus();page.keyboard.press('Enter');expect(modal).to_be_visible()
    modal.get_by_role('button',name='Apagar mensagem',exact=True).click();modal.get_by_role('button',name='Cancelar',exact=True).click()
    assert not page.evaluate("actionProbe.requests.some(r=>r.action==='support_delete')")
@@ -75,7 +75,7 @@ def main():
    expect(modal.get_by_role('button',name='Editar mensagem').locator('svg')).to_have_count(1)
    expect(modal.get_by_role('button',name='Apagar mensagem').locator('svg')).to_have_count(1)
    modal.get_by_role('button',name='Apagar mensagem',exact=True).click()
-   page.screenshot(path=str(ROOT/f'openspec/changes/reorganizar-fluxos-chat/evidence/message-delete-{profile}-{theme}.png'))
+   page.screenshot(path=str(ROOT/f'openspec/changes/archive/2026-11-15-reorganizar-fluxos-chat/evidence/message-delete-{profile}-{theme}.png'))
    page.get_by_role('button',name='Confirmar exclusão',exact=True).click();expect(modal).not_to_be_visible()
    expect(page.locator('.vt-chat-row.is-user p')).to_have_text('Mensagem apagada')
    assert page.locator('.vt-chat-row.is-user p').evaluate("el=>el.firstChild.nodeType===Node.TEXT_NODE&&el.lastElementChild.classList.contains('vt-chat-icon')")

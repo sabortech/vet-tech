@@ -1,0 +1,30 @@
+{
+  "checks": [
+    "login-password: teclado, valor preservado, ícone e reset",
+    "login: temas e 390/1440 px sem overflow",
+    "recovery-brand: temas e 390/1440 px sem overflow",
+    "recovery-new_password: teclado, valor preservado, ícone e reset",
+    "recovery-password_confirmation: teclado, valor preservado, ícone e reset",
+    "recovery-password-visual-fixture: temas e 390/1440 px sem overflow",
+    "recuperação: campos independentes, ocultar página e cancelar",
+    "signup-password: teclado, valor preservado, ícone e reset",
+    "signup-password-confirmation: teclado, valor preservado, ícone e reset",
+    "signup-tutor: temas e 390/1440 px sem overflow",
+    "signup-password: teclado, valor preservado, ícone e reset",
+    "signup-password-confirmation: teclado, valor preservado, ícone e reset",
+    "signup-vet: temas e 390/1440 px sem overflow",
+    "current_password: teclado, valor preservado, ícone e reset",
+    "current_password: teclado, valor preservado, ícone e reset",
+    "new_password: teclado, valor preservado, ícone e reset",
+    "password_confirmation: teclado, valor preservado, ícone e reset",
+    "settings-tutor_b-visual-fixture: temas e 390/1440 px sem overflow",
+    "current_password: teclado, valor preservado, ícone e reset",
+    "current_password: teclado, valor preservado, ícone e reset",
+    "new_password: teclado, valor preservado, ícone e reset",
+    "password_confirmation: teclado, valor preservado, ícone e reset",
+    "settings-vet_b-visual-fixture: temas e 390/1440 px sem overflow"
+  ],
+  "page_errors": [],
+  "test_value_network_leaks": [],
+  "protected_stages": "client-only visual fixtures; no email, signup, recovery verification or password write performed"
+}

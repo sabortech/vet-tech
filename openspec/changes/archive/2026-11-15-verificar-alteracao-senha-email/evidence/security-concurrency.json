@@ -1,0 +1,38 @@
+{
+  "delivery": "simulated",
+  "clock": "technical_fixture_metadata_only",
+  "checks": [
+    {
+      "check": "login fixture sem etapa adicional",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "check": "status das confirmações concorrentes",
+      "statuses": [
+        200,
+        400
+      ],
+      "ok": true
+    },
+    {
+      "check": "verificação concorrente tem um único vencedor",
+      "ok": true
+    },
+    {
+      "check": "autorização restrita não autentica sessão",
+      "ok": true,
+      "status": 401
+    },
+    {
+      "check": "autorização expirada rejeitada",
+      "ok": true,
+      "status": 400
+    },
+    {
+      "check": "senha original permanece válida",
+      "ok": true,
+      "status": 200
+    }
+  ]
+}

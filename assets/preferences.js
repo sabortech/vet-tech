@@ -52,14 +52,33 @@
       if (feedback) feedback.textContent = saved ? 'Preferência atualizada neste navegador.' : 'Tema aplicado nesta página. Não foi possível salvar neste navegador.';
     }
   });
+  const passwordLabel = (button, input) => button.dataset.passwordLabel ||
+    document.querySelector(`label[for="${input.id}"]`)?.textContent.toLowerCase() ||
+    input.getAttribute('aria-label')?.toLowerCase() || 'senha';
+  const hidePasswords = (root = document) => {
+    const container = typeof root === 'string' ? document.querySelector(root) : root;
+    container?.querySelectorAll('[data-password-target]').forEach(button => {
+      const input = document.getElementById(button.dataset.passwordTarget);
+      if (!input) return;
+      input.type = 'password';
+      button.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-label', 'Mostrar ' + passwordLabel(button, input));
+    });
+  };
+  window.vetTechPasswords = {hideAll: hidePasswords};
+  document.addEventListener('reset', event => hidePasswords(event.target), true);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hidePasswords();
+  });
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-password-target]');
-    if (!button) return;
+    if (!button || button.disabled) return;
     const input = document.getElementById(button.dataset.passwordTarget);
+    if (!input || input.disabled) return;
     const show = input.type === 'password';
     input.type = show ? 'text' : 'password';
     button.setAttribute('aria-pressed', String(show));
-    button.setAttribute('aria-label', (show ? 'Ocultar ' : 'Mostrar ') + document.querySelector(`label[for="${input.id}"]`).textContent.toLowerCase());
+    button.setAttribute('aria-label', (show ? 'Ocultar ' : 'Mostrar ') + passwordLabel(button, input));
   });
   document.addEventListener('keydown', event => {
     const tab = event.target.closest('.settings-tab');
