@@ -1,0 +1,25 @@
+Vet Tech — Cuidado que acompanha você.
+
+Que bom ter você no Vet Tech!
+Olá, Alex Oliveira!
+
+Obrigado por fazer parte do Vet Tech e contribuir para o cuidado dos nossos melhores amigos! Sua conta de veterinário já está pronta para começar.
+
+Seus próximos passos
+1. Organize seus horários e acompanhe a agenda de consultas.
+2. Acompanhe seus atendimentos e mantenha os registros profissionais organizados.
+3. Consulte prontuários somente com a autorização concedida pelos tutores.
+
+Para começar, acesse sua conta com o e-mail e a senha que você cadastrou.
+Acesse nosso sistema: http://localhost:3000/login
+
+Seu conhecimento faz parte de um cuidado que aproxima pessoas e pets. Que bom ter você com a gente!
+O melhor sistema para seu melhor amigo!
+
+Desenvolvedores do Sistema:
+Davi Diniz · Vitor Sousa · Danikelly Alves
+
+Com carinho,
+Vet Tech Team
+Esta é uma mensagem automática de boas-vindas.
+Copyright © by Vet Tech Team

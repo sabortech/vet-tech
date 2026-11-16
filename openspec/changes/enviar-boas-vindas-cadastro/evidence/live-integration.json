@@ -1,0 +1,41 @@
+{
+  "environment": "development",
+  "synthetic": true,
+  "real_email_sent": false,
+  "checks": [
+    {
+      "profile": "tutor",
+      "signup_success": true,
+      "event_after_commit": true,
+      "reserved_invalid_address_not_sent": true,
+      "login_after_delivery_failure": true,
+      "duplicate_signup_rejected": true,
+      "duplicate_attempt_ignored": true,
+      "concurrent_claim_single_winner": true,
+      "transport_for_concurrency": "simulated"
+    },
+    {
+      "profile": "veterinario",
+      "signup_success": true,
+      "event_after_commit": true,
+      "reserved_invalid_address_not_sent": true,
+      "login_after_delivery_failure": true,
+      "duplicate_signup_rejected": true,
+      "duplicate_attempt_ignored": true,
+      "concurrent_claim_single_winner": true,
+      "transport_for_concurrency": "simulated"
+    },
+    {
+      "profile": "tutor",
+      "invalid_signup_rejected": true,
+      "no_identity_or_welcome": true
+    },
+    {
+      "profile": "veterinario",
+      "invalid_signup_rejected": true,
+      "no_identity_or_welcome": true
+    }
+  ],
+  "synthetic_accounts_removed": true,
+  "temporary_functions_removed": true
+}

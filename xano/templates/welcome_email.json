@@ -1,0 +1,34 @@
+{
+  "brand_color": "#0d403a",
+  "text_color": "#17332c",
+  "davi_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/b42d19ced00e15fb04ef612a2c176919b66be7dd/email/developers/davi-diniz.jpeg",
+  "vitor_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/491b6b77173e105b76a9082990c35fa591ca4d69/email/developers/vitor-sousa.png",
+  "danikelly_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/d9684c01dec861e10d8308f03ad4134d19f9b0ca/email/developers/danikelly-alves.png",
+  "background_color": "#4c5c34",
+  "clinic_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/0d062f022b868b62338b6f82307ba6469a4f0994/email/welcome-clinicturtle.jpeg",
+  "title": "Que bom ter você no Vet Tech!",
+  "profiles": {
+    "tutor": {
+      "subject": "Seu melhor amigo ganhou mais cuidado | Vet Tech",
+      "profile_label": "PARA QUEM CUIDA COM AMOR",
+      "intro": "Obrigado por escolher o Vet Tech para acompanhar o cuidado do seu melhor amigo! Sua conta de tutor já está pronta para começar.",
+      "step_one": "Cadastre seus pets e mantenha as informações deles organizadas.",
+      "step_two": "Acompanhe vacinas, medicamentos, consultas e registros disponíveis no sistema.",
+      "step_three": "Compartilhe o acesso ao prontuário com um veterinário quando desejar autorizar esse cuidado.",
+      "closing": "Cada cuidado faz diferença. Estamos felizes por acompanhar você e seus pets nessa jornada!"
+    },
+    "veterinario": {
+      "subject": "Obrigado por fazer parte do nosso cuidado | Vet Tech",
+      "profile_label": "PARA QUEM TRANSFORMA CUIDADO EM PROFISSÃO",
+      "intro": "Obrigado por fazer parte do Vet Tech e contribuir para o cuidado dos nossos melhores amigos! Sua conta de veterinário já está pronta para começar.",
+      "step_one": "Organize seus horários e acompanhe a agenda de consultas.",
+      "step_two": "Acompanhe seus atendimentos e mantenha os registros profissionais organizados.",
+      "step_three": "Consulte prontuários somente com a autorização concedida pelos tutores.",
+      "closing": "Seu conhecimento faz parte de um cuidado que aproxima pessoas e pets. Que bom ter você com a gente!"
+    }
+  },
+  "background_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/e54c1843e9407b3e32571fd298509825a21e3d68/email/welcome-fundo.webp",
+  "mascot_image_url": "https://raw.githubusercontent.com/7offdvx/vet-tech-assets/0580aad550d98e547de77501c3f5bc26f031864a/email/welcome-mascote-v-clean.png",
+  "header_color": "#526b35",
+  "system_url": "http://localhost:3000/login"
+}

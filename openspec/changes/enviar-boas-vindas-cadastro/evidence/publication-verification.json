@@ -1,0 +1,23 @@
+{
+  "tutor_event_in_transaction": true,
+  "tutor_send_after_transaction": true,
+  "tutor_history_disabled": true,
+  "tutor_success_contract": true,
+  "veterinario_event_in_transaction": true,
+  "veterinario_send_after_transaction": true,
+  "veterinario_history_disabled": true,
+  "veterinario_success_contract": true,
+  "render_welcome_email_history_disabled": true,
+  "welcome_identity_history_disabled": true,
+  "deliver_welcome_email_history_disabled": true,
+  "send_welcome_email_history_disabled": true,
+  "welcome_email_event_unique": true,
+  "welcome_email_attempt_unique": true,
+  "acesso/login_no_welcome_hook": true,
+  "acesso/google/retorno_no_welcome_hook": true,
+  "acesso/password-reset/request_no_welcome_hook": true,
+  "auth/signup_no_welcome_hook": true,
+  "no_temporary_probes": true,
+  "no_new_public_welcome_route": true,
+  "legacy_quick_start_independent": true
+}

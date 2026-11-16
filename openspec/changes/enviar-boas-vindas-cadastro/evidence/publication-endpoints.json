@@ -1,0 +1,11 @@
+{
+  "http": 200,
+  "documents": [
+    "xano/api/authentication/auth/tutor_signup_POST.xs",
+    "xano/api/authentication/veterinario/signup_POST.xs"
+  ],
+  "env_imported": false,
+  "records_imported": false,
+  "delete": false,
+  "transaction": true
+}

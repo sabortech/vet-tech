@@ -299,10 +299,30 @@ query "tutor/signup" verb=POST {
           field_value = $reservation.id
           data = {identidade_id: $tutor.id}
         } as $complete
+
+        db.add welcome_email_event {
+          data={key:"tutor:" ~ ($tutor.id|to_text), profile:"tutor", identity_id:$tutor.id}
+        } as $welcome_event
+      }
+    }
+    // A resposta do cadastro não depende do provedor de e-mail.
+    util.post_process {
+      stack {
+        var $welcome_attempted {value=false}
+        try_catch {
+          try {
+            function.run "Notifications/send_welcome_email" {input={event_id:$welcome_event.id}} as $welcome_result
+            var.update $welcome_attempted {value=true}
+          }
+          catch {
+            var.update $welcome_attempted {value=false}
+          }
+        }
       }
     }
   }
 
   response = {success: true}
+  history = false
   guid = "Sf0P9fazACZFbxFTNcfSQqqKHqY"
 }

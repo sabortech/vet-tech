@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "profile": "veterinario",
+      "recipient_scope": "authorized_vet_tech_test_mailbox",
+      "accepted": true,
+      "state": "aceito",
+      "provider_id": "<202611162054.37203103632@smtp-relay.mailin.fr>",
+      "purpose": "fictional_preview_clean_mascot",
+      "account_created": false
+    }
+  ],
+  "real_signup_end_to_end": false,
+  "revision_confirmed_before_send": false
+}

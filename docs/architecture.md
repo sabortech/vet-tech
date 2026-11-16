@@ -474,3 +474,13 @@ privado do processo Python. A expiração é validada pelo Xano mesmo quando o
 aplicativo local estiver desligado; somente a remoção física aguarda o retorno.
 
 A visibilidade dos campos de senha é apresentada por `components/password_input.py`, reutilizado no login, cadastro, recuperação e Configurações. A delegação local de `assets/preferences.js` alterna apenas o type do input, o ícone e os atributos acessíveis; não mantém credenciais nem visibilidade no State ou storage. Reset do formulário e página oculta restauram o mascaramento. A recuperação exibe Vet Tech Team acima da mascote em V já existente.
+
+### Boas-vindas por perfil
+
+O Xano registra `welcome_email_event` junto do novo cadastro e processa o envio
+em `util.post_process`, preservando o sucesso da conta se o Brevo falhar.
+`Notifications/welcome_identity` deriva nome/destinatário do perfil persistido;
+`send_welcome_email` reserva tentativa única e `deliver_welcome_email` usa o
+Brevo já configurado. Templates próprios em `xano/templates/welcome_email.*`
+compartilham os padrões visuais dos códigos, sem alterar sua finalidade ou
+transporte. Ver `docs/welcome-email.md` para prévias, operação e rollback.

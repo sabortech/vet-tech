@@ -1,0 +1,25 @@
+Vet Tech — Cuidado que acompanha você.
+
+Que bom ter você no Vet Tech!
+Olá, Ana Silva!
+
+Obrigado por escolher o Vet Tech para acompanhar o cuidado do seu melhor amigo! Sua conta de tutor já está pronta para começar.
+
+Seus próximos passos
+1. Cadastre seus pets e mantenha as informações deles organizadas.
+2. Acompanhe vacinas, medicamentos, consultas e registros disponíveis no sistema.
+3. Compartilhe o acesso ao prontuário com um veterinário quando desejar autorizar esse cuidado.
+
+Para começar, acesse sua conta com o e-mail e a senha que você cadastrou.
+Acesse nosso sistema: http://localhost:3000/login
+
+Cada cuidado faz diferença. Estamos felizes por acompanhar você e seus pets nessa jornada!
+O melhor sistema para seu melhor amigo!
+
+Desenvolvedores do Sistema:
+Davi Diniz · Vitor Sousa · Danikelly Alves
+
+Com carinho,
+Vet Tech Team
+Esta é uma mensagem automática de boas-vindas.
+Copyright © by Vet Tech Team

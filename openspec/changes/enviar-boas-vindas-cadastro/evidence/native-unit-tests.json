@@ -1,0 +1,96 @@
+{
+  "provider_calls": "simulated",
+  "tests": [
+    {
+      "name": "resolve tutor",
+      "function": "Notifications/welcome_identity",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "resolve veterinario com mesmo id",
+      "function": "Notifications/welcome_identity",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "nega evento ausente",
+      "function": "Notifications/welcome_identity",
+      "passed": true,
+      "assertions_passed": 1,
+      "http": 200
+    },
+    {
+      "name": "nega perfil invalido",
+      "function": "Notifications/welcome_identity",
+      "passed": true,
+      "assertions_passed": 1,
+      "http": 200
+    },
+    {
+      "name": "nega reserva divergente",
+      "function": "Notifications/welcome_identity",
+      "passed": true,
+      "assertions_passed": 1,
+      "http": 200
+    },
+    {
+      "name": "aceita entrega confirmada",
+      "function": "Notifications/deliver_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "recusa autenticacao",
+      "function": "Notifications/deliver_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "recusa cota",
+      "function": "Notifications/deliver_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "trata erro do provedor como incerto",
+      "function": "Notifications/deliver_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "nao aceita resposta sem identificador",
+      "function": "Notifications/deliver_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "registra envio aceito",
+      "function": "Notifications/send_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "registra falha sem lancar erro",
+      "function": "Notifications/send_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    },
+    {
+      "name": "registra resultado incerto",
+      "function": "Notifications/send_welcome_email",
+      "passed": true,
+      "assertions_passed": 2,
+      "http": 200
+    }
+  ]
+}

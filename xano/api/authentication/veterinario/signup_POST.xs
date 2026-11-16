@@ -127,11 +127,31 @@ query "veterinario/signup" verb=POST {
           field_value = $reservation.id
           data = {identidade_id: $vet.id}
         } as $complete
+
+        db.add welcome_email_event {
+          data={key:"veterinario:" ~ ($vet.id|to_text), profile:"veterinario", identity_id:$vet.id}
+        } as $welcome_event
+      }
+    }
+    // A resposta do cadastro não depende do provedor de e-mail.
+    util.post_process {
+      stack {
+        var $welcome_attempted {value=false}
+        try_catch {
+          try {
+            function.run "Notifications/send_welcome_email" {input={event_id:$welcome_event.id}} as $welcome_result
+            var.update $welcome_attempted {value=true}
+          }
+          catch {
+            var.update $welcome_attempted {value=false}
+          }
+        }
       }
     }
   }
 
   response = {success: true}
+  history = false
   tags = ["vettech"]
   guid = "IvZWoi43BQXpjoGEnI3rgEm-U_c"
 }
