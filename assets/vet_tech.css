@@ -2352,6 +2352,165 @@ html .consultation-care .vaccine-art-symbol { color: var(--care-accent); backgro
   .pet-picker-page .profile-heading h1 { font-size: 28px; }
 }
 
+.adoption-page {
+  width: min(1320px, 100%);
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(18px, 2.4vw, 36px);
+}
+
+.adoption-page__header,
+.adoption-card__header,
+.adoption-card__actions,
+.adoption-dialog__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vt-space-4);
+}
+
+.adoption-page__header { margin-bottom: var(--vt-space-6); }
+.adoption-demo-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 var(--vt-space-5);
+  padding: 14px 16px;
+  border: 1px solid #d5a74a;
+  border-radius: var(--vt-radius-card);
+  color: var(--vt-text);
+  background: #fff8e6;
+  line-height: 1.5;
+}
+.adoption-demo-notice > svg { flex: 0 0 auto; margin-top: 2px; color: #966900; }
+html[data-vt-theme="dark"] .adoption-demo-notice {
+  border-color: #78643a;
+  color: #f0eadb;
+  background: #302b20;
+}
+html[data-vt-theme="dark"] .adoption-demo-notice > svg { color: #f0c66b; }
+.adoption-page__heading { min-width: 0; }
+.adoption-page__title { margin: 0; color: var(--vt-text); }
+.adoption-page__description { margin-top: var(--vt-space-2); color: var(--vt-muted); }
+.adoption-page__refresh,
+.adoption-card__secondary,
+.adoption-dialog__cancel {
+  min-height: 42px;
+  border: 1px solid var(--vt-green);
+  border-radius: var(--vt-radius-pill);
+  color: var(--vt-text);
+  background: var(--vt-surface);
+  cursor: pointer;
+}
+.adoption-page__refresh { display: inline-flex; align-items: center; gap: var(--vt-space-2); padding: 0 var(--vt-space-4); }
+.adoption-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--vt-space-5); }
+.adoption-card {
+  position: relative;
+  --vt-led-color: #69ca49;
+  --vt-led-glow: drop-shadow(0 0 2px #69ca49b3) drop-shadow(0 0 6px #69ca4966);
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--vt-space-4);
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--vt-card-border);
+  border-radius: var(--vt-radius-card);
+  background: var(--vt-surface);
+  box-shadow: var(--vt-card-green-shadow);
+}
+.adoption-card > .adoption-card-led { z-index: 0; }
+.adoption-card > :not(.adoption-card-led) { position: relative; z-index: 1; }
+.adoption-card-led .vet-date-led-track {
+  stroke-width: 2;
+  animation-duration: 8s;
+  rx: calc(var(--vt-radius-card) - 1px);
+  ry: calc(var(--vt-radius-card) - 1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .adoption-card-led .vet-date-led-track { animation-duration: 20s; }
+}
+.adoption-card__header { justify-content: flex-start; align-items: flex-start; }
+.adoption-card__photo {
+  display: flex;
+  flex: 0 0 92px;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  overflow: hidden;
+  border-radius: 18px;
+  object-fit: cover;
+  color: var(--vt-green);
+  background: var(--vt-icon-bg);
+}
+.adoption-card__photo--empty { border-radius: 50%; }
+.adoption-card__identity { min-width: 0; padding-top: 6px; }
+.adoption-card__name { margin: 0; color: var(--vt-text); overflow-wrap: anywhere; }
+.adoption-card__metadata { margin-top: 6px; color: var(--vt-muted); overflow-wrap: anywhere; }
+.adoption-card__clinical { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.adoption-clinical { min-width: 0; padding: 12px; border-radius: 14px; background: var(--vt-field-bg); }
+.adoption-clinical__heading { min-width: 0; margin-bottom: 4px; }
+.adoption-clinical__icon { flex: 0 0 auto; color: var(--vt-green); }
+.adoption-clinical__title { margin: 0; color: var(--vt-muted); font-size: 12px; font-weight: 700; }
+.adoption-clinical__value { margin: 0; color: var(--vt-text); font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; }
+.adoption-card__actions { justify-content: flex-end; flex-wrap: wrap; margin-top: auto; }
+.adoption-card__secondary,
+.adoption-card__primary,
+.adoption-dialog__confirm { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; font-weight: 700; }
+.adoption-card__primary,
+.adoption-dialog__confirm { min-height: 42px; border: 1px solid var(--vt-green); border-radius: var(--vt-radius-pill); color: #fff; background: var(--vt-green); cursor: pointer; }
+.adoption-card__primary:hover,
+.adoption-dialog__confirm:hover { background: var(--vt-green-hover); }
+.adoption-state { display: flex; min-height: 220px; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--vt-muted); text-align: center; }
+.adoption-state--empty { padding: 28px; border: 1px dashed var(--vt-border); border-radius: var(--vt-radius-card); background: var(--vt-surface); }
+.adoption-state--empty > svg { color: var(--vt-green); }
+.adoption-page__message,
+.adoption-dialog__message { margin: 0 0 var(--vt-space-4); color: var(--vt-green); }
+.adoption-page__message--error,
+.adoption-dialog__message--error { color: #a22b2b; }
+.adoption-dialog { position: relative; width: min(94vw, 560px); max-height: min(85dvh, 760px); overflow: visible; border-radius: 22px; background: var(--vt-surface); --vt-led-color: #69ca49; --vt-led-glow: drop-shadow(0 0 2px #69ca4980) drop-shadow(0 0 6px #69ca4933); }
+.adoption-dialog > .adoption-dialog-led { z-index: 0; }
+.adoption-dialog > :not(.adoption-dialog-led):not(.adoption-dialog__mascot) { position: relative; z-index: 1; }
+.adoption-dialog__mascot { position: absolute; z-index: 2; top: -117px; left: 72.7%; display: block; width: 150px; height: 150px; transform: translateX(-50%); object-fit: contain; pointer-events: none; }
+.adoption-preview-dialog .adoption-dialog__mascot { left: 62%; }
+.adoption-dialog-led .vet-date-led-track { stroke-width: 2; animation-duration: 8s; rx: 21px; ry: 21px; }
+.adoption-dialog__title { color: var(--vt-text); font-size: 24px; }
+.adoption-dialog__description { margin-top: 8px; color: var(--vt-muted); line-height: 1.6; }
+.adoption-preview-dialog__body { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); align-items: stretch; margin: 20px 0; overflow: hidden; border-radius: 14px; background: var(--vt-field-bg); }
+.adoption-preview-dialog__photo { display: block; width: 100%; height: 100%; min-height: 270px; object-fit: cover; background: var(--vt-icon-bg); }
+.adoption-preview-dialog__photo--empty { display: flex; align-items: center; justify-content: center; color: var(--vt-green); }
+.adoption-preview-dialog__records { display: flex; align-items: center; min-width: 0; padding: 16px; border-left: 1px solid var(--vt-border); }
+.adoption-dialog__clinical { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; width: 100%; }
+.adoption-dialog__clinical .adoption-clinical { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px; }
+.adoption-dialog__clinical .adoption-clinical__heading { margin-bottom: 0; }
+.adoption-dialog__clinical .adoption-clinical__value { width: 100%; line-height: 1.45; }
+.adoption-preview-dialog__actions { display: flex; justify-content: flex-end; width: 100%; margin-top: 22px; }
+.adoption-dialog__actions { justify-content: flex-end; margin-top: 22px; }
+.adoption-dialog__confirm:disabled,
+.adoption-card__primary:disabled,
+.adoption-page__refresh:disabled { cursor: progress; opacity: .7; }
+.adoption-page__restricted { max-width: 720px; margin: 48px auto; color: var(--vt-muted); text-align: center; }
+
+@media (max-width: 800px) {
+  .adoption-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 540px) {
+  .adoption-page { padding: 16px; }
+  .adoption-page__header { align-items: flex-start; flex-direction: column; }
+  .adoption-page__refresh { align-self: flex-end; }
+  .adoption-card__photo { flex-basis: 72px; width: 72px; height: 72px; }
+  .adoption-card__clinical { grid-template-columns: 1fr; }
+  .adoption-preview-dialog__body { grid-template-columns: 1fr; }
+  .adoption-preview-dialog__photo { height: 190px; min-height: 0; }
+  .adoption-preview-dialog__records { border-top: 1px solid var(--vt-border); border-left: 0; }
+  .adoption-card__actions > button { flex: 1; padding-inline: 10px; }
+  .adoption-dialog__mascot { top: -93px; left: 81%; width: 120px; height: 120px; }
+  .adoption-preview-dialog .adoption-dialog__mascot { left: 62%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .adoption-dialog-led .vet-date-led-track { animation-duration: 20s; }
+}
+
 /* Shared card halo; Dashboard retains its own shadows and vaccine status colors. */
 :root {
   --vt-card-green-shadow: 0 0 0 1px #69ca492e,
@@ -2372,15 +2531,15 @@ html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content, .dashboard-page)
   background-color: var(--vt-page-bg);
   background-image: none;
 }
-html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) {
+html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page, .adoption-page)) {
   background: #f7f3e7 url('/fundpet-pattern-light.svg') center / 360px 320px repeat;
 }
-html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) {
+html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page, .adoption-page)) {
   background: #12221b url('/fundpet-pattern.svg') center / 360px 320px repeat;
 }
 @media (max-width: 767px) {
-  html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)),
-  html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page)) { background-position: center bottom; }
+  html:not([data-vt-theme="dark"]) :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page, .adoption-page)),
+  html[data-vt-theme="dark"] :is(.app-layout, .app-content):has(:is(.pet-selection-empty, .profile-page, .settings-page, .adoption-page)) { background-position: center bottom; }
 }
 
 /* Shared bounded LED and green halo for login and registration. */

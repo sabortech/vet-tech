@@ -51,6 +51,11 @@ def google_login_enabled() -> bool:
     return os.environ.get("GOOGLE_LOGIN_ENABLED", "").strip().lower() in {"true", "1"}
 
 
+def adoption_demo_enabled() -> bool:
+    """A demonstração de adoção é opt-in e deve ficar restrita ao ambiente local."""
+    return os.environ.get("VET_TECH_ADOPTION_DEMO", "").strip().lower() in {"true", "1"}
+
+
 @asynccontextmanager
 async def validate_backend_configuration():
     """Interrompe o startup ASGI antes de aceitar requisições sem configuração."""

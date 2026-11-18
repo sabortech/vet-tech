@@ -86,7 +86,7 @@ def context_page(browser, width, theme='light', expanded=True):
 def verify_visuals(browser):
     baseline = json.loads((EVIDENCE / 'before-measurements.json').read_text(encoding='utf-8'))
     rows = []
-    expected_names = ['Dashboard', 'Prontuário', 'Vacinas', 'Medicamentos', 'Doenças', 'Consultas', 'Exames', 'Meus Pets', 'Mudar pet', 'Configurações']
+    expected_names = ['Dashboard', 'Prontuário', 'Vacinas', 'Medicamentos', 'Doenças', 'Consultas', 'Exames', 'Meus Pets', 'Adoção', 'Mudar pet', 'Configurações']
     for width in (1366, 1024, 390):
         for theme in ('light', 'dark'):
             for expanded in (True, False):

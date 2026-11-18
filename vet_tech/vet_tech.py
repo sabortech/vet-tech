@@ -10,6 +10,7 @@ from vet_tech.pages.login_google import login_google_page
 from vet_tech.shared.config import validate_backend_configuration
 from vet_tech.shared.password_cleanup import password_cleanup_lifespan
 from vet_tech.pages.atendimento import atendimento
+from vet_tech.pages.adoption import adoption_page
 from vet_tech.pages.dashboard import dashboard
 from vet_tech.pages.profile import clinical_page
 from vet_tech.features.auth.state import State
@@ -17,7 +18,7 @@ from vet_tech.features.navigation.state import NavigationState
 
 app = rx.App(
     extra_app_wraps={(6, "VetTechMascote"): mascote_app_wrap},
-    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=password-visibility-20261115"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js?v=password-visibility-20261115"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
+    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=adoption-preview-split-20261118"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js?v=password-visibility-20261115"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
 	toaster=rx.toast.provider(position="bottom-left", offset="calc(24px + env(safe-area-inset-bottom, 0px))"),
 	stylesheets=[
 		"https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap",
@@ -42,5 +43,6 @@ app.add_page(cadastro, route="/cadastro", title="Cadastro | Vet Tech")
 app.add_page(configuracoes, route="/configuracoes", title="Configurações | Vet Tech", on_load=[NavigationState.close_drawer, SettingsState.enter])
 app.add_page(atendimento, route="/atendimento/[consulta_id]", title="Atendimento | Vet Tech", on_load=State.load_attendance)
 app.add_page(dashboard, route="/dashboard", title="Dashboard | Vet Tech", on_load=[NavigationState.close_drawer, State.load_dashboard])
+app.add_page(adoption_page, route="/adocao", title="Adoção | Vet Tech", on_load=[NavigationState.close_drawer, State.load_adoption])
 
 app.add_page(clinical_page, route="/prontuario", title="Prontuário | Vet Tech", on_load=[NavigationState.close_drawer, State.enter_clinical_page])

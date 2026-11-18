@@ -15,6 +15,13 @@ se a conta pertence a um tutor ou a um veterinário.
   o pet escolhido.
 - **Meus Pets:** consulte os animais cadastrados, selecione um pet ou cadastre
   um novo animal.
+- **Adoção:** consulte pets disponíveis e o resumo clínico autorizado. “Ver
+  prontuário” abre apenas essa prévia; o prontuário completo fica disponível
+  depois da adoção. Confirme a ação no diálogo para que, em uma adoção real
+  concluída pelo backend, o pet passe a aparecer em Meus Pets e Mudar pet.
+  No modo demonstrativo local (`VET_TECH_ADOPTION_DEMO=true`), os perfis são
+  fictícios e a adoção vale somente durante a sessão: não é salva no Xano nem
+  adicionada às listas reais.
 - **Mudar pet:** abre somente a lista de animais para escolher outro pet. O cadastro
   continua em Meus Pets; Configurações fica logo abaixo de Mudar pet no menu.
 - **Prontuário:** acesse a área clínica para acompanhar consultas e o histórico

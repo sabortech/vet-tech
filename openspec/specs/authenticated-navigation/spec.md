@@ -112,11 +112,15 @@ O sistema SHALL apresentar Mudar pet e Sair no contexto clínico usando os mesmo
 - **THEN** a sessão e o contexto são limpos e a resposta pendente não repõe dados no menu ou no conteúdo
 
 ### Requirement: Menu do tutor mantém entradas e saída em posições consistentes
-Todas as telas autenticadas do tutor SHALL mostrar Mudar pet junto às entradas principais da sidebar, seguido imediatamente de Configurações, e somente Sair no rodapé. Novo pet SHALL NOT aparecer como entrada do menu; cadastro SHALL permanecer em Meus Pets. Em telas baixas a lista de navegação SHALL poder rolar, preservando a saída acessível. Configurações SHALL manter confirmação de descarte antes de Mudar pet ou Sair com dados não salvos. O menu veterinário SHALL preservar suas entradas próprias.
+Todas as telas autenticadas do tutor SHALL mostrar Adoção imediatamente abaixo de Meus Pets e antes de Mudar pet, e Configurações logo depois de Mudar pet, com somente Sair no rodapé. Novo pet SHALL NOT aparecer como entrada do menu; cadastro SHALL permanecer em Meus Pets. Em telas baixas a lista de navegação SHALL poder rolar, preservando a saída acessível. Configurações SHALL manter confirmação de descarte antes de Mudar pet ou Sair com dados não salvos. O menu veterinário SHALL preservar suas entradas próprias.
 
 #### Scenario: Navegar entre abas
-- **WHEN** o tutor abre Meus Pets, Dashboard, seções clínicas ou Configurações
-- **THEN** encontra as mesmas entradas na mesma ordem e Sair no rodapé
+- **WHEN** o tutor abre Meus Pets, Adoção, Dashboard, seções clínicas ou Configurações
+- **THEN** encontra as mesmas entradas na mesma ordem, Adoção abaixo de Meus Pets e Sair no rodapé
+
+#### Scenario: Abrir Adoção
+- **WHEN** o tutor autenticado seleciona Adoção
+- **THEN** abre a área de adoção com Adoção identificada como item ativo e o menu móvel fecha após a navegação
 
 ### Requirement: Seções sem pet usam orientação comum
 Prontuário, Vacinas, Medicamentos, Doenças e Consultas SHALL apresentar a mesma tela ilustrada sem pet alvo selecionado, com botão para selecionar pet em Meus Pets. A arte SHALL ter versões clara e escura alternadas pelo tema, preservando a cena e a legibilidade do título e botão em desktop e celular. A lista de escolha SHALL aparecer somente em Meus Pets. Dashboard global e Configurações SHALL continuar acessíveis sem seleção. Seleção em Meus Pets SHALL abrir o Dashboard com o pet escolhido no filtro; durante leitura SHALL mostrar carregamento e, em falha, permitir nova tentativa sem expor dados de outro pet.

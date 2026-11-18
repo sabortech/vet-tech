@@ -8,6 +8,7 @@ import reflex as rx
 
 from vet_tech.features.auth.password_recovery import PasswordRecoveryMixin
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
+from vet_tech.features.adoption.state import AdoptionMixin
 from vet_tech.features.clinical.state import ClinicalMixin, MONTHS, calendar_days, today
 from vet_tech.features.dashboard.state import TutorDashboardMixin
 from vet_tech.features.support_chat.state import SupportChatMixin
@@ -99,7 +100,7 @@ async def _fetch_pet_details(pet_id, token, species, known_pet):
         return details, warnings
 
 
-class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, ClinicalMixin, rx.State):
+class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, ClinicalMixin, AdoptionMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
@@ -242,6 +243,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
     def _clear_session(self):
         self._clear_password_recovery()
         self._reset_support_chat()
+        self._clear_adoption_session()
         self._clear_dashboard_session()
         self._clear_clinical_session()
         self.profile = ""
