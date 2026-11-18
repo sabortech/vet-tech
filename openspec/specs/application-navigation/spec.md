@@ -7,7 +7,7 @@ Oferece navegação consistente entre as áreas autenticadas do Vet Tech, com co
 ## Requirements
 
 ### Requirement: Navegação lateral reutilizável e com área ativa identificável
-O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compartilhada com a marca Vet Tech e as opções Dashboard, Prontuário, Vacinas, Medicamentos, Doenças, Consultas, Exames, Meus Pets e Configurações. A opção correspondente à área atual SHALL ser identificada visualmente como ativa e a patinha da marca SHALL usar a mesma cor do texto “Vet Tech”. No modo expandido, os itens SHALL ter área de interação de aproximadamente 48 px de altura e o item ativo SHALL manter o destaque branco com cantos arredondados.
+O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compartilhada com a marca Vet Tech e as opções Dashboard, Prontuário, Vacinas, Medicamentos, Doenças, Consultas, Exames, Meus Pets, Adoção e Configurações. A opção correspondente à área atual SHALL ser identificada visualmente como ativa e a patinha da marca SHALL usar a mesma cor do texto “Vet Tech”. No modo expandido, os itens SHALL ter área de interação de aproximadamente 48 px de altura e o item ativo SHALL manter o destaque branco com cantos arredondados.
 
 #### Scenario: Perfil do tutor identifica Meus Pets como área ativa
 - **WHEN** o tutor autenticado visualiza o perfil atual
@@ -22,7 +22,7 @@ O sistema SHALL apresentar nas áreas autenticadas uma navegação lateral compa
 - **THEN** a patinha e o texto “Vet Tech” usam o mesmo token de cor e a marca e os itens permanecem alinhados sem cortes
 
 #### Scenario: Tutor alterna entre áreas com o mesmo design
-- **WHEN** o tutor navega entre Meus Pets, Configurações e Prontuário
+- **WHEN** o tutor navega entre Meus Pets, Adoção, Configurações e Prontuário
 - **THEN** encontra a mesma sidebar verde personalizada, marca, ordem de itens, ícones, dimensões, foco e destaque ativo
 - **AND** o tema escuro usa os tokens da mesma identidade visual, sem trocar para um menu de aparência padrão
 

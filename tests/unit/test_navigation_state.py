@@ -38,8 +38,9 @@ class NavigationStateTests(unittest.TestCase):
 
     def test_unimplemented_navigation_items_have_no_route(self):
         route_ids = set(_EXISTING_ROUTES)
-        self.assertEqual(route_ids, {"dashboard", "meus_pets", "configuracoes", "prontuario", "vacinas", "medicamentos", "doencas", "consultas"})
+        self.assertEqual(route_ids, {"dashboard", "meus_pets", "adocao", "configuracoes", "prontuario", "vacinas", "medicamentos", "doencas", "consultas"})
         self.assertEqual(_EXISTING_ROUTES["meus_pets"], "/")
+        self.assertEqual(_EXISTING_ROUTES["adocao"], "/adocao")
 
         for item_id, label, icon_name in _NAV_ITEMS:
             with self.subTest(item_id=item_id):
@@ -53,8 +54,9 @@ class NavigationStateTests(unittest.TestCase):
         from vet_tech.features.navigation.state import CLINICAL_SECTIONS, TUTOR_DESTINATIONS
         self.assertEqual([item[0] for item in _NAV_ITEMS], [
             'dashboard', 'prontuario', 'vacinas', 'medicamentos', 'doencas',
-            'consultas', 'exames', 'meus_pets', 'configuracoes',
+            'consultas', 'exames', 'meus_pets', 'adocao', 'configuracoes',
         ])
+        self.assertIn('/adocao', TUTOR_DESTINATIONS)
         for key in CLINICAL_SECTIONS:
             self.assertIn('/prontuario?secao=' + key, TUTOR_DESTINATIONS)
         self.assertNotIn('/exames', TUTOR_DESTINATIONS)

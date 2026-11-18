@@ -113,7 +113,7 @@ def main():
             page.get_by_label('Senha', exact=True).fill('synthetic-password')
             page.get_by_role('button', name='Login', exact=True).click()
             expect(page.locator('.pet-entry__action').first).to_be_visible()
-            expected=['Dashboard','Prontuário','Vacinas','Medicamentos','Doenças','Consultas','Exames','Meus Pets','Mudar pet','Configurações']
+            expected=['Dashboard','Prontuário','Vacinas','Medicamentos','Doenças','Consultas','Exames','Meus Pets','Adoção','Mudar pet','Configurações']
             sidebar=page.locator('#vet-tech-sidebar')
             def verify_menu():
                 assert sidebar.locator('.sidebar-navigation .sidebar-item__label').all_text_contents()==expected

@@ -88,12 +88,17 @@ O sistema SHALL retornar ao tutor autenticado somente pets cujo vínculo de prop
 - **THEN** o sistema mantém o pet na lista sem fabricar uma imagem
 
 ### Requirement: Operações de pets exigem autenticação e não permitem edição nesta etapa
-O sistema SHALL exigir autenticação de tutor para cadastrar, listar ou consultar individualmente pets e SHALL disponibilizar essas operações no escopo desta capacidade. Consulta individual SHALL verificar propriedade no backend. Edição e exclusão dos dados de pets não fazem parte desta etapa.
+O sistema SHALL exigir autenticação de tutor para cadastrar, listar, consultar individualmente ou adotar pets. Consulta individual SHALL verificar propriedade no backend; adoção SHALL ser somente a transferência específica de um pet disponível, conforme a capacidade de adoção. Edição genérica e exclusão dos dados de pets não fazem parte desta etapa.
 
 #### Scenario: Requisição sem autenticação
 - **GIVEN** uma pessoa não possui autenticação válida de tutor
-- **WHEN** tenta cadastrar, listar ou consultar individualmente pets
-- **THEN** o sistema nega a operação sem criar nem revelar registros
+- **WHEN** tenta cadastrar, listar, consultar individualmente ou adotar pets
+- **THEN** o sistema nega a operação sem criar, transferir ou revelar registros
+
+#### Scenario: Transferência não libera edição genérica
+- **GIVEN** um tutor autenticado adotou um pet
+- **WHEN** tenta alterar outros campos do pet ou excluir o registro por uma operação não prevista
+- **THEN** o backend não oferece essas operações e preserva os dados existentes
 
 ### Requirement: Tutor abre somente um pet próprio
 O sistema SHALL permitir consultar individualmente os dados básicos de um pet, exigindo autenticação e verificando no backend que o pet pertence ao tutor da sessão. Um identificador fornecido pelo cliente SHALL ser tratado somente como alvo da consulta, nunca como comprovação de propriedade (RN05).

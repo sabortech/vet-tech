@@ -25,6 +25,7 @@ table pet {
     int tutor_id {
       table = "tutor"
     }
+    bool disponivel_adocao?=false
   }
 
   index = [
