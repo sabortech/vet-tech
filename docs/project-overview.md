@@ -119,7 +119,7 @@ Aplicação web com:
 - **RN12** Espécie: nome único (ex.: não pode haver duas entradas para "Cachorro").
 - **RN13** Toda raça pertence a exatamente uma espécie; o pet não pode receber raça de outra espécie (ex.: "Labrador" não pode ser associado a "Gato").
 - **RN14** A raça do pet é opcional (em branco = SRD, sem raça definida).
-- **RN15** Todo pet pertence a exatamente um tutor responsável.
+- **RN15** Todo pet tem exatamente um responsável atual: tutor ou clínica. A clínica responde provisoriamente pelo pet cadastrado para adoção; a transferência atribui o pet ao tutor adotante.
 - **RN16** O histórico do pet nunca é apagado, mesmo com mudança de clínica, veterinário ou tutor.
 - **RN17** O sistema suporta múltiplas clínicas e veterinários por pet sem duplicar o histórico.
 
@@ -157,7 +157,8 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    TUTOR ||--o{ PET : possui
+    TUTOR |o--o{ PET : responsavel
+    CLINICA |o--o{ PET : responsabilidade_provisoria
     TUTOR ||--o{ NOTIFICACAO : recebe
     ESPECIE ||--o{ RACA : contem
     ESPECIE ||--o{ PET : classifica
@@ -223,9 +224,9 @@ Campos de chave primária (`id`) e chaves estrangeiras são implícitos; as FKs 
 - **Relaciona-se com:** ESPECIE (N:1), PET (1:N).
 
 #### PET
-- **Campos:** nome, espécie, raça (opcional), sexo, data de nascimento, peso, cor da pelagem, nº de microchip (opcional, quando houver), foto, tutor.
-- **Regras:** exatamente um tutor responsável; pode ter vários veterinários autorizados, sempre mediante permissão do tutor; acumula ao longo do tempo consultas, exames, vacinas, medicamentos e diagnósticos; histórico nunca é apagado.
-- **Relaciona-se com:** TUTOR, ESPECIE, RACA (N:1); CONSULTA, EXAME, VACINA, MEDICAMENTO, PET_DOENCA, ANEXO, NOTIFICACAO, ACESSO_AUTORIZADO, LOG_ACESSO (1:N).
+- **Campos:** nome, espécie, raça (opcional), sexo, data de nascimento, peso, cor da pelagem, nº de microchip (opcional, quando houver), foto e responsável (tutor ou clínica provisória).
+- **Regras:** exatamente um responsável atual, tutor ou clínica provisória; pode ter vários veterinários autorizados, mediante permissão do tutor; acumula ao longo do tempo consultas, exames, vacinas, medicamentos e diagnósticos; histórico nunca é apagado.
+- **Relaciona-se com:** TUTOR ou CLINICA (responsável exclusivo), ESPECIE e RACA (N:1); CONSULTA, EXAME, VACINA, MEDICAMENTO, PET_DOENCA, ANEXO, NOTIFICACAO, ACESSO_AUTORIZADO, LOG_ACESSO (1:N).
 
 #### CONSULTA
 - **Campos:** data, motivo do atendimento, diagnóstico do veterinário, observações adicionais, pet, veterinário.

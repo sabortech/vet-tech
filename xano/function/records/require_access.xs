@@ -29,7 +29,7 @@ function "records/require_access" {
       output = ["id", "tutor_id"]
     } as $pet
 
-    precondition ($pet != null) {
+    precondition ($pet != null && $pet.tutor_id != null && $pet.tutor_id > 0) {
       error_type = "accessdenied"
       error = "Acesso não autorizado."
     }

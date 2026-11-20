@@ -158,11 +158,11 @@ def birth_date_picker() -> rx.Component:
     )
 
 
-def pet_form() -> rx.Component:
+def pet_form(clinic: bool = False) -> rx.Component:
     return rx.box(
         perimeter_led("vet-date-led pets-card-led", "19"),
         rx.heading(
-            "Cadastrar pet",
+            "Cadastrar pet para adoção" if clinic else "Cadastrar pet",
             as_="h2",
             size="4",
             class_name="pet-card__title",
@@ -257,11 +257,11 @@ def pet_form() -> rx.Component:
         ),
         rx.button(
             "Cadastrar pet",
-            on_click=State.create_pet(rx.upload_files(upload_id="pet-photo")),
+            on_click=(State.clinic_create_pet(rx.upload_files(upload_id="pet-photo")) if clinic else State.create_pet(rx.upload_files(upload_id="pet-photo"))),
             disabled=State.is_busy,
             class_name="pet-form__submit",
         ),
-        rx.text(State.pet_message, role="status", class_name="pet-message"),
+        rx.text(State.clinic_admin_message if clinic else State.pet_message, role="status", class_name="pet-message"),
         rx.script(
             _PET_PHOTO_PREVIEW_SCRIPT,
             id="pet-photo-preview-handler",

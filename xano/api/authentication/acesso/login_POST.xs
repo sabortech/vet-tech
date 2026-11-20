@@ -19,13 +19,19 @@ query "acesso/login" verb=POST {
       output = ["id", "senha"]
     } as $vet
 
+    db.get clinica_admin {
+      field_name = "email"
+      field_value = $input.email
+      output = ["id", "senha", "ativo", "clinica_id"]
+    } as $admin
+
     db.get reserva_email {
       field_name = "email"
       field_value = $input.email
       output = ["id", "perfil", "identidade_id"]
     } as $reservation
 
-    precondition (($tutor != null && $vet == null) || ($tutor == null && $vet != null)) {
+    precondition (($tutor != null && $vet == null && $admin == null) || ($tutor == null && $vet != null && $admin == null) || ($tutor == null && $vet == null && $admin != null)) {
       error_type = "accessdenied"
       error = "Credenciais inválidas."
     }
@@ -77,7 +83,7 @@ query "acesso/login" verb=POST {
         }
       }
 
-      else {
+      elseif ($vet != null) {
         precondition ($reservation.perfil == "veterinario" && $reservation.identidade_id == $vet.id) {
           error_type = "accessdenied"
           error = "Credenciais inválidas."
@@ -113,10 +119,44 @@ query "acesso/login" verb=POST {
           }
         }
       }
+
+      else {
+        precondition ($admin.ativo == true && $admin.clinica_id != null && $reservation.perfil == "clinica" && $reservation.identidade_id == $admin.id) {
+          error_type = "accessdenied"
+          error = "Credenciais inválidas."
+        }
+        db.get clinica {
+          field_name = "id"
+          field_value = $admin.clinica_id
+          output = ["id"]
+        } as $clinica
+        precondition ($clinica != null && $admin.senha != null && $admin.senha != "") {
+          error_type = "accessdenied"
+          error = "Credenciais inválidas."
+        }
+        security.check_password {
+          text_password = $input.password
+          hash_password = $admin.senha
+        } as $valid_admin
+        precondition ($valid_admin) {
+          error_type = "accessdenied"
+          error = "Credenciais inválidas."
+        }
+        security.create_auth_token {
+          table = "clinica_admin"
+          extras = {perfil: "clinica"}
+          expiration = 86400
+          id = $admin.id
+        } as $token_admin
+        var.update $login_result {
+          value = {authToken: $token_admin, perfil: "clinica", identidade_id: $admin.id}
+        }
+      }
     }
   }
 
   response = $login_result
+  history = false
   tags = ["vettech"]
   guid = "VgaizmK8G72qk6sAb5Z_hYk3ta0"
 }

@@ -22,8 +22,11 @@ table pet {
     text cor_pelo? filters=trim
     int num_microchip?
     text? foto?
-    int tutor_id {
+    int tutor_id? {
       table = "tutor"
+    }
+    int clinica_id? {
+      table = "clinica"
     }
     bool disponivel_adocao?=false
   }
@@ -32,6 +35,7 @@ table pet {
     {type: "primary", field: [{name: "id"}]}
     {type: "btree", field: [{name: "created_at", op: "desc"}]}
     {type: "btree", field: [{name: "tutor_id"}]}
+    {type: "btree", field: [{name: "clinica_id"}]}
   ]
 
   tags = ["vettech"]

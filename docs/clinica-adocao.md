@@ -1,0 +1,11 @@
+# Acesso de clínica e adoção
+
+A equipe da plataforma provisiona usuários administrativos individuais pela função interna `Identity/create_clinica_admin`, vinculando cada usuário a uma clínica existente e reservando o e-mail na mesma transação. Não existe cadastro público de administrador. A função não deve ser exposta por endpoint público; senhas não devem aparecer em argumentos de linha de comando, logs ou arquivos versionados.
+
+O administrador entra pelo mesmo formulário de e-mail e senha dos demais perfis. A área exibe apenas os veterinários ligados à sua clínica e permite cadastrar um novo pet e publicá-lo ou retirá-lo da adoção. O cadastro mantém o pet indisponível até a confirmação de publicação. A foto é selecionada no dispositivo e enviada em base64, como no cadastro do tutor.
+
+Cada pet tem um responsável atual, tutor ou clínica. Na representação do workspace Xano, `0` e `null` indicam ausência de vínculo; IDs positivos identificam o responsável. A adoção é transacional e troca a clínica pelo tutor da sessão, retira o anúncio, revoga autorizações veterinárias anteriores e preserva o histórico. A área administrativa não concede acesso a prontuários; operações clínicas continuam sujeitas às regras do tutor e de autorização veterinária.
+
+As ações de cadastro, publicação e retirada criam eventos operacionais associados à clínica, ao administrador, ao pet e ao instante. Esses eventos não substituem o log clínico. Na implantação, preservar pets e seus históricos: desativar os novos acessos e operações em caso de rollback, sem remover os campos ou reverter transferências em lote. Pets que ainda tenham uma clínica como responsável exigem migração autorizada antes de qualquer remoção desse vínculo.
+
+Para o workspace de desenvolvimento confirmado, `scripts/provision_clinic_test.py --confirm-development 167758 EMAIL` solicita a senha sem eco e cria uma clínica sintética e um administrador. `scripts/check_clinic_login.py`, `scripts/check_clinic_pet.py` e `scripts/check_clinic_adoption.py` usam a mesma confirmação, solicitam a senha sem eco e verificam os contratos. Os dois últimos criam e removem exclusivamente fixtures sintéticas identificadas. Nunca executar esses scripts em produção. O teste de navegador `tests/integration/clinic_browser.py EMAIL` requer servidor local em `127.0.0.1:3199` e também limpa os pets sintéticos criados.

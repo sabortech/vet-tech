@@ -16,13 +16,19 @@ function "Identity/check_email_available" {
       output = ["id"]
     } as $veterinario
 
+    db.get clinica_admin {
+      field_name = "email"
+      field_value = $input.email
+      output = ["id"]
+    } as $clinica_admin
+
     db.get reserva_email {
       field_name = "email"
       field_value = $input.email
       output = ["id"]
     } as $reservation
 
-    precondition ($tutor == null && $veterinario == null && $reservation == null) {
+    precondition ($tutor == null && $veterinario == null && $clinica_admin == null && $reservation == null) {
       error_type = "inputerror"
       error = "Não foi possível cadastrar: e-mail já utilizado."
     }

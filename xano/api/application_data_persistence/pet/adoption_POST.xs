@@ -47,11 +47,16 @@ query "adoption" verb=POST {
         db.get pet {
           field_name = "id"
           field_value = $input.pet_id
-          output = ["id", "disponivel_adocao"]
+          output = ["id", "disponivel_adocao", "tutor_id", "clinica_id"]
         } as $locked_pet
 
         precondition ($locked_pet != null && $locked_pet.disponivel_adocao == true) {
           error_type = "notfound"
+          error = "Pet não disponível."
+        }
+
+        precondition ((($locked_pet.tutor_id != null && $locked_pet.tutor_id > 0) && ($locked_pet.clinica_id == null || $locked_pet.clinica_id == 0)) || (($locked_pet.clinica_id != null && $locked_pet.clinica_id > 0) && ($locked_pet.tutor_id == null || $locked_pet.tutor_id == 0))) {
+          error_type = "inputerror"
           error = "Pet não disponível."
         }
 
@@ -79,6 +84,7 @@ query "adoption" verb=POST {
           field_value = $locked_pet.id
           data = {
             tutor_id: $auth.id
+            clinica_id: 0
             disponivel_adocao: false
           }
         } as $updated_pet

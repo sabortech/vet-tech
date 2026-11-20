@@ -9,6 +9,7 @@ import reflex as rx
 from vet_tech.features.auth.password_recovery import PasswordRecoveryMixin
 from vet_tech.features.auth.validation import is_valid_cpf, normalize_cpf
 from vet_tech.features.adoption.state import AdoptionMixin
+from vet_tech.features.clinic.state import ClinicMixin
 from vet_tech.features.clinical.state import ClinicalMixin, MONTHS, calendar_days, today
 from vet_tech.features.dashboard.state import TutorDashboardMixin
 from vet_tech.features.support_chat.state import SupportChatMixin
@@ -100,7 +101,7 @@ async def _fetch_pet_details(pet_id, token, species, known_pet):
         return details, warnings
 
 
-class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, ClinicalMixin, AdoptionMixin, rx.State):
+class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, ClinicalMixin, AdoptionMixin, ClinicMixin, rx.State):
     profile: str = ""
     identity_id: str = ""
     identity_name: str = ""
@@ -241,6 +242,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
             self.identity_professional_loaded = True
 
     def _clear_session(self):
+        self._clear_clinic_admin()
         self._clear_password_recovery()
         self._reset_support_chat()
         self._clear_adoption_session()
@@ -391,7 +393,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
 
     @rx.event
     def birth_calendar_choose_day(self, value: str):
-        if not self.birth_calendar_open or self.is_busy or not self.is_authenticated or self.profile != "tutor":
+        if not self.birth_calendar_open or self.is_busy or not self.is_authenticated or self.profile not in ("tutor", "clinica"):
             return
         parsed = calendar_date(value)
         if value and (parsed is None or parsed.isoformat() != value or value > today()):
@@ -465,7 +467,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
             raise XanoRequestError("O Xano não retornou uma sessão válida.")
         profile = result.get("perfil")
         identity_id = str(result.get("identidade_id", ""))
-        if profile not in ("tutor", "veterinario") or not identity_id.isascii() or not identity_id.isdecimal() or int(identity_id) <= 0:
+        if profile not in ("tutor", "veterinario", "clinica") or not identity_id.isascii() or not identity_id.isdecimal() or int(identity_id) <= 0:
             raise XanoRequestError("O Xano não retornou uma identidade válida.")
         identity = await xano_request("GET", AUTH_API_GROUP, f"{profile}/me", auth_token=str(token))
         if session != self._session_generation:
@@ -476,8 +478,9 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
         self.profile = profile
         self.identity_id = identity_id
         self.identity_name = str(identity.get("nome") or "")
+        self.clinic_name = str(identity.get("clinica_nome") or "") if profile == "clinica" else ""
         self.is_authenticated = True
-        if profile == "veterinario":
+        if profile in ("veterinario", "clinica"):
             return
         self.pets = []
         self.species_options = []
@@ -860,6 +863,9 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
         self.breed_options = []
         self.pet_message = ""
         if not species_id:
+            return
+        if self.profile == "clinica":
+            self.breed_options = [{"id": b["id"], "nome": b["nome"]} for b in self.clinic_catalog_breeds if b["especie_id"] == species_id]
             return
         try:
             breeds = await self._load_breeds(species_id)
