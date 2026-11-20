@@ -77,6 +77,10 @@ atual seja reescrita antes de continuar o desenvolvimento.
 
 ## Aplicação gradual
 
+### Área administrativa da clínica
+
+A identidade individual `clinica_admin` é vinculada a uma clínica e usa o login compartilhado. As operações Xano revalidam usuário ativo e clínica, listam apenas veterinários vinculados e permitem cadastrar pets novos para adoção. `pet.clinica_id` representa a responsabilidade provisória; `tutor_id` ausente pode ser persistido como `0` pelo Xano. A transferência usa `clinical_lock`, remove a responsabilidade da clínica e atribui o tutor da sessão. Eventos administrativos são registrados separadamente do log clínico. A clínica não obtém acesso automático a prontuários. O frontend reutiliza a navegação e a paleta veterinárias.
+
 ### Navegação compartilhada do tutor
 
 A marca da sidebar centraliza nome Vet Tech e a tartaruga em V de

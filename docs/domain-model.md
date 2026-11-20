@@ -49,7 +49,7 @@ erDiagram
  
 Cada tutor se cadastra no sistema informando nome, CPF, e-mail, telefone, endereço e senha. Um tutor pode possuir um ou mais pets. 
 
-Cada pet possui nome, espécie, raça, sexo, data de nascimento, peso, cor da pelagem, número de microchip(quando houver)e foto. Todo pet está vinculado a exatamente um tutor responsável.
+Cada pet possui nome, espécie, raça, sexo, data de nascimento, peso, cor da pelagem, número de microchip(quando houver)e foto. Todo pet tem exatamente um responsável atual: tutor ou clínica, esta provisoriamente para pets cadastrados para adoção.
 
 As espécies (cachorro, gato, ave etc.) e raças são cadastradas de forma padronizada no sistema, sendo que cada raça pertence a uma única espécie.
 
@@ -106,11 +106,11 @@ O campo raça no pet pode ficar em branco, representando um animal sem raça def
 Relaciona-se com: ESPECIE (N:1), PET (1:N)
 
 ## Pet
-Todo pet deve estar vinculado a exatamente um tutor responsável
+Todo pet deve ter exatamente um responsável atual: tutor ou clínica responsável provisória. Na adoção, a clínica deixa de ser responsável e o tutor adotante passa a ser o único responsável.
 Um pet pode ter vários veterinários autorizados a acessar seu histórico, mas apenas mediante permissão do tutor
 Um pet acumula, ao longo do tempo, múltiplas consultas, exames, vacinas, medicamentos e diagnósticos de doenças
 O histórico do pet nunca é apagado, mesmo que o tutor mude de clínica ou de veterinário
-Relaciona-se com: TUTOR (N:1), ESPECIE (N:1), RACA (N:1), CONSULTA (1:N), EXAME (1:N), VACINA (1:N), MEDICAMENTO (1:N), PET_DOENCA (1:N), ANEXO (1:N), NOTIFICACAO (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
+Relaciona-se com: TUTOR ou CLINICA (um responsável exclusivo), ESPECIE (N:1), RACA (N:1), CONSULTA (1:N), EXAME (1:N), VACINA (1:N), MEDICAMENTO (1:N), PET_DOENCA (1:N), ANEXO (1:N), NOTIFICACAO (1:N), ACESSO_AUTORIZADO (1:N), LOG_ACESSO (1:N)
 
 ## Consulta
 O fluxo estruturado de consultas, agenda e associativas clínicas em implementação está detalhado em [clinical-flow.md](clinical-flow.md). A migração preserva os registros anteriores e distingue reserva, rascunho e publicação.

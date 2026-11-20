@@ -3,7 +3,7 @@
 ## Acesso
 
 Entre com o e-mail e a senha cadastrados. O sistema identifica automaticamente
-se a conta pertence a um tutor ou a um veterinário.
+se a conta pertence a um tutor, veterinário ou administrador de clínica.
 
 ## Tutor
 
@@ -38,6 +38,16 @@ se a conta pertence a um tutor ou a um veterinário.
 
 A área veterinária reúne horários, consultas e atendimentos. O acesso aos dados
 clínicos segue as permissões aplicadas pelo backend.
+
+## Clínica
+
+O acesso administrativo é criado pela equipe da plataforma. No mesmo formulário
+de login, entre com o e-mail e a senha da conta da clínica. Em **Veterinários**,
+consulte os profissionais vinculados à clínica. Em **Pets para adoção**, cadastre
+o pet e, quando estiver pronto, confirme **Publicar**. Para retirá-lo, use
+**Retirar** e confirme. A clínica é responsável pelo pet até a adoção; após a
+transferência, ele passa para o tutor. A foto é selecionada no dispositivo, como
+no cadastro comum de pets.
 
 ## Datas e próxima vacina
 

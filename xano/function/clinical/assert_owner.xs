@@ -4,6 +4,10 @@ function "Clinical/assert_owner" {
     int tutor_id
   }
   stack {
+    precondition ($input.tutor_id > 0 && $input.pet_id > 0) {
+      error_type = "accessdenied"
+      error = "Pet não disponível."
+    }
     db.query pet {
       where = $db.pet.id == $input.pet_id && $db.pet.tutor_id == $input.tutor_id
       output = ["id", "nome", "especie_id", "tutor_id"]
