@@ -13,3 +13,5 @@
 - `tests/integration/clinic_browser.py`: fluxo de login compartilhado, cadastro, publicação e retirada de pet sintético passou no navegador em desktop e celular após os ajustes finais. Fixtures removidas; imagens de verificação em `evidence/`.
 
 Os contratos foram publicados somente no workspace de desenvolvimento confirmado; não foi efetuada publicação em produção. A conta de teste permanece ativa para uso solicitado; remoção deverá ocorrer quando o usuário terminar seus testes.
+
+- Correção do calendário de nascimento no formulário de adoção: a abertura agora aceita a sessão autenticada de clínica, assim como a seleção da data. Os testes de clínica e calendário verificam abertura, escolha e restrição por perfil; 18 testes passaram e `reflex compile --dry` compilou com sucesso. A verificação automatizada não inclui interação em navegador.

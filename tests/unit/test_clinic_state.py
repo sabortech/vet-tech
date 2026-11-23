@@ -99,9 +99,11 @@ class ClinicStateTests(unittest.IsolatedAsyncioTestCase):
 
     def test_clinic_uses_shared_birth_date_picker(self):
         state = clinic_state()
-        state.birth_calendar_open = True
+        State.birth_calendar_set_open.fn(state, True)
+        self.assertTrue(state.birth_calendar_open)
         State.birth_calendar_choose_day.fn(state, "2020-01-02")
         self.assertEqual(state.pet_birth_date, "2020-01-02")
+        self.assertFalse(state.birth_calendar_open)
 
     async def test_failed_availability_does_not_change_local_list(self):
         state = clinic_state()

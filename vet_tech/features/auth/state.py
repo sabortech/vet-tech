@@ -365,7 +365,7 @@ class State(PasswordRecoveryMixin, SupportChatMixin, TutorDashboardMixin, Clinic
     def birth_calendar_set_open(self, value: bool):
         if not value:
             self.birth_calendar_open = False
-        elif self.is_authenticated and self.profile == "tutor" and not self.is_busy:
+        elif self.is_authenticated and self.profile in ("tutor", "clinica") and not self.is_busy:
             selected = calendar_date(self.pet_birth_date)
             self.birth_calendar_month = (selected.isoformat() if selected else today())[:7]
             self.birth_calendar_open = True

@@ -123,8 +123,8 @@ class TutorCalendarTests(unittest.TestCase):
         self.assertFalse(s.birth_calendar_open)
         self.assertEqual(s.birth_calendar_month, '')
 
-    def test_birth_cannot_open_without_authenticated_tutor(self):
-        for profile, authenticated in (('veterinario', True), ('tutor', False)):
+    def test_birth_cannot_open_without_authorized_authenticated_profile(self):
+        for profile, authenticated in (('veterinario', True), ('tutor', False), ('clinica', False)):
             s = tutor()
             s.profile, s.is_authenticated = profile, authenticated
             State.birth_calendar_set_open.fn(s, True)
