@@ -18,7 +18,7 @@ from vet_tech.features.navigation.state import NavigationState
 
 app = rx.App(
     extra_app_wraps={(6, "VetTechMascote"): mascote_app_wrap},
-    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=adoption-preview-split-20261118"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js?v=password-visibility-20261115"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js", defer=True)],
+    head_components=[rx.el.link(rel="stylesheet", href="/vet_tech.css?v=adoption-preview-split-20261118"),rx.el.link(rel="icon", type="image/png", href="/optimized/favicon.png?v=optimized-1"), rx.el.script(src="/preferences.js?v=password-visibility-20261115"), rx.el.script(src="/mascote.js", defer=True), rx.el.script(src="/support-chat.js?v=assistant-receipts-20261123", defer=True)],
 	toaster=rx.toast.provider(position="bottom-left", offset="calc(24px + env(safe-area-inset-bottom, 0px))"),
 	stylesheets=[
 		"https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap",

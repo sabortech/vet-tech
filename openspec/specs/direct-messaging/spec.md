@@ -31,7 +31,7 @@ O backend SHALL permitir leitura e escrita somente ao tutor e veterinário do pa
 - **THEN** o backend nega sem retornar conteúdo
 
 ### Requirement: Compositor compartilhado e alterações seguras
-Conversas simples SHALL reutilizar emojis, nomes por participante, recibos Entregue/Visto e menu de edição/exclusão próprias em até 10 minutos do envio original, com autoria, revisão, retry idempotente e auditoria privada no backend. Não SHALL apresentar assunção, encerramento ou status de atendimento. A conversa SHALL persistir ao fechar e reabrir.
+Conversas simples SHALL reutilizar emojis, nomes por participante, recibos Entregue/Visto e menu de edição/exclusão próprias em até 10 minutos do envio original, com autoria, revisão, retry idempotente e auditoria privada no backend. Balões de mensagens enviadas SHALL ter fundo sólido e opaco, distinguível do fundo da conversa nos temas claro e escuro. Não SHALL apresentar assunção, encerramento ou status de atendimento. A conversa SHALL persistir ao fechar e reabrir.
 
 #### Scenario: Mensagem e reabertura
 - **WHEN** um participante envia mensagem e reabre a conversa

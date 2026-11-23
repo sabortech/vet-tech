@@ -104,12 +104,14 @@
     const b = node('button', cls); b.type = 'button'; b.setAttribute('aria-label', label); b.title = label; b.append(icon(name)); return b;
   }
   let dialog, log, input, submit, footer, historyView, historyButton, bannerVideo, shade;
+  let assistantMessageSent = false;
   let emojiButton, emojiPanel;
   let messageActionDialog, messageActionBody, messageActionStatus, messageActionTarget;
   let ticketInfoButton, ticketInfoDialog, ticketDetails, ticketInfoStatus;
   let updateLedPath = () => {};
   let pending = false, lastQuestion = '', errorRow, responseTimer, generation = 0;
   let conversation = [], history = [], sessionKey = session().key;
+  let assistantMessagesAwaitingRead = [];
   let conversationId = '', activeRequest = null;
   let supportPending = null, humanTicket = null, supportTimer, supportPanel, supportStatus;
   let supportRetry = null, offeredHandoff = false;
@@ -274,7 +276,7 @@
     if(ticketInfoButton)ticketInfoButton.hidden=mode!=='ticket'||humanTicket?.kind==='direct';
     if(mode!=='ticket'){clearMessageActions();ticketInfoDialog?.close();ticketDetails?.replaceChildren();if(ticketInfoStatus)ticketInfoStatus.textContent='';}
     if(!mode&&input)input.placeholder='Digite sua pergunta…';
-    supportPanel.hidden=false;supportStatus.hidden=false;bannerVideo.parentElement.hidden=false;historyView.hidden=true;
+    supportPanel.hidden=false;supportStatus.hidden=false;bannerVideo.parentElement.hidden=Boolean(mode)||assistantMessageSent;historyView.hidden=true;
     bannerVideo.parentElement.style.display=mode?'none':'';
     dialog.querySelector('.vt-chat-chips').style.display=mode?'none':'';
     dialog.dataset.mode=mode||'assistant';
@@ -285,7 +287,7 @@
     log.hidden=['list','handoff'].includes(mode);footer.hidden=['list','handoff'].includes(mode);
     footer.querySelector('.vt-chat-notice').textContent=mode?'Atendimento por texto. Acesso ao prontuário depende de autorização.':'Sou um assistente do sistema, não substituo o veterinário.';
     directPicker?.close();
-    if(mode)bannerVideo.pause();else if(dialog.open)bannerVideo.play().catch(()=>{});
+    if(mode||assistantMessageSent)bannerVideo.pause();else if(dialog.open)bannerVideo.play().catch(()=>{});
     requestAnimationFrame(updateLedPath);
   }
   function supportAction(action, fields = {}, retry = null) {
@@ -591,6 +593,8 @@
     if(!footer.hidden)input.focus();
   }
   function resetConversation() {
+    assistantMessageSent = false;
+    assistantMessagesAwaitingRead = [];
     supportMode(false);
     supportListVisible=false;
     renderedSupportVersion='';readCandidate=null;serverClock=null;clearTimeout(readFlushTimer);readFlushTimer=null;clearTimeout(focusRefreshTimer);focusRefreshTimer=null;clearTimeout(focusFollowUpTimer);
@@ -623,7 +627,7 @@
       }
       historyView.append(details);
     }
-    ticketInfoButton.hidden=true;ticketInfoDialog.close();
+    ticketInfoButton.hidden=true;ticketInfoDialog.close();bannerVideo.pause();
     supportPanel.hidden=true;supportStatus.hidden=true;bannerVideo.parentElement.hidden=true;
     log.hidden = true; footer.hidden = true; historyView.hidden = false;
     historyButton.setAttribute('aria-expanded', 'true'); back.focus();
@@ -643,7 +647,12 @@
     const bubble = node('div', 'vt-chat-bubble');
     bubble.append(node('p', '', text));
     const time = node('div', 'vt-chat-time', new Intl.DateTimeFormat('pt-BR', {hour:'2-digit',minute:'2-digit'}).format(at ? new Date(at) : new Date()));
-    if (user&&!humanTicket) time.append(node('span', 'vt-chat-check', ' ✓✓'));
+    if (user&&!humanTicket) {
+      const receipt=node('span','vt-chat-receipt');
+      receipt.append(icon('check'),node('span','','Entregue'));
+      receipt.setAttribute('aria-label','Mensagem entregue ao assistente');
+      time.append(receipt);
+    }
     bubble.append(time); row.append(bubble);
     if(user)row.append(participantAvatar(author|| (session().key.startsWith('veterinario:')?'veterinario':'tutor')));
     log.append(row); log.scrollTop = log.scrollHeight;
@@ -657,6 +666,13 @@
     const reply = typeof result.reply === 'string' && result.reply.trim() ? result.reply : genericError;
     if (result.ok === true) {
       message(reply);
+      if(typeof result.reply==='string'&&result.reply.trim()){
+        for(const row of assistantMessagesAwaitingRead){
+          const receipt=row.querySelector('.vt-chat-receipt');
+          if(receipt){receipt.classList.add('is-read');receipt.replaceChildren(icon('checks'),node('span','','Visto'));receipt.setAttribute('aria-label','Mensagem vista pelo assistente');}
+        }
+        assistantMessagesAwaitingRead=[];
+      }
       if(result.handoff&&session().key.startsWith('tutor:'))offerHandoff();
     } else {
       errorRow = message(reply, false, false);
@@ -696,7 +712,10 @@
       }
       return;
     }
-    lastQuestion = clean; message(clean, true); input.value = ''; respond(clean);
+    assistantMessageSent = true;
+    bannerVideo.pause();
+    bannerVideo.parentElement.hidden = true;
+    lastQuestion = clean; assistantMessagesAwaitingRead.push(message(clean, true)); input.value = ''; respond(clean);
   }
   function close() {
     directPicker?.close();
