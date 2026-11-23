@@ -542,6 +542,15 @@ def appointment_card(row):
 def veterinary_content():
     from vet_tech.components.veterinary_schedule import schedule_content, consultations_content
     return rx.vstack(
+        rx.box(
+            rx.cond(State.vet_invites.length() > 0, rx.vstack(
+                rx.heading("Convites de clínicas", size="4"),
+                rx.foreach(State.vet_invites, lambda invite: rx.hstack(rx.text(invite["nome"]), rx.button("Aceitar vínculo", on_click=State.accept_vet_invite(invite["id"]), disabled=State.vet_invites_busy), wrap="wrap")),
+                align="stretch", spacing="2")),
+            rx.cond(State.vet_invites_message != "", rx.text(State.vet_invites_message, role="status")),
+            rx.cond(State.vet_invites_message != "", rx.button("Atualizar convites", on_click=State.load_vet_invites, disabled=State.vet_invites_busy, variant="soft", size="1")),
+            on_mount=State.load_vet_invites,
+        ),
         rx.hstack(rx.vstack(rx.heading(State.vet_section, size="7"),
                             rx.text(rx.cond(State.vet_section == "Horários", "Sua agenda do dia", "Próximas consultas e atendimentos pendentes"), color="var(--vt-muted)"),
                             align="start", spacing="1"), rx.spacer(),

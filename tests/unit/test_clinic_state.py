@@ -16,6 +16,36 @@ def clinic_state():
 
 
 class ClinicStateTests(unittest.IsolatedAsyncioTestCase):
+    async def test_clinic_creates_vet_without_client_clinic_id(self):
+        state = clinic_state()
+        state.clinic_vet_form = "novo"
+        state.professional_species = ["2"]
+        state.professional_specialties = ["3"]
+        form = {"nome": "Ana", "email": "ana@example.org", "telefone": "123", "crmv": "123", "crmv_uf": "SP", "password": "temporary", "password_confirmation": "temporary", "clinica_id": "999"}
+        with patch("vet_tech.features.clinic.state.xano_request", new_callable=AsyncMock, side_effect=[{"success": True}, []]) as request:
+            async for _ in State.clinic_submit_vet.fn(state, form):
+                pass
+        payload = request.await_args_list[0].kwargs["json_payload"]
+        self.assertNotIn("clinica_id", payload)
+        self.assertEqual(payload["especies_ids"], [2])
+        self.assertEqual(state.clinic_vet_form, "")
+
+    async def test_invite_is_sent_separately_and_no_password(self):
+        state = clinic_state()
+        state.clinic_vet_form = "vinculo"
+        with patch("vet_tech.features.clinic.state.xano_request", new_callable=AsyncMock, return_value={"success": True}) as request:
+            async for _ in State.clinic_submit_vet.fn(state, {"email": "Vet@Example.org"}):
+                pass
+        self.assertEqual(request.await_args.args[2], "clinica/veterinarios/convites")
+        self.assertEqual(request.await_args.kwargs["json_payload"], {"email": "vet@example.org"})
+
+    async def test_only_vet_can_accept_invite(self):
+        state = clinic_state()
+        with patch("vet_tech.features.clinic.state.xano_request", new_callable=AsyncMock) as request:
+            async for _ in State.accept_vet_invite.fn(state, "1"):
+                pass
+        request.assert_not_awaited()
+
     async def test_same_login_confirms_clinic_identity(self):
         state = make_state()
         with patch("vet_tech.features.auth.state.xano_request", new_callable=AsyncMock, return_value={"perfil": "clinica", "identidade_id": 11, "nome": "Admin", "clinica_nome": "Clínica A"}) as request:

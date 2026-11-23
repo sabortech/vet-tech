@@ -4,6 +4,7 @@ import base64
 
 import reflex as rx
 
+from vet_tech.features.veterinarians.validation import professional_payload
 from vet_tech.shared.dates import calendar_date
 from vet_tech.shared.xano_client import AUTH_API_GROUP, XanoRequestError, xano_request
 
@@ -19,6 +20,10 @@ class ClinicMixin(rx.State, mixin=True):
     clinic_admin_loading: bool = False
     clinic_admin_loaded: bool = False
     clinic_admin_message: str = ""
+    clinic_vet_form: str = ""
+    vet_invites: list[dict[str, str]] = []
+    vet_invites_message: str = ""
+    vet_invites_busy: bool = False
 
     def _clear_clinic_admin(self):
         self.clinic_section = "Veterinários"
@@ -31,6 +36,121 @@ class ClinicMixin(rx.State, mixin=True):
         self.clinic_admin_loading = False
         self.clinic_admin_loaded = False
         self.clinic_admin_message = ""
+        self.clinic_vet_form = ""
+        self.vet_invites = []
+        self.vet_invites_message = ""
+        self.vet_invites_busy = False
+
+    @rx.event
+    def clinic_close_vet_form(self):
+        self.clinic_vet_form = ""
+        self.clinic_admin_message = ""
+
+    @rx.event
+    async def clinic_open_vet_form(self, mode: str):
+        if self.profile != "clinica" or mode not in ("novo", "vinculo"):
+            return
+        self.clinic_vet_form = mode
+        self.clinic_admin_message = ""
+        self.professional_species = []
+        self.professional_specialties = []
+        if mode == "novo":
+            await self.load_registration_options()
+
+    @rx.event
+    async def clinic_submit_vet(self, form: dict):
+        if not self.is_authenticated or self.profile != "clinica" or self.clinic_admin_loading:
+            return
+        mode = self.clinic_vet_form
+        email = str(form.get("email", "")).strip().lower()
+        if not email or mode not in ("novo", "vinculo"):
+            self.clinic_admin_message = "Informe um e-mail válido."
+            return
+        payload = {"email": email}
+        if mode == "novo":
+            password = str(form.get("password", ""))
+            if not all((str(form.get("nome", "")).strip(), str(form.get("telefone", "")).strip(), password)):
+                self.clinic_admin_message = "Preencha todos os campos obrigatórios."
+                return
+            if password != str(form.get("password_confirmation", "")):
+                self.clinic_admin_message = "As senhas não coincidem."
+                return
+            try:
+                professional = professional_payload(form, self.professional_species, self.professional_specialties, "")
+            except ValueError as error:
+                self.clinic_admin_message = str(error)
+                return
+            professional.pop("clinica_id")
+            payload.update(professional, nome=str(form["nome"]).strip(), telefone=str(form["telefone"]).strip(), password=password)
+        session, token = self._session_generation, self._auth_token
+        self.clinic_admin_loading = True
+        self.clinic_admin_message = ""
+        yield
+        try:
+            endpoint = "clinica/veterinarios" if mode == "novo" else "clinica/veterinarios/convites"
+            result = await xano_request("POST", AUTH_API_GROUP, endpoint, auth_token=token, json_payload=payload)
+            if session != self._session_generation or token != self._auth_token:
+                return
+            if not isinstance(result, dict) or result.get("success") is not True:
+                raise XanoRequestError("Resposta incompatível do servidor.")
+            if mode == "novo":
+                vets = await xano_request("GET", AUTH_API_GROUP, "clinica/veterinarios", auth_token=token)
+                if session != self._session_generation or token != self._auth_token:
+                    return
+                if not isinstance(vets, list):
+                    raise XanoRequestError("Cadastro concluído, mas não foi possível atualizar a lista.")
+                self.clinic_admin_vets = [{"nome": str(v.get("nome") or "Não informado"), "crmv": str(v.get("crmv") or ""), "uf": str(v.get("crmv_uf") or ""), "especialidades": ", ".join(str(x) for x in v.get("especialidades", []) if x)} for v in vets]
+            self.clinic_vet_form = ""
+            self.clinic_admin_message = "Veterinário cadastrado." if mode == "novo" else "Convite registrado. O veterinário pode aceitá-lo na conta dele."
+        except XanoRequestError as error:
+            if session == self._session_generation and token == self._auth_token:
+                self.clinic_admin_message = str(error)
+        finally:
+            if session == self._session_generation and token == self._auth_token:
+                self.clinic_admin_loading = False
+
+    @rx.event
+    async def load_vet_invites(self):
+        if not self.is_authenticated or self.profile != "veterinario" or self.vet_invites_busy:
+            return
+        session, token = self._session_generation, self._auth_token
+        self.vet_invites_busy = True
+        try:
+            result = await xano_request("GET", AUTH_API_GROUP, "veterinario/convites", auth_token=token)
+            if session != self._session_generation or token != self._auth_token:
+                return
+            if not isinstance(result, list):
+                raise XanoRequestError("Resposta incompatível do servidor.")
+            self.vet_invites = [{"id": str(item["id"]), "nome": str(item.get("clinica_nome") or "Clínica")} for item in result]
+            self.vet_invites_message = ""
+        except (XanoRequestError, KeyError, TypeError):
+            if session == self._session_generation and token == self._auth_token:
+                self.vet_invites_message = "Não foi possível carregar os convites."
+        finally:
+            if session == self._session_generation and token == self._auth_token:
+                self.vet_invites_busy = False
+
+    @rx.event
+    async def accept_vet_invite(self, invite_id: str):
+        if not self.is_authenticated or self.profile != "veterinario" or self.vet_invites_busy or not invite_id.isdecimal():
+            return
+        session, token = self._session_generation, self._auth_token
+        self.vet_invites_busy = True
+        yield
+        try:
+            result = await xano_request("POST", AUTH_API_GROUP, "veterinario/convites/aceitar", auth_token=token, json_payload={"convite_id": int(invite_id)})
+            if session != self._session_generation or token != self._auth_token:
+                return
+            if not isinstance(result, dict) or result.get("success") is not True:
+                raise XanoRequestError("Resposta incompatível do servidor.")
+            self.vet_invites = []
+            self.vet_invites_message = "Vínculo com a clínica aceito."
+        except XanoRequestError as error:
+            if session == self._session_generation and token == self._auth_token:
+                self.vet_invites_message = str(error)
+        finally:
+            if session == self._session_generation and token == self._auth_token:
+                self.vet_invites_busy = False
 
     @rx.var
     def clinic_filtered_breeds(self) -> list[dict[str, str]]:
