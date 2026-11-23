@@ -319,7 +319,7 @@ def auth_shell(painel: rx.Component) -> rx.Component:
                     width="48%",
                     height="100%",
                     background="#72935B",
-                    background_image="url('/optimized/fundo02.webp')",
+                    background_image="url('/mascote/turtleandog.jpeg')",
                     background_size="cover",
                     background_position="center",
                     background_repeat="no-repeat",

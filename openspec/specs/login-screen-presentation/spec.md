@@ -7,12 +7,12 @@ Definir uma apresentação visual responsiva para a tela de login de tutor confo
 ## Requirements
 
 ### Requirement: A tela de login segue a referência visual aprovada
-O sistema SHALL apresentar a tela de login existente com a hierarquia e o estilo visual do protótipo aprovado: um cartão dividido com cantos arredondados, uma área clara para o formulário, uma área com imagem de floresta, a marca Vet Tech, mensagem de boas-vindas, campos de credenciais, ação primária, divisor, entrada com Google e convite ao cadastro. A imagem exibida no painel direito SHALL também aparecer como fundo da página com efeito de desfoque, mantendo o conteúdo do cartão e a imagem do painel lateral nítidos.
+O sistema SHALL apresentar a tela de login existente com a hierarquia e o estilo visual do protótipo aprovado: um cartão dividido com cantos arredondados, uma área clara para o formulário, uma área com a imagem da mascote Vet Tech, a marca Vet Tech, mensagem de boas-vindas, campos de credenciais, ação primária, divisor, entrada com Google e convite ao cadastro. O fundo da página SHALL manter a imagem de floresta com efeito de desfoque, sem desfocar o conteúdo do cartão ou a imagem do painel lateral.
 
 #### Scenario: Renderização do login em desktop
 - **WHEN** uma pessoa acessa a rota de login em uma viewport desktop
-- **THEN** o sistema exibe formulário e identidade visual no painel claro e a imagem florestal no painel adjacente, com proporções, tipografia, cores, espaçamentos e cantos arredondados correspondentes ao protótipo aprovado
-- **AND** a mesma imagem aparece ampliada e desfocada atrás do cartão, sem desfocar seus conteúdos
+- **THEN** o sistema exibe formulário e identidade visual no painel claro e a imagem da mascote Vet Tech no painel adjacente, com proporções, tipografia, cores, espaçamentos e cantos arredondados correspondentes ao protótipo aprovado
+- **AND** a imagem de floresta aparece ampliada e desfocada atrás do cartão, sem desfocar seus conteúdos
 
 #### Scenario: Exibição das opções visuais do protótipo
 - **WHEN** a tela de login é renderizada
