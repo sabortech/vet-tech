@@ -1,9 +1,6 @@
-## 🐾 VetTech | [README.md](https://github.com/user-attachments/files/32921014/README.1.md)
+# 🐾 VetTech
 
-
-> Prontuário digital para pets: o histórico de saúde do animal acompanha o pet por toda a vida, independentemente de clínica, cidade ou veterinário.
-
-Consulte o [guia rápido de uso](docs/guia-rapido.md) para conhecer as telas e as configurações disponíveis.
+> Prontuário digital para acompanhar a saúde dos pets ao longo da vida.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![Reflex](https://img.shields.io/badge/Frontend-Reflex-5646ED)
@@ -11,63 +8,85 @@ Consulte o [guia rápido de uso](docs/guia-rapido.md) para conhecer as telas e a
 ![OpenSpec](https://img.shields.io/badge/Spec--Driven-OpenSpec-black)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
----
+## 1. Apresentação
 
-## 📖 Sobre o projeto
+O **VetTech** é um aplicativo web acadêmico para organizar os cuidados de saúde dos pets. Informações guardadas em cadernetas, arquivos e sistemas de clínicas diferentes podem dificultar a continuidade do atendimento. O prontuário digital reúne os registros publicados de cada animal, permitindo que a pessoa tutora acompanhe sua saúde e que veterinários autorizados consultem o histórico antes de registrar um atendimento. Clínicas podem administrar seus profissionais e pets destinados à adoção.
 
-O **VetTech** é uma plataforma web que centraliza o histórico médico completo de cada pet em um ambiente seguro e acessível. O sistema conecta **tutores** e **veterinários**: o tutor é dono dos dados do animal e decide quem pode acessá-los.
+## 2. Acesso ao aplicativo
 
-### O problema
+Não há endereço público do aplicativo ou landing page confirmado nos arquivos desta versão. Para executar o aplicativo no próprio computador, consulte [Como rodar localmente](#como-rodar-localmente); o endereço local padrão é `http://localhost:3000/`.
 
-O histórico médico de pets está fragmentado em cadernetas de papel, arquivos físicos e sistemas isolados de cada clínica, o que causa:
+Na tela de login, informe e-mail e senha e clique em **Login**. O sistema identifica o perfil automaticamente. Para criar uma conta, clique em **Cadastre-se!**, escolha **Tutor** ou **Veterinário** em **Perfil a cadastrar**, preencha os dados solicitados e conclua o cadastro. O tutor informa CPF e endereço; o veterinário informa CRMV, UF, espécies atendidas e especialidades. A opção de acesso ou cadastro com Google depende da configuração do ambiente.
 
-- repetição desnecessária de exames;
-- risco de erro médico por falta de informação (ex.: alergias não comunicadas);
-- perda de continuidade no acompanhamento de doenças crônicas;
-- dificuldade do tutor em controlar vacinas e medicações.
+A conta administrativa de **Clínica** é criada pela equipe responsável pela plataforma; não há cadastro público desse perfil. O administrador entra pelo mesmo formulário. Uma clínica também pode cadastrar um novo veterinário com senha provisória ou convidar uma conta existente em **Veterinários**; a conta existente deve aceitar o convite antes do vínculo.
 
-### Objetivos
+![Tela de login sem dados pessoais, em captura de demonstração](openspec/changes/archive/2026-10-31-ajustar-tamanho-e-led-mascote/evidence/login-desktop.png)
 
-- Centralizar o histórico médico de cada pet em um único sistema.
-- Garantir que o prontuário acompanhe o pet independentemente da clínica atendida.
-- Reduzir riscos médicos causados por falta de informação nos atendimentos.
-- Dar ao tutor controle sobre quem acessa os dados do seu animal.
-- Facilitar o acompanhamento de vacinas, medicações e retornos com lembretes automáticos.
+*Captura de demonstração da tela de acesso; a disponibilidade do botão Google depende da configuração.*
 
----
+## 3. Perfis de usuários
 
-## 👥 Perfis de usuário
-
-| Perfil | Necessidade | Pode |
+| Perfil | O que pode fazer | Autorização e limites |
 |---|---|---|
-| **Tutor** | Organização e controle da saúde dos pets | Gerenciar os próprios pets, conceder/revogar acesso a veterinários, ver histórico de acessos, receber notificações, exportar PDF |
-| **Veterinário** | Acesso rápido e confiável ao histórico do paciente | Registrar consultas, vacinas e diagnósticos **somente** em pets com autorização ativa |
-| **Clínica** | Agrupar veterinários | Empregar vários veterinários. **Não acessa prontuários diretamente**; o acesso é sempre individual |
+| **Tutor** | Cadastrar e selecionar seus pets; agendar consultas; acompanhar registros publicados, permissões e acessos; exportar uma consulta em PDF; consultar pets disponíveis para adoção. | Controla o acesso de veterinários ao prontuário de seus pets e pode revogá-lo. Ao confirmar um agendamento, libera previamente o histórico ao profissional escolhido. |
+| **Veterinário** | Consultar agenda e histórico autorizado; iniciar, registrar e finalizar atendimentos; registrar vacinas, medicamentos, doenças e exames; exportar consultas finalizadas. | A leitura, o atendimento e a exportação dependem de autorização ativa do tutor; a revogação impede o acesso. |
+| **Clínica** | Consultar e administrar veterinários vinculados; cadastrar pets sob sua responsabilidade e publicar ou retirar anúncios de adoção. | A administração da clínica não concede acesso automático a prontuários. O acesso clínico é individual e depende da autorização do tutor. |
+
+## 4. Funcionalidades
+
+- Cadastro e autenticação de tutores e veterinários, com acesso administrativo provisionado para clínicas.
+- Cadastro, seleção e consulta dos dados de pets; painel com resumo dos registros disponíveis.
+- Agendamento de consulta e agenda veterinária; rascunho, finalização e publicação do atendimento.
+- Prontuário com consultas, vacinas, medicamentos, doenças, diagnósticos e exames, incluindo resultado em texto.
+- Consulta de permissões e histórico de acessos, com autorização e revogação pelo tutor.
+- Prévia e download em PDF de uma consulta finalizada, para o tutor e o veterinário autorizado.
+- Cadastro e publicação de pets para adoção pela clínica, consulta e confirmação de adoção pelo tutor.
+
+## 5. Manual de utilização
+
+### Tutor: pet, consulta e PDF
+
+1. Entre como tutor e abra **Meus Pets**. Para um animal novo, preencha nome e espécie em **Cadastrar pet**, acrescente os demais dados e foto se desejar e clique em **Cadastrar pet**. Para um pet existente, use **Abrir** seguido do nome ou selecione-o em **Mudar pet**. O pet passa a ser o contexto das consultas e do prontuário.
+2. No **Dashboard**, clique em **Agendar consulta**. Escolha pet, veterinário compatível, dia e horário; clique em **Continuar**. Informe o motivo e clique em **Confirmar agendamento**. A reserva aparece nas consultas e o veterinário escolhido recebe acesso prévio ao histórico desse pet.
+3. Após o veterinário finalizar o atendimento, selecione o pet, abra **Consultas** e clique em **Ver prontuário** na consulta desejada. O atendimento publicado e seus registros ficam disponíveis à pessoa tutora.
+4. No prontuário da consulta, clique em **Exportar PDF**, confira a prévia e clique em **Baixar PDF**. O documento baixado corresponde à consulta selecionada.
+5. Para conferir ou revogar acesso, em **Consultas** clique em **Carregar permissões e histórico de acessos** e abra **Permissões e histórico de acessos**. Use **Revogar** ao lado do profissional; a revogação interrompe seu acesso ao prontuário.
+
+### Veterinário: agenda e atendimento
+
+1. Entre como veterinário e abra **Horários** para consultar o dia desejado ou **Consultas** para localizar próximas consultas e pendências. Não há configuração de disponibilidade individual nesta versão; o tutor escolhe um horário permitido no agendamento.
+2. Localize o agendamento e clique em **Iniciar atendimento**; se já estiver aberto, use **Retomar atendimento**. Com autorização ativa, abra **Consultar histórico anterior** para verificar os registros publicados antes de preencher o atendimento.
+3. Em **Dados do atendimento**, informe data, motivo e diagnóstico; preencha observações e retorno quando necessário. Em **Registros clínicos**, use **Adicionar** em **Vacinas**, **Medicamentos**, **Doenças** ou **Exames** e preencha os campos pertinentes. Para um exame realizado, informe o tipo, estado, datas e resultado em texto.
+4. Use **Salvar rascunho** se ainda precisar editar. Quando os dados estiverem completos, clique em **Terminar consulta**. O atendimento finalizado e seus complementos são publicados para o tutor; a confirmação também oferece **Exportar PDF** quando elegível.
+
+### Clínica e tutor: adoção
+
+1. Como clínica, abra **Pets para adoção**, preencha **Cadastrar pet para adoção** e clique em **Cadastrar pet**. O pet aparece em **Pets cadastrados** inicialmente sem publicação.
+2. No card do pet, clique em **Publicar** e depois em **Confirmar**. Para cancelar a disponibilidade, use **Retirar** e confirme.
+3. Como tutor, abra **Adoção**. Os cards mostram os pets disponíveis e um resumo clínico compartilhado; **Ver prontuário** abre apenas a prévia disponibilizada para adoção. Clique em **Adotar** e, no diálogo, em **Confirmar adoção**.
+4. No modo persistente, se o backend confirmar a adoção, a responsabilidade passa ao tutor e o pet aparece em **Meus Pets** e **Mudar pet**. No modo demonstrativo local, os cards são fictícios e a confirmação só simula a adoção durante a sessão: não grava no Xano nem inclui o pet nas listas reais.
+
+## 6. Exemplo de utilização
+
+Jade é uma **jiboia fictícia**, assim como todas as informações clínicas deste exemplo. Sua tutora cadastra Jade em **Meus Pets**, seleciona **Jiboia** e usa **Agendar consulta** para escolher um veterinário que atenda essa espécie. Ao confirmar, ela libera previamente o histórico ao profissional escolhido.
+
+O veterinário localiza a reserva em **Consultas**, inicia o atendimento e abre **Consultar histórico anterior** para ler os registros já publicados e autorizados. Em **Exames**, adiciona um exame fictício de acompanhamento, seleciona o estado de realizado e registra um resultado textual fictício. Depois de preencher data, motivo e diagnóstico, escolhe **Terminar consulta**.
+
+A tutora volta a **Consultas**, abre **Ver prontuário** na consulta finalizada e encontra o resultado publicado. Se desejar, usa **Exportar PDF** e **Baixar PDF** para guardar o documento dessa consulta.
+
+## 7. Limitações conhecidas
+
+- A exportação e a prévia de PDF exigem consulta finalizada e acesso autorizado; o documento contém o recorte da consulta escolhida, não um PDF de todo o histórico. Para o veterinário, a autorização deve permanecer ativa. Falhas de acesso ou auditoria impedem a liberação.
+- O rascunho do atendimento não é exibido ao tutor; os registros se tornam visíveis após a finalização. Um veterinário sem autorização ativa não pode acessar o prontuário, e o perfil de clínica não recebe acesso clínico automático.
+- Não há configuração de disponibilidade individual pelo veterinário nesta versão. O agendamento apresenta a faixa de 08h a 17h e está sujeito às validações e aos conflitos de horário do backend.
+- A adoção depende do modo e do backend configurados. Com `VET_TECH_ADOPTION_DEMO=true`, a confirmação é somente uma simulação local; no modo persistente, a transferência depende da confirmação do backend.
+- O envio de código ao Git não publica automaticamente as APIs Xano. Funcionalidades dependem dos contratos correspondentes estarem publicados no ambiente utilizado.
+
+Consulte também o [guia rápido](docs/guia-rapido.md) e o [guia de exportação em PDF](docs/guia-exportar-pdf.md).
 
 ---
 
-## ✨ Funcionalidades
-
-| # | Funcionalidade | Descrição |
-|---|---|---|
-| RF01 | Cadastro e autenticação | Tutores e veterinários se cadastram e fazem login |
-| RF02 | Perfil do pet | Dados, foto, espécie e raça |
-| RF03 | Histórico médico | Consultas, exames e diagnósticos |
-| RF04 | Carteira de vacinação | Vacinas aplicadas com alerta de reforço |
-| RF05 | Controle de medicamentos | Contínuos, vermífugo, antipulgas/carrapatos e outros |
-| RF06 | Registro de doenças | Diagnóstico pontual (por consulta) e histórico consolidado (por pet) |
-| RF07 | Permissões | Tutor autoriza e revoga o acesso de veterinários |
-| RF08 | Log de auditoria | Quem acessou, editou ou exportou dados |
-| RF09 | Notificações automáticas | Vacina, retorno e medicamento |
-| RF10 | Exportação | Relatório PDF do histórico completo |
-
-### Fora do escopo inicial (evolução futura)
-
-- Módulo de pagamento
-- Telemedicina em vídeo
-- Aplicativo mobile nativo
-
----
+# Informações para desenvolvedores
 
 ## 🏗️ Arquitetura
 
@@ -133,9 +152,9 @@ Detalhes de cada entidade, campos e regras estão em [`docs/domain-model.md`](./
 
 - O **tutor** é o único que concede ou revoga o acesso de veterinários ao prontuário do seu pet.
 - O **veterinário** só visualiza, edita ou exporta dados de pets com autorização **ativa**; ao ser revogada, o acesso é perdido imediatamente.
-- Toda visualização, edição ou exportação gera um registro **imutável** em `LOG_ACESSO` (data, veterinário, pet e ação).
+- Operações clínicas protegidas e exportações geram registros de auditoria no backend conforme os contratos implementados.
 - Senhas são armazenadas com **hash**, nunca em texto puro.
-- A auditoria e o controle de acesso seguem os princípios da **LGPD**.
+- O controle de acesso e a auditoria são aplicados no backend; detalhes estão em [fluxo clínico](docs/clinical-flow.md).
 
 ```mermaid
 sequenceDiagram
@@ -212,7 +231,7 @@ vet-tech/
 
 ---
 
-## 🚀 Como rodar localmente
+## Como rodar localmente
 
 ### Pré-requisitos
 
@@ -305,17 +324,6 @@ Desenvolvimento incremental por módulo:
 - Normalização para evitar inconsistências (espécie/raça padronizadas).
 - Tabelas associativas para relações N:N (Pet-Doença, Consulta-Doença).
 - Documentação incremental do modelo conforme surgem novas necessidades.
-
----
-
-## ❓ Pontos em aberto
-
-- [ ] **Anexos de exame:** definir se haverá relação direta EXAME–ANEXO.
-- [ ] **Data de retorno:** `CONSULTA` ainda não tem campo de data de retorno.
-- [ ] **Perfil administrador:** o log é consultável pela administração, mas não há perfil admin descrito.
-- [ ] **Cadastro de pet:** confirmar que apenas o tutor cadastra pets.
-- [ ] **Canal de notificação:** apenas dentro do sistema ou também por e-mail?
-- [ ] **Relação Pet–Veterinário:** confirmar se `ACESSO_AUTORIZADO` basta ou se haverá vínculo clínico separado.
 
 ---
 
@@ -434,7 +442,7 @@ Desenvolvimento incremental por módulo:
 Faculdade Impacta e Tecnologia (FIT)
 # Verificação do backend clínico
 
-Contratos dos endpoints, decisão de identidade com dois perfis, preparo de
+Contratos dos endpoints, decisões de identidade, preparo de
 fixtures e testes reais do Xano estão em
 [`docs/record-foundation-verification.md`](docs/record-foundation-verification.md).
 A suíte remota é separada dos testes unitários e exige configuração explícita
